@@ -6,6 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/models/country.dart';
+import 'country_picker_dialog.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -17,6 +19,7 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  Country _selectedCountry = Country.saudiArabia;
 
   @override
   void dispose() {
@@ -24,10 +27,20 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
+  Future<void> _openCountryPicker() async {
+    final country = await showDialog<Country>(
+      context: context,
+      builder: (_) => CountryPickerDialog(selected: _selectedCountry),
+    );
+    if (country != null) {
+      setState(() => _selectedCountry = country);
+    }
+  }
+
   Future<void> _handleRequestOtp() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
-    final phone = _phoneController.text.trim();
+    final phone = '${_selectedCountry.dialCode}${_phoneController.text.trim()}';
     final success = await auth.requestOtp(phone);
     if (success && mounted) {
       context.go('/verify-otp');
@@ -168,9 +181,39 @@ class _SignInScreenState extends State<SignInScreen> {
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                   ],
-                  decoration: const InputDecoration(
-                    hintText: '05XXXXXXXX',
-                    prefixIcon: Icon(Icons.phone_outlined, size: 20),
+                  decoration: InputDecoration(
+                    hintText: '5XXXXXXXX',
+                    prefixIcon: InkWell(
+                      onTap: _openCountryPicker,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _selectedCountry.flag,
+                              style: const TextStyle(fontSize: 20),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _selectedCountry.dialCode,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_drop_down,
+                              size: 18,
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {

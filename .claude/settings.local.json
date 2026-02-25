@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub get:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter build:*)",
+      "Bash(flutter pub add shared_preferences)",
+      "Bash(du -sh build/web/*/ build/web/*.js build/web/*.html build/web/*.json build/web/*.png)",
+      "Bash(find build/web -type f -exec du -h {} +)",
+      "Bash(flutter --version)",
+      "Bash(python3 -c \":*)",
+      "Bash(du -sh build/web/*/ build/web/*.js build/web/*.html build/web/*.json build/web/*.png build/web/*.wasm build/web/*.map)"
+    ]
+  }
+}

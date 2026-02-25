@@ -283,6 +283,17 @@ class AppLocalizations {
     fr: 'Aucun emplacement de chauffeur disponible',
     de: 'Keine Fahrerstandorte verfügbar',
   );
+  String get allRegions => _t('All Regions', 'جميع المناطق',
+      nl: 'Alle regio\'s', fr: 'Toutes les régions', de: 'Alle Regionen');
+  String get otherRegion => _t('Other', 'أخرى',
+      nl: 'Overig', fr: 'Autre', de: 'Sonstige');
+  String driversInRegion(int count) => _t(
+    '$count drivers',
+    '$count سائقين',
+    nl: '$count chauffeurs',
+    fr: '$count chauffeurs',
+    de: '$count Fahrer',
+  );
 
   // ─── Approvals Screen ─────────────────────────────────────────
   String applicationsWaitingReview(int count) => _t(

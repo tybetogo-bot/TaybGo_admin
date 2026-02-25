@@ -7,6 +7,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/models/home_response.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/city_locator.dart';
 
 class DriversScreen extends StatefulWidget {
   const DriversScreen({super.key});
@@ -18,6 +19,7 @@ class DriversScreen extends StatefulWidget {
 class _DriversScreenState extends State<DriversScreen> {
   String _filter = 'all';
   String _search = '';
+  String? _selectedCityKey; // null = all regions
   bool _showMap = false;
   final MapController _mapController = MapController();
 
@@ -144,6 +146,9 @@ class _DriversScreenState extends State<DriversScreen> {
                 _filterChipBtn(l.online, 'online'),
                 _filterChipBtn(l.offline, 'offline'),
                 const SizedBox(width: 8),
+                // Region dropdown
+                _buildRegionDropdown(all, theme, l),
+                const SizedBox(width: 8),
                 // Map / List toggle
                 Container(
                   height: 34,
@@ -239,6 +244,109 @@ class _DriversScreenState extends State<DriversScreen> {
         ),
       ),
     );
+  }
+
+  // ─── Region Dropdown ─────────────────────────────────────────
+
+  Widget _buildRegionDropdown(
+      List<DriverWithLocation> allDrivers, ThemeData theme, AppLocalizations l) {
+    final cityEntries = _buildCityEntries(allDrivers);
+    if (cityEntries.isEmpty) return const SizedBox.shrink();
+
+    final isArabic = l.isArabic;
+
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _selectedCityKey != null
+              ? AppColors.primary.withValues(alpha: 0.3)
+              : theme.dividerColor,
+        ),
+        color: _selectedCityKey != null
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : Colors.transparent,
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedCityKey ?? '_all',
+          icon: Icon(Icons.arrow_drop_down, size: 18,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+          isDense: true,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: _selectedCityKey != null ? FontWeight.w600 : FontWeight.w400,
+            color: _selectedCityKey != null
+                ? AppColors.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+          ),
+          items: [
+            DropdownMenuItem(
+              value: '_all',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.public_rounded, size: 14,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                  const SizedBox(width: 6),
+                  Text(l.allRegions),
+                ],
+              ),
+            ),
+            ...cityEntries.map((entry) {
+              final label = entry.city != null
+                  ? (isArabic ? entry.city!.nameAr : entry.city!.nameEn)
+                  : l.otherRegion;
+              return DropdownMenuItem(
+                value: entry.key,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.location_on_rounded, size: 14,
+                        color: AppColors.primary.withValues(alpha: 0.5)),
+                    const SizedBox(width: 6),
+                    Text(label),
+                    const SizedBox(width: 4),
+                    Text(
+                      '(${entry.count})',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _selectedCityKey = value == '_all' ? null : value;
+            });
+            _zoomToSelectedCity();
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Animates the map camera to focus on the selected city, or fits all
+  /// drivers if "All Regions" is chosen.
+  void _zoomToSelectedCity() {
+    if (!_showMap) return;
+    // Small delay to let setState rebuild the map with filtered markers
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted) return;
+      if (_selectedCityKey == null || _selectedCityKey == '_other') return;
+      final city = CityLocator.cities
+          .where((c) => c.key == _selectedCityKey)
+          .firstOrNull;
+      if (city != null) {
+        _mapController.move(LatLng(city.lat, city.lng), 11);
+      }
+    });
   }
 
   // ─── Map View ─────────────────────────────────────────────────
@@ -566,6 +674,39 @@ class _DriversScreenState extends State<DriversScreen> {
     );
   }
 
+  /// Returns the city key for a driver, or `'_other'` if no known city,
+  /// or `null` if coordinates are missing.
+  String? _cityKeyFor(DriverWithLocation d) {
+    final lat = double.tryParse(d.latitude ?? '');
+    final lng = double.tryParse(d.longitude ?? '');
+    if (lat == null || lng == null) return null;
+    return CityLocator.nearest(lat, lng)?.key ?? '_other';
+  }
+
+  /// Builds a sorted list of cities that currently have at least one driver.
+  List<_CityEntry> _buildCityEntries(List<DriverWithLocation> drivers) {
+    final counts = <String, int>{};
+    for (final d in drivers) {
+      final key = _cityKeyFor(d);
+      if (key != null) counts[key] = (counts[key] ?? 0) + 1;
+    }
+    final entries = <_CityEntry>[];
+    for (final city in CityLocator.cities) {
+      final c = counts[city.key];
+      if (c != null && c > 0) {
+        entries.add(_CityEntry(key: city.key, city: city, count: c));
+      }
+    }
+    // Sort by driver count descending
+    entries.sort((a, b) => b.count.compareTo(a.count));
+    // Add "Other" if any drivers are outside known cities
+    final otherCount = counts['_other'] ?? 0;
+    if (otherCount > 0) {
+      entries.add(_CityEntry(key: '_other', city: null, count: otherCount));
+    }
+    return entries;
+  }
+
   List<DriverWithLocation> _apply(List<DriverWithLocation> drivers) {
     var r = drivers;
     if (_filter == 'online') {
@@ -581,8 +722,11 @@ class _DriversScreenState extends State<DriversScreen> {
               d.phone.contains(q))
           .toList();
     }
-    debugPrint('[DriversScreen] Filter: $_filter, search: "$_search" '
-        '=> ${r.length}/${drivers.length} drivers shown');
+    if (_selectedCityKey != null) {
+      r = r.where((d) => _cityKeyFor(d) == _selectedCityKey).toList();
+    }
+    debugPrint('[DriversScreen] Filter: $_filter, search: "$_search", '
+        'city: $_selectedCityKey => ${r.length}/${drivers.length} drivers shown');
     return r;
   }
 
@@ -615,6 +759,15 @@ class _DriverLatLng {
   final DriverWithLocation driver;
   final LatLng latLng;
   const _DriverLatLng(this.driver, this.latLng);
+}
+
+// ─── Helper: City entry for the region dropdown ─────────────────
+
+class _CityEntry {
+  final String key;
+  final City? city; // null for "_other"
+  final int count;
+  const _CityEntry({required this.key, required this.city, required this.count});
 }
 
 // ─── Arrow painter for marker ───────────────────────────────────

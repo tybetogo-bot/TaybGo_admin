@@ -49,8 +49,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _clearTokens() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keyAccess);
-    await prefs.remove(_keyRefresh);
+    await prefs.clear();
   }
 
   /// Request OTP for the given phone number (no country code).

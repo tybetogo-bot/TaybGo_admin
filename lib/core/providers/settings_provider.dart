@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SettingsProvider extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.light;
   Locale _locale = const Locale('en');
 
   ThemeMode get themeMode => _themeMode;
@@ -23,6 +23,13 @@ class SettingsProvider extends ChangeNotifier {
     final idx = _supportedLocales.indexOf(_locale.languageCode);
     final next = (idx + 1) % _supportedLocales.length;
     _locale = Locale(_supportedLocales[next]);
+    notifyListeners();
+  }
+
+  /// Reset settings to defaults. Called on sign-out.
+  void resetToDefaults() {
+    _themeMode = ThemeMode.light;
+    _locale = const Locale('en');
     notifyListeners();
   }
 }

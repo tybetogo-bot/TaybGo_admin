@@ -241,10 +241,10 @@ class Country {
     Country(name: 'Zimbabwe', code: 'ZW', dialCode: '+263'),
   ];
 
-  /// Saudi Arabia as default.
-  static const Country saudiArabia = Country(
-    name: 'Saudi Arabia',
-    code: 'SA',
-    dialCode: '+966',
+  /// Austria as default.
+  static const Country defaultCountry = Country(
+    name: 'Austria',
+    code: 'AT',
+    dialCode: '+43',
   );
 }

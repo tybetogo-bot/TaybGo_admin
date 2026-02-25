@@ -336,6 +336,22 @@ class AdminProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Clear all cached data and stop polling. Called on sign-out.
+  void clearAll() {
+    debugPrint('[AdminProvider] clearAll() — wiping cached data');
+    stopPolling();
+    _homeData = null;
+    _isLoading = false;
+    _error = null;
+    _tickets = [];
+    _ticketsTotal = 0;
+    _ticketsLoading = false;
+    _ticketsError = null;
+    _selectedTicket = null;
+    _ticketDetailLoading = false;
+    notifyListeners();
+  }
+
   Future<void> updateTicketStatus(int ticketId, String newStatus) async {
     debugPrint('[AdminProvider] updateTicketStatus() ticketId=$ticketId, newStatus=$newStatus');
     final updated = await _apiService.updateTicket(ticketId, status: newStatus);

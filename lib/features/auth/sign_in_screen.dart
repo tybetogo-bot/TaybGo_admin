@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/providers/auth_provider.dart';
+import '../../core/providers/settings_provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/models/country.dart';
 import 'country_picker_dialog.dart';
@@ -19,7 +20,7 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  Country _selectedCountry = Country.saudiArabia;
+  Country _selectedCountry = Country.defaultCountry;
 
   @override
   void dispose() {
@@ -144,6 +145,12 @@ class _SignInScreenState extends State<SignInScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Language selector
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: _LanguageSelector(),
+                ),
+                const SizedBox(height: 8),
                 if (showLogo) ...[
                   Center(
                     child: Image.asset('assets/TaybGo_green.png', width: 130),
@@ -288,6 +295,86 @@ class _FieldLabel extends StatelessWidget {
         fontSize: 13,
         fontWeight: FontWeight.w500,
         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+      ),
+    );
+  }
+}
+
+class _LanguageSelector extends StatelessWidget {
+  static const _languages = [
+    (locale: Locale('en'), label: 'English', flag: '🇬🇧'),
+    (locale: Locale('ar'), label: 'العربية', flag: '🇸🇦'),
+    (locale: Locale('nl'), label: 'Nederlands', flag: '🇳🇱'),
+    (locale: Locale('fr'), label: 'Français', flag: '🇫🇷'),
+    (locale: Locale('de'), label: 'Deutsch', flag: '🇩🇪'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final theme = Theme.of(context);
+    final current = settings.locale;
+
+    return PopupMenuButton<Locale>(
+      tooltip: 'Language',
+      onSelected: (locale) => settings.setLocale(locale),
+      offset: const Offset(0, 36),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      itemBuilder: (_) => _languages.map((lang) {
+        final selected = lang.locale.languageCode == current.languageCode;
+        return PopupMenuItem<Locale>(
+          value: lang.locale,
+          child: Row(
+            children: [
+              Text(lang.flag, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 10),
+              Text(
+                lang.label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+              if (selected) ...[
+                const Spacer(),
+                Icon(Icons.check, size: 16, color: AppColors.primary),
+              ],
+            ],
+          ),
+        );
+      }).toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.language, size: 18,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+            const SizedBox(width: 6),
+            Text(
+              _languages
+                  .firstWhere(
+                    (l) => l.locale.languageCode == current.languageCode,
+                    orElse: () => _languages.first,
+                  )
+                  .label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.arrow_drop_down, size: 16,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+          ],
+        ),
       ),
     );
   }

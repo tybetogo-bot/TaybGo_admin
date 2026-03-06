@@ -1,0 +1,15 @@
+﻿name: phone_otp_auth_ui
+description: Reusable phone login, OTP, and country selector widgets.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.4
+  flutter: ">=3.35.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

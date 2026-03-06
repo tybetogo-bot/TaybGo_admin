@@ -9,7 +9,19 @@
       "Bash(find build/web -type f -exec du -h {} +)",
       "Bash(flutter --version)",
       "Bash(python3 -c \":*)",
-      "Bash(du -sh build/web/*/ build/web/*.js build/web/*.html build/web/*.json build/web/*.png build/web/*.wasm build/web/*.map)"
+      "Bash(du -sh build/web/*/ build/web/*.js build/web/*.html build/web/*.json build/web/*.png build/web/*.wasm build/web/*.map)",
+      "Bash(git add README.md)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(ls -la \"c:\\\\Users\\\\abdul\\\\taybgoadmin\\\\web\\\\assets\"\" 2>/dev/null || echo \"Assets folder not found \")",
+      "Bash(firebase deploy --only hosting)",
+      "Bash(xargs grep -l \"sign_in\\\\|SignInScreen\\\\|verify-otp\\\\|OtpVerifyScreen\")",
+      "Bash(git status -u)",
+      "Bash(git add lib/core/utils/city_locator.dart lib/core/l10n/app_localizations.dart lib/features/drivers/drivers_screen.dart firebase.json .firebaserc)",
+      "Bash(git add lib/core/models/country.dart lib/features/auth/country_picker_dialog.dart lib/features/auth/sign_in_screen.dart)",
+      "Bash(git add lib/core/models/country.dart lib/features/auth/sign_in_screen.dart lib/core/providers/admin_provider.dart lib/core/providers/auth_provider.dart lib/core/providers/settings_provider.dart lib/features/profile/profile_screen.dart web/index.html)"
     ]
-  }
+  },
+  "outputStyle": "default",
+  "spinnerTipsEnabled": false
 }

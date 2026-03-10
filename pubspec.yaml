@@ -22,8 +22,20 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.jpg"
+  web:
+    generate: true
+    image_path: "assets/logo.jpg"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/logo.jpg"
 
 flutter:
   uses-material-design: true
   assets:
     - assets/TaybGo_green.png
+    - assets/logo.jpg

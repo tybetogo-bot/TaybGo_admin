@@ -37,7 +37,7 @@ class PhoneNumberField extends StatelessWidget {
       keyboardType: TextInputType.phone,
       textInputAction: TextInputAction.done,
       onFieldSubmitted: onSubmitted,
-      inputFormatters: const [
+      inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
       ],
       decoration: InputDecoration(

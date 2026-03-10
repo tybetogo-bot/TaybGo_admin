@@ -138,7 +138,7 @@ class _OtpVerifyFormState extends State<OtpVerifyForm> {
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _handleSubmit(),
-            inputFormatters: const [
+            inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
             ],
             style: const TextStyle(

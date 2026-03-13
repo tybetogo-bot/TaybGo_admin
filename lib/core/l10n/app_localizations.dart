@@ -376,7 +376,63 @@ class AppLocalizations {
     de: 'Aktualisierung fehlgeschlagen: $e',
   );
 
+  // ─── Ticket Detail Screen ─────────────────────────────────────
+  String get ticketDetails => _t('Ticket Details', 'تفاصيل التذكرة',
+      nl: 'Ticketdetails', fr: 'Détails du ticket', de: 'Ticket-Details');
+  String get priority => _t('Priority', 'الأولوية',
+      nl: 'Prioriteit', fr: 'Priorité', de: 'Priorität');
+  String get category => _t('Category', 'الفئة',
+      nl: 'Categorie', fr: 'Catégorie', de: 'Kategorie');
+  String get requester => _t('Requester', 'مقدم الطلب',
+      nl: 'Aanvrager', fr: 'Demandeur', de: 'Anfragender');
+  String get created => _t('Created', 'تم الإنشاء',
+      nl: 'Aangemaakt', fr: 'Créé', de: 'Erstellt');
+  String get lastActivity => _t('Last Activity', 'آخر نشاط',
+      nl: 'Laatste activiteit', fr: 'Dernière activité', de: 'Letzte Aktivität');
+  String get closedAt => _t('Closed', 'تم الإغلاق',
+      nl: 'Gesloten', fr: 'Fermé', de: 'Geschlossen');
+  String get conversation => _t('Conversation', 'المحادثة',
+      nl: 'Gesprek', fr: 'Conversation', de: 'Konversation');
+  String noMessages(int id) => _t(
+    'No messages yet for ticket #$id',
+    'لا توجد رسائل بعد للتذكرة #$id',
+    nl: 'Nog geen berichten voor ticket #$id',
+    fr: 'Aucun message pour le ticket #$id',
+    de: 'Noch keine Nachrichten für Ticket #$id',
+  );
+  String get assignedTo => _t('Assigned To', 'مسند إلى',
+      nl: 'Toegewezen aan', fr: 'Assigné à', de: 'Zugewiesen an');
+  String get unassigned => _t('Unassigned', 'غير مسند',
+      nl: 'Niet toegewezen', fr: 'Non assigné', de: 'Nicht zugewiesen');
+  String get relatedOrder => _t('Order', 'الطلب',
+      nl: 'Bestelling', fr: 'Commande', de: 'Bestellung');
+  String get relatedRestaurant => _t('Restaurant', 'المطعم',
+      nl: 'Restaurant', fr: 'Restaurant', de: 'Restaurant');
+  String get relatedDriver => _t('Driver', 'السائق',
+      nl: 'Chauffeur', fr: 'Chauffeur', de: 'Fahrer');
+  String nAttachments(int n) => _t(
+    '$n attachment${n == 1 ? '' : 's'}',
+    '$n مرفق${n == 1 ? '' : 'ات'}',
+    nl: '$n bijlage${n == 1 ? '' : 'n'}',
+    fr: '$n pièce${n == 1 ? '' : 's'} jointe${n == 1 ? '' : 's'}',
+    de: '$n Anhang${n == 1 ? '' : 'e'}',
+  );
+
   // ─── Profile Screen ───────────────────────────────────────────
+  String get accountInfo => _t('Account', 'الحساب',
+      nl: 'Account', fr: 'Compte', de: 'Konto');
+  String get email => _t('Email', 'البريد الإلكتروني',
+      nl: 'E-mail', fr: 'E-mail', de: 'E-Mail');
+  String get name => _t('Name', 'الاسم',
+      nl: 'Naam', fr: 'Nom', de: 'Name');
+  String get roles => _t('Roles', 'الأدوار',
+      nl: 'Rollen', fr: 'Rôles', de: 'Rollen');
+  String get verified => _t('Verified', 'موثق',
+      nl: 'Geverifieerd', fr: 'Vérifié', de: 'Verifiziert');
+  String get notVerified => _t('Not verified', 'غير موثق',
+      nl: 'Niet geverifieerd', fr: 'Non vérifié', de: 'Nicht verifiziert');
+  String get memberSince => _t('Member since', 'عضو منذ',
+      nl: 'Lid sinds', fr: 'Membre depuis', de: 'Mitglied seit');
   String get settings => _t('Settings', 'الإعدادات',
       nl: 'Instellingen', fr: 'Paramètres', de: 'Einstellungen');
   String get theme => _t('Theme', 'المظهر',

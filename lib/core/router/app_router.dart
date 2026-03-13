@@ -7,6 +7,7 @@ import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/approvals/approvals_screen.dart';
 import '../../features/drivers/drivers_screen.dart';
 import '../../features/support/support_screen.dart';
+import '../../features/support/ticket_detail_screen.dart';
 import '../../features/profile/profile_screen.dart';
 
 class AppRouter {
@@ -68,6 +69,15 @@ class AppRouter {
               GoRoute(
                 path: '/support',
                 builder: (context, state) => const SupportScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return TicketDetailScreen(ticketId: id);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

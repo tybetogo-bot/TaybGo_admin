@@ -60,7 +60,7 @@ class _AdminShellState extends State<AdminShell> {
 
     if (w < 640) {
       return Scaffold(
-        body: widget.navigationShell,
+        body: SafeArea(child: widget.navigationShell),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: theme.scaffoldBackgroundColor,
@@ -118,15 +118,17 @@ class _AdminShellState extends State<AdminShell> {
     final expanded = w >= 960;
 
     return Scaffold(
-      body: Row(
-        children: [
-          _Sidebar(
-            currentIndex: widget.navigationShell.currentIndex,
-            expanded: expanded,
-            onTap: _onTap,
-          ),
-          Expanded(child: widget.navigationShell),
-        ],
+      body: SafeArea(
+        child: Row(
+          children: [
+            _Sidebar(
+              currentIndex: widget.navigationShell.currentIndex,
+              expanded: expanded,
+              onTap: _onTap,
+            ),
+            Expanded(child: widget.navigationShell),
+          ],
+        ),
       ),
     );
   }

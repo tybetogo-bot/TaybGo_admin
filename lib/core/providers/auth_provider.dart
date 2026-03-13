@@ -14,6 +14,11 @@ class AuthProvider extends ChangeNotifier {
   String? _accessToken;
   String? _refreshToken;
 
+  // User profile data from /api/me/
+  Map<String, dynamic>? _userProfile;
+  bool _profileLoading = false;
+  String? _profileError;
+
   final ApiService _apiService;
 
   AuthProvider({ApiService? apiService})
@@ -25,6 +30,10 @@ class AuthProvider extends ChangeNotifier {
   String? get phone => _phone;
   String? get testOtp => _testOtp;
   String? get accessToken => _accessToken;
+
+  Map<String, dynamic>? get userProfile => _userProfile;
+  bool get profileLoading => _profileLoading;
+  String? get profileError => _profileError;
 
   /// Load saved tokens from storage. Call once at app startup.
   Future<void> tryRestoreSession() async {
@@ -114,12 +123,34 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchProfile() async {
+    _profileLoading = true;
+    _profileError = null;
+    notifyListeners();
+
+    try {
+      _userProfile = await _apiService.getMe();
+      _profileLoading = false;
+      notifyListeners();
+    } on ApiException catch (e) {
+      _profileError = e.message;
+      _profileLoading = false;
+      notifyListeners();
+    } catch (_) {
+      _profileError = 'Connection error';
+      _profileLoading = false;
+      notifyListeners();
+    }
+  }
+
   void signOut() {
     _isAuthenticated = false;
     _accessToken = null;
     _refreshToken = null;
     _phone = null;
     _testOtp = null;
+    _userProfile = null;
+    _profileError = null;
     _apiService.clearAuthToken();
     _clearTokens();
     notifyListeners();

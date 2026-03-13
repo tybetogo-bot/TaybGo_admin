@@ -8,8 +8,11 @@ class SupportTicket {
   final String requesterName;
   final int? order;
   final int? restaurant;
+  final String? restaurantName;
   final int? driver;
+  final String? driverName;
   final int? assignedTo;
+  final String? assignedToName;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime lastActivityAt;
@@ -26,8 +29,11 @@ class SupportTicket {
     required this.requesterName,
     this.order,
     this.restaurant,
+    this.restaurantName,
     this.driver,
+    this.driverName,
     this.assignedTo,
+    this.assignedToName,
     required this.createdAt,
     required this.updatedAt,
     required this.lastActivityAt,
@@ -46,8 +52,11 @@ class SupportTicket {
       requesterName: json['requester_name'] ?? '',
       order: json['order'],
       restaurant: json['restaurant'],
+      restaurantName: json['restaurant_name'],
       driver: json['driver'],
+      driverName: json['driver_name'],
       assignedTo: json['assigned_to'],
+      assignedToName: json['assigned_to_name'],
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at']) ?? DateTime.now()
           : DateTime.now(),

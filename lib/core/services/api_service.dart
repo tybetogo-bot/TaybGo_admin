@@ -269,6 +269,34 @@ class ApiService {
     }
   }
 
+  // ─── User Profile ─────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> getMe() async {
+    final uri = Uri.parse('$baseUrl/api/me/');
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', response.statusCode);
+    } else {
+      throw ApiException('Failed to load profile', response.statusCode);
+    }
+  }
+
+  // ─── Restaurant ──────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> getRestaurant(int id) async {
+    final uri = Uri.parse('$baseUrl/api/customer/restaurants/$id/');
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw ApiException('Failed to load restaurant', response.statusCode);
+    }
+  }
+
   void dispose() {
     _client.close();
   }

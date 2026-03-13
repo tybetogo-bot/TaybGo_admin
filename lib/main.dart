@@ -14,22 +14,29 @@ void main() async {
 
   final apiService = ApiService();
   final authProvider = AuthProvider(apiService: apiService);
-  await authProvider.tryRestoreSession();
+  final settingsProvider = SettingsProvider();
+  await Future.wait([
+    authProvider.tryRestoreSession(),
+    settingsProvider.loadSettings(),
+  ]);
 
   runApp(TaybGoAdminApp(
     apiService: apiService,
     authProvider: authProvider,
+    settingsProvider: settingsProvider,
   ));
 }
 
 class TaybGoAdminApp extends StatefulWidget {
   final ApiService apiService;
   final AuthProvider authProvider;
+  final SettingsProvider settingsProvider;
 
   const TaybGoAdminApp({
     super.key,
     required this.apiService,
     required this.authProvider,
+    required this.settingsProvider,
   });
 
   @override
@@ -52,7 +59,7 @@ class _TaybGoAdminAppState extends State<TaybGoAdminApp> {
         ChangeNotifierProvider.value(value: widget.authProvider),
         ChangeNotifierProvider(
             create: (_) => AdminProvider(apiService: widget.apiService)),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider.value(value: widget.settingsProvider),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {

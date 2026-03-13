@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 
 class AdminProvider extends ChangeNotifier {
   final ApiService _apiService;
+  ApiService get apiService => _apiService;
 
   HomeResponse? _homeData;
   bool _isLoading = false;
@@ -384,8 +385,11 @@ class AdminProvider extends ChangeNotifier {
         requesterName: _selectedTicket!.requesterName,
         order: _selectedTicket!.order,
         restaurant: _selectedTicket!.restaurant,
+        restaurantName: _selectedTicket!.restaurantName,
         driver: _selectedTicket!.driver,
+        driverName: _selectedTicket!.driverName,
         assignedTo: _selectedTicket!.assignedTo,
+        assignedToName: _selectedTicket!.assignedToName,
         createdAt: _selectedTicket!.createdAt,
         updatedAt: DateTime.now(),
         lastActivityAt: DateTime.now(),

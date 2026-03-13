@@ -56,7 +56,8 @@ class _SignInScreenState extends State<SignInScreen> {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
-      body: LayoutBuilder(
+      body: SafeArea(
+        child: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth > 900;
 
@@ -127,6 +128,7 @@ class _SignInScreenState extends State<SignInScreen> {
           }
           return _buildForm(context, auth, theme, l, showLogo: true);
         },
+      ),
       ),
     );
   }

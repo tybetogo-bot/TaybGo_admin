@@ -7,13 +7,28 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/l10n/app_localizations.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final auth = context.read<AuthProvider>();
+    if (auth.userProfile == null && !auth.profileLoading) {
+      Future.microtask(() => auth.fetchProfile());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsProvider>();
+    final auth = context.watch<AuthProvider>();
     final l = AppLocalizations.of(context);
 
     return Scaffold(
@@ -23,7 +38,7 @@ class ProfileScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l.settings,
+              l.profile,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -31,9 +46,13 @@ class ProfileScreen extends StatelessWidget {
                 letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
-            // ─── Theme Section ─────────────────────────────────
+            // ─── User Profile Card ────────────────────────────
+            _buildProfileCard(auth, theme, l),
+            const SizedBox(height: 16),
+
+            // ─── Theme Section ────────────────────────────────
             _SectionCard(
               icon: Icons.palette_outlined,
               title: l.theme,
@@ -62,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // ─── Language Section ──────────────────────────────
+            // ─── Language Section ─────────────────────────────
             _SectionCard(
               icon: Icons.translate_rounded,
               title: l.language,
@@ -108,7 +127,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // ─── Sign Out ──────────────────────────────────────
+            // ─── Sign Out ─────────────────────────────────────
             SizedBox(
               width: double.infinity,
               child: ConstrainedBox(
@@ -119,7 +138,8 @@ class ProfileScreen extends StatelessWidget {
                   label: Text(l.signOut),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
-                    side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
+                    side: BorderSide(
+                        color: AppColors.error.withValues(alpha: 0.3)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
@@ -127,6 +147,258 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildProfileCard(
+      AuthProvider auth, ThemeData theme, AppLocalizations l) {
+    if (auth.profileLoading && auth.userProfile == null) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: theme.cardTheme.color,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            border: Border.all(color: theme.dividerColor),
+          ),
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    if (auth.profileError != null && auth.userProfile == null) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: theme.cardTheme.color,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            border: Border.all(color: theme.dividerColor),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.error_outline_rounded,
+                  size: 32,
+                  color:
+                      theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+              const SizedBox(height: 8),
+              Text(
+                auth.profileError!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color:
+                      theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => auth.fetchProfile(),
+                child: Text(l.retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final profile = auth.userProfile;
+    if (profile == null) return const SizedBox.shrink();
+
+    final name = profile['name'] as String? ?? '';
+    final email = profile['email'] as String? ?? '';
+    final phone = profile['phone'] as String? ?? '';
+    final isVerified = profile['is_verified'] as bool? ?? false;
+    final roles = (profile['roles'] as List<dynamic>?)
+            ?.map((r) => r.toString())
+            .toList() ??
+        [];
+    final createdAt = profile['created_at'] != null
+        ? DateTime.tryParse(profile['created_at'])
+        : null;
+
+    final initials = name.isNotEmpty
+        ? name
+            .split(' ')
+            .where((w) => w.isNotEmpty)
+            .take(2)
+            .map((w) => w[0].toUpperCase())
+            .join()
+        : '?';
+
+    final monthNames = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final joinedDate = createdAt != null
+        ? '${monthNames[createdAt.month]} ${createdAt.day}, ${createdAt.year}'
+        : null;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 500),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Column(
+          children: [
+            // ── Avatar + Name + Verified badge ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+              child: Column(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    name.isNotEmpty ? name : '—',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  if (email.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      email,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.45),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isVerified
+                          ? AppColors.success.withValues(alpha: 0.08)
+                          : AppColors.warning.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isVerified
+                              ? Icons.verified_rounded
+                              : Icons.info_outline_rounded,
+                          size: 14,
+                          color: isVerified
+                              ? AppColors.success
+                              : AppColors.warning,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          isVerified ? l.verified : l.notVerified,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isVerified
+                                ? AppColors.success
+                                : AppColors.warning,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(color: theme.dividerColor, height: 1),
+
+            // ── Detail rows ──
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
+                children: [
+                  if (phone.isNotEmpty)
+                    _profileRow(
+                        theme, Icons.phone_outlined, l.phone, phone),
+                  if (roles.isNotEmpty)
+                    _profileRow(theme, Icons.shield_outlined, l.roles,
+                        roles.map((r) => r[0].toUpperCase() + r.substring(1).toLowerCase()).join(', ')),
+                  if (joinedDate != null)
+                    _profileRow(theme, Icons.calendar_today_outlined,
+                        l.memberSince, joinedDate),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _profileRow(
+      ThemeData theme, IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Icon(icon,
+                  size: 16,
+                  color: theme.colorScheme.onSurface
+                      .withValues(alpha: 0.4)),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color:
+                      theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -150,7 +422,8 @@ class ProfileScreen extends StatelessWidget {
               context.read<SettingsProvider>().resetToDefaults();
               context.read<AuthProvider>().signOut();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: Text(l.signOut),
           ),
         ],
@@ -188,8 +461,10 @@ class _SectionCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
               child: Row(
                 children: [
-                  Icon(icon, size: 18,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                  Icon(icon,
+                      size: 18,
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.5)),
                   const SizedBox(width: 10),
                   Text(
                     title,
@@ -245,7 +520,8 @@ class _ThemeOptionState extends State<_ThemeOption> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           color: widget.selected
               ? AppColors.primary.withValues(alpha: 0.06)
               : _hovered
@@ -259,7 +535,8 @@ class _ThemeOptionState extends State<_ThemeOption> {
                   size: 18,
                   color: widget.selected
                       ? AppColors.primary
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                      : theme.colorScheme.onSurface
+                          .withValues(alpha: 0.45),
                 ),
                 const SizedBox(width: 12),
               ],
@@ -268,8 +545,9 @@ class _ThemeOptionState extends State<_ThemeOption> {
                   widget.label,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight:
-                        widget.selected ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: widget.selected
+                        ? FontWeight.w600
+                        : FontWeight.w400,
                     color: widget.selected
                         ? AppColors.primary
                         : theme.colorScheme.onSurface,
@@ -284,7 +562,8 @@ class _ThemeOptionState extends State<_ThemeOption> {
                     fontWeight: FontWeight.w600,
                     color: widget.selected
                         ? AppColors.primary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.35),
+                        : theme.colorScheme.onSurface
+                            .withValues(alpha: 0.35),
                   ),
                 ),
               if (widget.trailing != null) const SizedBox(width: 10),
@@ -297,7 +576,8 @@ class _ThemeOptionState extends State<_ThemeOption> {
                   border: Border.all(
                     color: widget.selected
                         ? AppColors.primary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                        : theme.colorScheme.onSurface
+                            .withValues(alpha: 0.2),
                     width: widget.selected ? 6 : 1.5,
                   ),
                 ),

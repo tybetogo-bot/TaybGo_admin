@@ -5,6 +5,8 @@ import '../../features/auth/otp_verify_screen.dart';
 import '../../features/shell/admin_shell.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/approvals/approvals_screen.dart';
+import '../../features/approvals/driver_request_detail_screen.dart';
+import '../../features/approvals/restaurant_request_detail_screen.dart';
 import '../../features/drivers/drivers_screen.dart';
 import '../../features/support/support_screen.dart';
 import '../../features/support/ticket_detail_screen.dart';
@@ -53,6 +55,32 @@ class AppRouter {
               GoRoute(
                 path: '/approvals',
                 builder: (context, state) => const ApprovalsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'driver/:id',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      final name = state.uri.queryParameters['name'] ?? '';
+                      final phone = state.uri.queryParameters['phone'] ?? '';
+                      return DriverRequestDetailScreen(
+                        driverId: id,
+                        driverName: name,
+                        driverPhone: phone,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'restaurant/:id',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      final name = state.uri.queryParameters['name'] ?? '';
+                      return RestaurantRequestDetailScreen(
+                        restaurantId: id,
+                        restaurantName: name,
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),

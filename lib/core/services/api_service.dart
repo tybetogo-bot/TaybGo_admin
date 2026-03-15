@@ -110,6 +110,31 @@ class ApiService {
         'Failed to activate restaurant', response.statusCode);
   }
 
+  /// Fetch the driver verification queue with full profile details.
+  Future<PaginatedResponse<DriverProfile>> getVerificationQueue({
+    int? page,
+  }) async {
+    final params = <String, String>{};
+    if (page != null) params['page'] = '$page';
+
+    final uri =
+        Uri.parse('$baseUrl/api/admin/drivers/verification-queue/').replace(
+      queryParameters: params.isNotEmpty ? params : null,
+    );
+
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return PaginatedResponse.fromJson(json, DriverProfile.fromJson);
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', response.statusCode);
+    } else {
+      throw ApiException(
+          'Failed to load verification queue', response.statusCode);
+    }
+  }
+
   Future<HomeResponse> getHome({
     bool? driverOnline,
     String? driverSearch,

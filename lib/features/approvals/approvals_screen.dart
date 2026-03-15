@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -270,138 +271,146 @@ class _DriverCardState extends State<_DriverCard> {
     final driver = widget.driver;
     final l = AppLocalizations.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(color: theme.dividerColor),
+    return GestureDetector(
+      onTap: () => context.go(
+        '/approvals/driver/${driver.id}?name=${Uri.encodeComponent(driver.name)}&phone=${Uri.encodeComponent(driver.phone)}',
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.15),
-                      AppColors.primary.withValues(alpha: 0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-                ),
-                child: Center(
-                  child: Text(
-                    driver.name
-                        .split(' ')
-                        .map((n) => n.isNotEmpty ? n[0] : '')
-                        .take(2)
-                        .join(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      driver.name,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      driver.submittedAt != null
-                          ? _fmtDate(driver.submittedAt!)
-                          : l.pending,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Details
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            children: [
-              _InfoTag(Icons.phone_outlined, driver.phone),
-              _InfoTag(Icons.badge_outlined, l.statusLabel(driver.status)),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Actions
-          if (_busy)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
             Row(
               children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 38,
-                    child: OutlinedButton(
-                      onPressed: () => _verify('REJECTED'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                        side: BorderSide(color: theme.dividerColor),
-                        textStyle: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w500),
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.15),
+                        AppColors.primary.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+                  ),
+                  child: Center(
+                    child: Text(
+                      driver.name
+                          .split(' ')
+                          .map((n) => n.isNotEmpty ? n[0] : '')
+                          .take(2)
+                          .join(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
                       ),
-                      child: Text(l.decline),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 14),
                 Expanded(
-                  child: SizedBox(
-                    height: 38,
-                    child: ElevatedButton(
-                      onPressed: () => _verify('APPROVED'),
-                      style: ElevatedButton.styleFrom(
-                        textStyle: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w500),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        driver.name,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
-                      child: Text(l.approve),
-                    ),
+                      const SizedBox(height: 2),
+                      Text(
+                        driver.submittedAt != null
+                            ? _fmtDate(driver.submittedAt!)
+                            : l.pending,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                Icon(Icons.chevron_right_rounded,
+                    size: 20,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
               ],
             ),
-        ],
+            const SizedBox(height: 16),
+
+            // Details
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _InfoTag(Icons.phone_outlined, driver.phone),
+                _InfoTag(Icons.badge_outlined, l.statusLabel(driver.status)),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Actions
+            if (_busy)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 38,
+                      child: OutlinedButton(
+                        onPressed: () => _verify('REJECTED'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor:
+                              theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          side: BorderSide(color: theme.dividerColor),
+                          textStyle: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                        child: Text(l.decline),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 38,
+                      child: ElevatedButton(
+                        onPressed: () => _verify('APPROVED'),
+                        style: ElevatedButton.styleFrom(
+                          textStyle: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                        child: Text(l.approve),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -478,95 +487,103 @@ class _RestaurantCardState extends State<_RestaurantCard> {
     final restaurant = widget.restaurant;
     final l = AppLocalizations.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(color: theme.dividerColor),
+    return GestureDetector(
+      onTap: () => context.go(
+        '/approvals/restaurant/${restaurant.id}?name=${Uri.encodeComponent(restaurant.name)}',
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      const Color(0xFF6366F1).withValues(alpha: 0.15),
-                      const Color(0xFF6366F1).withValues(alpha: 0.05),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFF6366F1).withValues(alpha: 0.15),
+                        const Color(0xFF6366F1).withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.storefront_rounded,
+                        size: 20, color: Color(0xFF6366F1)),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        restaurant.name,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        restaurant.submittedAt != null
+                            ? _fmtDate(restaurant.submittedAt!)
+                            : l.pending,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4),
+                        ),
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
                 ),
-                child: const Center(
-                  child: Icon(Icons.storefront_rounded,
-                      size: 20, color: Color(0xFF6366F1)),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      restaurant.name,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      restaurant.submittedAt != null
-                          ? _fmtDate(restaurant.submittedAt!)
-                          : l.pending,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Actions
-          if (_busy)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else
-            SizedBox(
-              width: double.infinity,
-              height: 38,
-              child: ElevatedButton(
-                onPressed: _activate,
-                style: ElevatedButton.styleFrom(
-                  textStyle: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w500),
-                ),
-                child: Text(l.activate),
-              ),
+                Icon(Icons.chevron_right_rounded,
+                    size: 20,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+              ],
             ),
-        ],
+            const SizedBox(height: 16),
+
+            // Actions
+            if (_busy)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                height: 38,
+                child: ElevatedButton(
+                  onPressed: _activate,
+                  style: ElevatedButton.styleFrom(
+                    textStyle: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                  child: Text(l.activate),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -137,6 +137,62 @@ class PendingRestaurant {
   }
 }
 
+class DriverProfile {
+  final int id;
+  final String? email;
+  final String name;
+  final String status;
+  final String vehicleType;
+  final bool acceptsFood;
+  final bool acceptsShipping;
+  final bool acceptsTaxi;
+  final String? drivingLicense;
+  final String? idDocument;
+  final String? otherDocuments;
+  final DateTime? createdAt;
+
+  const DriverProfile({
+    required this.id,
+    this.email,
+    required this.name,
+    required this.status,
+    required this.vehicleType,
+    required this.acceptsFood,
+    required this.acceptsShipping,
+    required this.acceptsTaxi,
+    this.drivingLicense,
+    this.idDocument,
+    this.otherDocuments,
+    this.createdAt,
+  });
+
+  factory DriverProfile.fromJson(Map<String, dynamic> json) {
+    // API returns empty strings for missing documents/email — treat as null
+    String? nullIfEmpty(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString();
+      return s.isEmpty ? null : s;
+    }
+
+    return DriverProfile(
+      id: json['id'] ?? 0,
+      email: nullIfEmpty(json['email']),
+      name: json['name'] ?? '',
+      status: json['status'] ?? 'PENDING',
+      vehicleType: json['vehicle_type'] ?? '',
+      acceptsFood: json['accepts_food'] ?? false,
+      acceptsShipping: json['accepts_shipping'] ?? false,
+      acceptsTaxi: json['accepts_taxi'] ?? false,
+      drivingLicense: nullIfEmpty(json['driving_license']),
+      idDocument: nullIfEmpty(json['id_document']),
+      otherDocuments: nullIfEmpty(json['other_documents']),
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+    );
+  }
+}
+
 class DriversCount {
   final int online;
   final int offline;

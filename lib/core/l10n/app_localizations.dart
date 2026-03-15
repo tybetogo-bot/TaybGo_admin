@@ -323,6 +323,56 @@ class AppLocalizations {
     de: 'Keine ausstehenden Anträge zur Überprüfung',
   );
 
+  // ─── Request Detail Screen ───────────────────────────────────
+  String get requestDetails => _t('Request Details', 'تفاصيل الطلب',
+      nl: 'Aanvraagdetails', fr: 'Détails de la demande', de: 'Anfragedetails');
+  String get driverRequest => _t('Driver Request', 'طلب سائق',
+      nl: 'Chauffeursaanvraag', fr: 'Demande de chauffeur', de: 'Fahreranfrage');
+  String get restaurantRequest => _t('Restaurant Request', 'طلب مطعم',
+      nl: 'Restaurantaanvraag', fr: 'Demande de restaurant', de: 'Restaurantanfrage');
+  String get vehicleType => _t('Vehicle Type', 'نوع المركبة',
+      nl: 'Voertuigtype', fr: 'Type de véhicule', de: 'Fahrzeugtyp');
+  String get serviceTypes => _t('Service Types', 'أنواع الخدمات',
+      nl: 'Servicetypes', fr: 'Types de service', de: 'Diensttypen');
+  String get food => _t('Food', 'طعام',
+      nl: 'Eten', fr: 'Nourriture', de: 'Essen');
+  String get shipping => _t('Shipping', 'شحن',
+      nl: 'Verzending', fr: 'Livraison', de: 'Versand');
+  String get taxi => _t('Taxi', 'تاكسي',
+      nl: 'Taxi', fr: 'Taxi', de: 'Taxi');
+  String get documents => _t('Documents', 'المستندات',
+      nl: 'Documenten', fr: 'Documents', de: 'Dokumente');
+  String get drivingLicense => _t('Driving License', 'رخصة القيادة',
+      nl: 'Rijbewijs', fr: 'Permis de conduire', de: 'Führerschein');
+  String get idDocument => _t('ID Document', 'وثيقة الهوية',
+      nl: 'Identiteitsbewijs', fr: "Pièce d'identité", de: 'Ausweisdokument');
+  String get otherDocuments => _t('Other Documents', 'مستندات أخرى',
+      nl: 'Overige documenten', fr: 'Autres documents', de: 'Andere Dokumente');
+  String get noDocumentsUploaded => _t('No documents uploaded', 'لم يتم رفع مستندات',
+      nl: 'Geen documenten geüpload', fr: 'Aucun document téléchargé', de: 'Keine Dokumente hochgeladen');
+  String get contactInfo => _t('Contact Info', 'معلومات الاتصال',
+      nl: 'Contactgegevens', fr: 'Coordonnées', de: 'Kontaktdaten');
+  String get submittedDate => _t('Submitted', 'تاريخ التقديم',
+      nl: 'Ingediend', fr: 'Soumis', de: 'Eingereicht');
+  String get registeredDate => _t('Registered', 'تاريخ التسجيل',
+      nl: 'Geregistreerd', fr: 'Inscrit', de: 'Registriert');
+  String get loadingDetails => _t('Loading details...', 'جاري تحميل التفاصيل...',
+      nl: 'Details laden...', fr: 'Chargement des détails...', de: 'Details werden geladen...');
+  String get failedToLoadDetails => _t('Failed to load details', 'فشل تحميل التفاصيل',
+      nl: 'Kan details niet laden', fr: 'Échec du chargement des détails', de: 'Details konnten nicht geladen werden');
+  String get notProvided => _t('Not provided', 'غير متوفر',
+      nl: 'Niet opgegeven', fr: 'Non fourni', de: 'Nicht angegeben');
+  String get viewDocument => _t('View', 'عرض',
+      nl: 'Bekijken', fr: 'Voir', de: 'Ansehen');
+  String get bike => _t('Bike', 'دراجة',
+      nl: 'Fiets', fr: 'Vélo', de: 'Fahrrad');
+  String get motorcycle => _t('Motorcycle', 'دراجة نارية',
+      nl: 'Motor', fr: 'Moto', de: 'Motorrad');
+  String get car => _t('Car', 'سيارة',
+      nl: 'Auto', fr: 'Voiture', de: 'Auto');
+  String get van => _t('Van', 'فان',
+      nl: 'Bestelbus', fr: 'Camionnette', de: 'Transporter');
+
   // ─── Support Screen ───────────────────────────────────────────
   String supportSub(int open, int inProgress, int resolved) => _t(
     '$open open · $inProgress in progress · $resolved resolved',

@@ -20,6 +20,13 @@ class AdminProvider extends ChangeNotifier {
   SupportTicket? _selectedTicket;
   bool _ticketDetailLoading = false;
 
+  // ─── Driver profile detail ────────────────────────────────────
+  DriverProfile? _driverProfile;
+  bool _driverProfileLoading = false;
+
+  DriverProfile? get driverProfile => _driverProfile;
+  bool get driverProfileLoading => _driverProfileLoading;
+
   // ─── Polling ───────────────────────────────────────────────────
   Timer? _pollTimer;
   static const _pollInterval = Duration(seconds: 10);
@@ -243,6 +250,55 @@ class AdminProvider extends ChangeNotifier {
   Future<void> refreshHome() async {
     debugPrint('[AdminProvider] refreshHome() called');
     await fetchHome();
+  }
+
+  // ─── Driver profile detail ──────────────────────────────────────
+
+  Future<void> fetchDriverProfile(int driverId, {String? driverName}) async {
+    debugPrint('[AdminProvider] fetchDriverProfile() driverId=$driverId, name=$driverName');
+    _driverProfileLoading = true;
+    _driverProfile = null;
+    notifyListeners();
+
+    try {
+      // Paginate through the verification queue to find the driver
+      var page = 1;
+      while (true) {
+        final queue = await _apiService.getVerificationQueue(page: page);
+        for (final d in queue.results) {
+          debugPrint('[AdminProvider]   queue driver: id=${d.id}, name="${d.name}"');
+        }
+        // Match by queue ID first
+        _driverProfile =
+            queue.results.where((d) => d.id == driverId).firstOrNull;
+        // Then try matching by exact name (only if unique match)
+        if (_driverProfile == null && driverName != null && driverName.isNotEmpty) {
+          final nameMatches =
+              queue.results.where((d) => d.name == driverName).toList();
+          if (nameMatches.length == 1) {
+            _driverProfile = nameMatches.first;
+          }
+          debugPrint('[AdminProvider]   name match for "$driverName": ${nameMatches.length} results');
+        }
+        if (_driverProfile != null || queue.next == null) break;
+        page++;
+      }
+      debugPrint('[AdminProvider] fetchDriverProfile() '
+          '${_driverProfile != null ? 'FOUND (queue id=${_driverProfile!.id})' : 'NOT FOUND'} '
+          '(searched $page pages)');
+    } on ApiException catch (e) {
+      debugPrint('[AdminProvider] fetchDriverProfile() queue FAILED: ${e.message}');
+    } catch (e) {
+      debugPrint('[AdminProvider] fetchDriverProfile() queue ERROR: $e');
+    }
+
+    _driverProfileLoading = false;
+    notifyListeners();
+  }
+
+  void clearDriverProfile() {
+    _driverProfile = null;
+    notifyListeners();
   }
 
   // ─── Approval actions ────────────────────────────────────────────

@@ -24,6 +24,10 @@ class AdminProvider extends ChangeNotifier {
   Timer? _pollTimer;
   static const _pollInterval = Duration(seconds: 10);
 
+  // Track recently approved/removed IDs so polling doesn't re-add them
+  final Set<int> _recentlyRemovedDriverIds = {};
+  final Set<int> _recentlyRemovedRestaurantIds = {};
+
   AdminProvider({ApiService? apiService})
       : _apiService = apiService ?? ApiService();
 
@@ -115,7 +119,44 @@ class AdminProvider extends ChangeNotifier {
   Future<void> _silentRefreshHome() async {
     try {
       final data = await _apiService.getHome();
-      _homeData = data;
+
+      // Filter out recently approved/removed items so they don't reappear
+      // due to backend processing lag.
+      final filteredDrivers = data.pendingDrivers.results
+          .where((d) => !_recentlyRemovedDriverIds.contains(d.id))
+          .toList();
+      final filteredRestaurants = data.pendingRestaurants.results
+          .where((r) => !_recentlyRemovedRestaurantIds.contains(r.id))
+          .toList();
+
+      // Clear IDs that the backend has already processed (no longer in response)
+      final serverDriverIds =
+          data.pendingDrivers.results.map((d) => d.id).toSet();
+      _recentlyRemovedDriverIds.removeWhere((id) => !serverDriverIds.contains(id));
+      final serverRestaurantIds =
+          data.pendingRestaurants.results.map((r) => r.id).toSet();
+      _recentlyRemovedRestaurantIds.removeWhere((id) => !serverRestaurantIds.contains(id));
+
+      _homeData = HomeResponse(
+        driversWithLocations: data.driversWithLocations,
+        restaurants: data.restaurants,
+        pendingDrivers: PaginatedResponse(
+          count: data.pendingDrivers.count -
+              (data.pendingDrivers.results.length - filteredDrivers.length),
+          next: data.pendingDrivers.next,
+          previous: data.pendingDrivers.previous,
+          results: filteredDrivers,
+        ),
+        pendingRestaurants: PaginatedResponse(
+          count: data.pendingRestaurants.count -
+              (data.pendingRestaurants.results.length - filteredRestaurants.length),
+          next: data.pendingRestaurants.next,
+          previous: data.pendingRestaurants.previous,
+          results: filteredRestaurants,
+        ),
+        ordersCountByStatus: data.ordersCountByStatus,
+        driversCount: data.driversCount,
+      );
       _error = null;
       debugPrint('[AdminProvider] Silent home refresh OK — '
           '${drivers.length} drivers, '
@@ -224,6 +265,7 @@ class AdminProvider extends ChangeNotifier {
   }
 
   void _removePendingDriver(int driverId) {
+    _recentlyRemovedDriverIds.add(driverId);
     if (_homeData == null) return;
     final updated = _homeData!.pendingDrivers.results
         .where((d) => d.id != driverId)
@@ -245,6 +287,7 @@ class AdminProvider extends ChangeNotifier {
   }
 
   void _removePendingRestaurant(int restaurantId) {
+    _recentlyRemovedRestaurantIds.add(restaurantId);
     if (_homeData == null) return;
     final updated = _homeData!.pendingRestaurants.results
         .where((r) => r.id != restaurantId)
@@ -350,6 +393,8 @@ class AdminProvider extends ChangeNotifier {
     _ticketsError = null;
     _selectedTicket = null;
     _ticketDetailLoading = false;
+    _recentlyRemovedDriverIds.clear();
+    _recentlyRemovedRestaurantIds.clear();
     notifyListeners();
   }
 

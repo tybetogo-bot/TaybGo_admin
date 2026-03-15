@@ -213,7 +213,7 @@ class _DriversTab extends StatelessWidget {
         return ListView.separated(
           itemCount: drivers.length,
           separatorBuilder: (_, _) => const SizedBox(height: 12),
-          itemBuilder: (_, i) => _DriverCard(driver: drivers[i]),
+          itemBuilder: (_, i) => _DriverCard(key: ValueKey(drivers[i].id), driver: drivers[i]),
         );
       }
       return GridView.builder(
@@ -224,7 +224,7 @@ class _DriversTab extends StatelessWidget {
           mainAxisExtent: 180,
         ),
         itemCount: drivers.length,
-        itemBuilder: (_, i) => _DriverCard(driver: drivers[i]),
+        itemBuilder: (_, i) => _DriverCard(key: ValueKey(drivers[i].id), driver: drivers[i]),
       );
     });
   }
@@ -232,7 +232,7 @@ class _DriversTab extends StatelessWidget {
 
 class _DriverCard extends StatefulWidget {
   final PendingDriver driver;
-  const _DriverCard({required this.driver});
+  const _DriverCard({super.key, required this.driver});
 
   @override
   State<_DriverCard> createState() => _DriverCardState();
@@ -424,7 +424,7 @@ class _RestaurantsTab extends StatelessWidget {
           itemCount: restaurants.length,
           separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (_, i) =>
-              _RestaurantCard(restaurant: restaurants[i]),
+              _RestaurantCard(key: ValueKey(restaurants[i].id), restaurant: restaurants[i]),
         );
       }
       return GridView.builder(
@@ -436,7 +436,7 @@ class _RestaurantsTab extends StatelessWidget {
         ),
         itemCount: restaurants.length,
         itemBuilder: (_, i) =>
-            _RestaurantCard(restaurant: restaurants[i]),
+            _RestaurantCard(key: ValueKey(restaurants[i].id), restaurant: restaurants[i]),
       );
     });
   }
@@ -444,7 +444,7 @@ class _RestaurantsTab extends StatelessWidget {
 
 class _RestaurantCard extends StatefulWidget {
   final PendingRestaurant restaurant;
-  const _RestaurantCard({required this.restaurant});
+  const _RestaurantCard({super.key, required this.restaurant});
 
   @override
   State<_RestaurantCard> createState() => _RestaurantCardState();

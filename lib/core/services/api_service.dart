@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../config/env_config.dart';
 import '../models/home_response.dart';
 import '../models/support_ticket.dart';
 
 class ApiService {
-  // TODO: Update this to your actual API base URL
-  static const String baseUrl = 'https://taybgo.com';
+  String get baseUrl => EnvConfig.baseUrl;
 
   final http.Client _client;
   String? _authToken;

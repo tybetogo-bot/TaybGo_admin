@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'core/config/env_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
 import 'core/providers/auth_provider.dart';
@@ -11,6 +12,13 @@ import 'core/l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Default to prod if main.dart is run directly
+  try {
+    EnvConfig.baseUrl;
+  } catch (_) {
+    EnvConfig.init(env: Environment.prod);
+  }
 
   final apiService = ApiService();
   final authProvider = AuthProvider(apiService: apiService);
@@ -64,7 +72,7 @@ class _TaybGoAdminAppState extends State<TaybGoAdminApp> {
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
           return MaterialApp.router(
-            title: 'TaybGo Admin',
+            title: EnvConfig.appName,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,

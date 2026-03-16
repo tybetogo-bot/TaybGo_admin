@@ -23,97 +23,147 @@ Platform management dashboard for the TaybGo delivery ecosystem. Built with Flut
 | Maps | flutter_map + latlong2 (OpenStreetMap) |
 | Storage | SharedPreferences |
 | Analytics | Firebase Analytics |
+| Hosting | Firebase Hosting |
 | Renderer | SkWasm (WebAssembly) |
 
 ## Project Structure
 
 ```
 lib/
-├── main.dart
+├── main.dart                # Default entry point (falls back to prod)
+├── main_dev.dart            # Dev entry point → https://dev.taybgo.com
+├── main_prod.dart           # Prod entry point → https://taybgo.com
 ├── core/
-│   ├── l10n/           # Localization (5 languages)
-│   ├── models/         # Driver, Restaurant, SupportTicket, OrderStats
-│   ├── providers/      # AuthProvider, AdminProvider, SettingsProvider
-│   ├── router/         # GoRouter config with auth guards
-│   ├── services/       # API client with Bearer token auth
-│   └── theme/          # Colors, spacing, typography, light/dark themes
+│   ├── config/          # Environment configuration (dev/prod)
+│   ├── l10n/            # Localization (5 languages)
+│   ├── models/          # Driver, Restaurant, SupportTicket, HomeResponse, etc.
+│   ├── providers/       # AuthProvider, AdminProvider, SettingsProvider
+│   ├── router/          # GoRouter config with auth guards
+│   ├── services/        # API client with Bearer token auth
+│   ├── theme/           # Colors, spacing, typography, light/dark themes
+│   └── utils/           # Utility helpers
 └── features/
-    ├── auth/           # Sign-in + OTP verification
-    ├── shell/          # Responsive nav shell (sidebar >= 640px, bottom nav < 640px)
-    ├── dashboard/      # Stats cards, order chart, fleet status, attention items
-    ├── approvals/      # Pending drivers & restaurants tabs
-    ├── drivers/        # Driver list + map view with markers
-    ├── support/        # Ticket list, detail view, threaded messages
-    └── profile/        # Theme & language settings
+    ├── auth/            # Sign-in + OTP verification
+    ├── shell/           # Responsive nav shell (sidebar ≥ 640px, bottom nav < 640px)
+    ├── dashboard/       # Stats cards, order chart, fleet status, attention items
+    ├── approvals/       # Pending drivers & restaurants tabs with detail screens
+    ├── drivers/         # Driver list + map view with markers
+    ├── support/         # Ticket list, detail view, threaded messages
+    └── profile/         # Theme & language settings
 ```
+
+## Environments
+
+The app supports two environments with separate entry points and Android flavors:
+
+| Environment | App Name | Base URL | App ID |
+|---|---|---|---|
+| **dev** | Admin Dev | `https://dev.taybgo.com` | `com.example.taybgoadmin.dev` |
+| **prod** | TaybGo Admin | `https://taybgo.com` | `com.example.taybgoadmin` |
+
+Both flavors can be installed side-by-side on the same device.
 
 ## Getting Started
 
 ```bash
 # Install dependencies
 flutter pub get
-
-# Run on Chrome
-flutter run -d chrome
-
-# Run on any web browser
-flutter run -d web-server --web-port 8080
 ```
 
-## Web Build
+### Run
 
 ```bash
-# Production build (wasm, ~6.5 MB)
-flutter build web --release --wasm
+# Dev environment
+flutter run -t lib/main_dev.dart --flavor dev
+
+# Prod environment
+flutter run -t lib/main_prod.dart --flavor prod
+
+# Web (no flavor needed)
+flutter run -d chrome -t lib/main_dev.dart
+flutter run -d chrome -t lib/main_prod.dart
 ```
 
-### Build Optimization
+### VS Code
 
-The production build targets modern browsers only (Chrome 119+, Firefox 120+, Edge 119+) using WebAssembly. Post-build cleanup to strip debug artifacts and redundant renderer variants:
+Use the pre-configured launch configurations in `.vscode/launch.json`. Open the **Run and Debug** panel and select **Dev** or **Prod** from the dropdown.
+
+## Build
+
+### Android
+
+```bash
+# Dev APK
+flutter build apk -t lib/main_dev.dart --flavor dev
+
+# Prod APK
+flutter build apk -t lib/main_prod.dart --flavor prod
+
+# Prod App Bundle (for Play Store)
+flutter build appbundle -t lib/main_prod.dart --flavor prod
+```
+
+### iOS
+
+```bash
+# Dev
+flutter build ios -t lib/main_dev.dart --flavor dev
+
+# Prod
+flutter build ios -t lib/main_prod.dart --flavor prod
+```
+
+### Web
+
+```bash
+# Production build (wasm)
+flutter build web --release --wasm -t lib/main_prod.dart
+```
+
+#### Build Optimization
+
+The production build targets modern browsers only (Chrome 119+, Firefox 120+, Edge 119+) using WebAssembly. Post-build cleanup to strip debug artifacts:
 
 ```bash
 cd build/web
-
-# Remove debug symbols
 find canvaskit -name "*.js.symbols" -delete
-
-# Remove license notices
 rm -f assets/NOTICES
-
-# Remove unused renderer variants
 rm -f canvaskit/skwasm_heavy.*
 rm -f canvaskit/canvaskit.wasm canvaskit/canvaskit.js
-
-# Remove JS fallback (wasm-only)
 rm -f main.dart.js
 rm -rf canvaskit/chromium
 ```
 
-### Deploy
+## Deploy
 
 ```bash
+# Deploy web to Firebase Hosting
 firebase deploy --only hosting
 ```
 
 ## API
 
-All requests go to `https://taybgo.com` with Bearer token auth.
+Requests are sent to the configured environment base URL with Bearer token auth.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | POST | `/api/auth/otp/request/` | Request OTP |
-| POST | `/api/auth/otp/verify/` | Verify OTP, receive tokens |
-| GET | `/api/admin/home/` | Dashboard stats |
+| POST | `/api/auth/otp/verify/` | Verify OTP, receive JWT tokens |
+| GET | `/api/admin/home/` | Dashboard stats (drivers, restaurants, orders, pending) |
+| GET | `/api/admin/drivers/verification-queue/` | Pending driver applications |
 | POST | `/api/admin/drivers/{id}/verify/` | Approve/reject driver |
 | POST | `/api/admin/restaurants/{id}/activate/` | Activate restaurant |
 | GET | `/api/admin/support/tickets/` | List tickets (paginated) |
 | GET | `/api/admin/support/tickets/{id}/` | Ticket detail |
+| PATCH | `/api/admin/support/tickets/{id}/` | Update ticket status/priority |
 | POST | `/api/admin/support/tickets/{id}/messages/` | Reply to ticket |
+| GET | `/api/me/` | Current user profile |
+| GET | `/api/customer/restaurants/{id}/` | Restaurant detail |
 
 ## Responsive Breakpoints
 
 | Viewport | Layout |
 |---|---|
 | < 640px | Bottom navigation, card lists, single column |
-| 640 - 960px | Sidebar, flexible grid |
-| >= 960px | Expanded sidebar, multi-column grids, table views |
+| 640 – 960px | Collapsed sidebar, flexible grid |
+| ≥ 960px | Expanded sidebar, multi-column grids, table views |

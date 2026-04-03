@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:http/http.dart' as http;
 import '../config/env_config.dart';
 import '../models/home_response.dart';
@@ -9,6 +10,7 @@ class ApiService {
 
   final http.Client _client;
   String? _authToken;
+  VoidCallback? onUnauthorized;
 
   ApiService({http.Client? client}) : _client = client ?? http.Client();
 
@@ -21,10 +23,15 @@ class ApiService {
   }
 
   Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+  };
+
+  Never _throwUnauthorized() {
+    onUnauthorized?.call();
+    throw const ApiException('Unauthorized', 401);
+  }
 
   Future<Map<String, dynamic>> requestOtp(String phone) async {
     final uri = Uri.parse('$baseUrl/api/auth/otp/request/');
@@ -61,16 +68,14 @@ class ApiService {
       };
     } else {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw ApiException(
-        body['detail'] ?? 'Invalid OTP',
-        response.statusCode,
-      );
+      throw ApiException(body['detail'] ?? 'Invalid OTP', response.statusCode);
     }
   }
 
   /// Approve or reject a driver.
   /// [status] should be "APPROVED" or "REJECTED".
-  Future<void> verifyDriver(int driverId, {
+  Future<void> verifyDriver(
+    int driverId, {
     required String status,
     String? notes,
   }) async {
@@ -85,9 +90,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) return;
-    if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
-    }
+    if (response.statusCode == 401) _throwUnauthorized();
     String detail = 'Failed to verify driver';
     try {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -99,15 +102,13 @@ class ApiService {
   /// Activate a restaurant so it appears to customers and accepts orders.
   Future<void> activateRestaurant(int restaurantId) async {
     final uri = Uri.parse(
-        '$baseUrl/api/admin/restaurants/$restaurantId/activate/');
+      '$baseUrl/api/admin/restaurants/$restaurantId/activate/',
+    );
     final response = await _client.post(uri, headers: _headers);
 
     if (response.statusCode == 200) return;
-    if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
-    }
-    throw ApiException(
-        'Failed to activate restaurant', response.statusCode);
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw ApiException('Failed to activate restaurant', response.statusCode);
   }
 
   /// Fetch the driver verification queue with full profile details.
@@ -117,22 +118,117 @@ class ApiService {
     final params = <String, String>{};
     if (page != null) params['page'] = '$page';
 
-    final uri =
-        Uri.parse('$baseUrl/api/admin/drivers/verification-queue/').replace(
-      queryParameters: params.isNotEmpty ? params : null,
-    );
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/drivers/verification-queue/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
 
     final response = await _client.get(uri, headers: _headers);
 
     if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      return PaginatedResponse.fromJson(json, DriverProfile.fromJson);
+      final decoded = jsonDecode(response.body);
+      return _parseVerificationQueueResponse(decoded);
     } else if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
+      _throwUnauthorized();
     } else {
       throw ApiException(
-          'Failed to load verification queue', response.statusCode);
+        'Failed to load verification queue',
+        response.statusCode,
+      );
     }
+  }
+
+  PaginatedResponse<DriverProfile> _parseVerificationQueueResponse(
+    dynamic decoded,
+  ) {
+    final page = _extractVerificationQueuePage(decoded);
+    return PaginatedResponse(
+      count: _asInt(page.count) ?? page.results.length,
+      next: _asNullableString(page.next),
+      previous: _asNullableString(page.previous),
+      results: page.results,
+    );
+  }
+
+  _VerificationQueuePage _extractVerificationQueuePage(dynamic decoded) {
+    if (decoded is List) {
+      final results = _asDriverProfiles(decoded);
+      return _VerificationQueuePage(
+        count: results.length,
+        next: null,
+        previous: null,
+        results: results,
+      );
+    }
+
+    if (decoded is! Map) {
+      throw const FormatException(
+        'Unexpected verification queue response type',
+      );
+    }
+
+    final json = Map<String, dynamic>.from(decoded);
+    final nestedData = json['data'];
+
+    if (nestedData is Map) {
+      final nestedMap = Map<String, dynamic>.from(nestedData);
+      if (nestedMap['results'] is List) {
+        return _extractVerificationQueuePage(nestedMap);
+      }
+    }
+
+    final listCandidate =
+        json['results'] ??
+        json['items'] ??
+        json['drivers'] ??
+        json['queue'] ??
+        (nestedData is List ? nestedData : null);
+
+    if (listCandidate is List) {
+      final results = _asDriverProfiles(listCandidate);
+      return _VerificationQueuePage(
+        count: json['count'],
+        next: json['next'],
+        previous: json['previous'],
+        results: results,
+      );
+    }
+
+    if (_looksLikeDriverProfile(json)) {
+      return _VerificationQueuePage(
+        count: 1,
+        next: null,
+        previous: null,
+        results: [DriverProfile.fromJson(json)],
+      );
+    }
+
+    throw const FormatException('Unexpected verification queue response shape');
+  }
+
+  List<DriverProfile> _asDriverProfiles(List<dynamic> raw) {
+    return raw
+        .whereType<Map>()
+        .map((item) => DriverProfile.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  bool _looksLikeDriverProfile(Map<String, dynamic> json) {
+    return json.containsKey('id') ||
+        json.containsKey('driver_id') ||
+        json.containsKey('name') ||
+        json.containsKey('driver_name') ||
+        json.containsKey('driver');
+  }
+
+  int? _asInt(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  String? _asNullableString(dynamic value) {
+    final text = value?.toString();
+    if (text == null || text.isEmpty || text == 'null') return null;
+    return text;
   }
 
   Future<HomeResponse> getHome({
@@ -190,9 +286,9 @@ class ApiService {
       params['restaurants_page_size'] = '$restaurantsPageSize';
     }
 
-    final uri = Uri.parse('$baseUrl/api/admin/home/').replace(
-      queryParameters: params.isNotEmpty ? params : null,
-    );
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/home/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
 
     final response = await _client.get(uri, headers: _headers);
 
@@ -200,12 +296,9 @@ class ApiService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return HomeResponse.fromJson(json);
     } else if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
+      _throwUnauthorized();
     } else {
-      throw ApiException(
-        'Failed to load dashboard data',
-        response.statusCode,
-      );
+      throw ApiException('Failed to load dashboard data', response.statusCode);
     }
   }
 
@@ -215,37 +308,37 @@ class ApiService {
     final params = <String, String>{};
     if (page != null) params['page'] = '$page';
 
-    final uri = Uri.parse('$baseUrl/api/admin/support/tickets/').replace(
-      queryParameters: params.isNotEmpty ? params : null,
-    );
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/support/tickets/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
 
     final response = await _client.get(uri, headers: _headers);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
+      _throwUnauthorized();
     } else {
       throw ApiException('Failed to load tickets', response.statusCode);
     }
   }
 
   Future<SupportTicket> getTicket(int ticketId) async {
-    final uri =
-        Uri.parse('$baseUrl/api/admin/support/tickets/$ticketId/');
+    final uri = Uri.parse('$baseUrl/api/admin/support/tickets/$ticketId/');
     final response = await _client.get(uri, headers: _headers);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return SupportTicket.fromJson(json);
     } else if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
+      _throwUnauthorized();
     } else {
       throw ApiException('Failed to load ticket', response.statusCode);
     }
   }
 
-  Future<SupportTicket> updateTicket(int ticketId, {
+  Future<SupportTicket> updateTicket(
+    int ticketId, {
     String? status,
     String? priority,
     int? assignedToId,
@@ -255,8 +348,7 @@ class ApiService {
     if (priority != null) body['priority'] = priority;
     if (assignedToId != null) body['assigned_to_id'] = assignedToId;
 
-    final uri =
-        Uri.parse('$baseUrl/api/admin/support/tickets/$ticketId/');
+    final uri = Uri.parse('$baseUrl/api/admin/support/tickets/$ticketId/');
     final response = await _client.patch(
       uri,
       headers: _headers,
@@ -267,17 +359,19 @@ class ApiService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return SupportTicket.fromJson(json);
     } else if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
+      _throwUnauthorized();
     } else {
       throw ApiException('Failed to update ticket', response.statusCode);
     }
   }
 
-  Future<TicketMessage> addTicketMessage(int ticketId, {
+  Future<TicketMessage> addTicketMessage(
+    int ticketId, {
     required String body,
   }) async {
     final uri = Uri.parse(
-        '$baseUrl/api/admin/support/tickets/$ticketId/messages/');
+      '$baseUrl/api/admin/support/tickets/$ticketId/messages/',
+    );
     final response = await _client.post(
       uri,
       headers: _headers,
@@ -288,7 +382,7 @@ class ApiService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return TicketMessage.fromJson(json);
     } else if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
+      _throwUnauthorized();
     } else {
       throw ApiException('Failed to send message', response.statusCode);
     }
@@ -303,7 +397,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else if (response.statusCode == 401) {
-      throw ApiException('Unauthorized', response.statusCode);
+      _throwUnauthorized();
     } else {
       throw ApiException('Failed to load profile', response.statusCode);
     }
@@ -325,6 +419,20 @@ class ApiService {
   void dispose() {
     _client.close();
   }
+}
+
+class _VerificationQueuePage {
+  final dynamic count;
+  final dynamic next;
+  final dynamic previous;
+  final List<DriverProfile> results;
+
+  const _VerificationQueuePage({
+    required this.count,
+    required this.next,
+    required this.previous,
+    required this.results,
+  });
 }
 
 class ApiException implements Exception {

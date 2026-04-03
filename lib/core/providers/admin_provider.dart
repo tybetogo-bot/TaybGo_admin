@@ -36,7 +36,7 @@ class AdminProvider extends ChangeNotifier {
   final Set<int> _recentlyRemovedRestaurantIds = {};
 
   AdminProvider({ApiService? apiService})
-      : _apiService = apiService ?? ApiService();
+    : _apiService = apiService ?? ApiService();
 
   // ─── State getters ──────────────────────────────────────────────
 
@@ -51,8 +51,7 @@ class AdminProvider extends ChangeNotifier {
 
   int get driversTotal => _homeData?.driversWithLocations.count ?? 0;
 
-  List<HomeRestaurant> get restaurants =>
-      _homeData?.restaurants.results ?? [];
+  List<HomeRestaurant> get restaurants => _homeData?.restaurants.results ?? [];
 
   int get restaurantsTotal => _homeData?.restaurants.count ?? 0;
 
@@ -64,8 +63,7 @@ class AdminProvider extends ChangeNotifier {
   List<PendingRestaurant> get pendingRestaurants =>
       _homeData?.pendingRestaurants.results ?? [];
 
-  int get pendingRestaurantsTotal =>
-      _homeData?.pendingRestaurants.count ?? 0;
+  int get pendingRestaurantsTotal => _homeData?.pendingRestaurants.count ?? 0;
 
   Map<String, int> get ordersCountByStatus =>
       _homeData?.ordersCountByStatus ?? {};
@@ -106,7 +104,9 @@ class AdminProvider extends ChangeNotifier {
 
   void startPolling() {
     stopPolling();
-    debugPrint('[AdminProvider] Starting polling (every ${_pollInterval.inSeconds}s)');
+    debugPrint(
+      '[AdminProvider] Starting polling (every ${_pollInterval.inSeconds}s)',
+    );
     _pollTimer = Timer.periodic(_pollInterval, (_) {
       debugPrint('[AdminProvider] Poll tick — refreshing home + tickets');
       _silentRefreshHome();
@@ -137,26 +137,35 @@ class AdminProvider extends ChangeNotifier {
           .toList();
 
       // Clear IDs that the backend has already processed (no longer in response)
-      final serverDriverIds =
-          data.pendingDrivers.results.map((d) => d.id).toSet();
-      _recentlyRemovedDriverIds.removeWhere((id) => !serverDriverIds.contains(id));
-      final serverRestaurantIds =
-          data.pendingRestaurants.results.map((r) => r.id).toSet();
-      _recentlyRemovedRestaurantIds.removeWhere((id) => !serverRestaurantIds.contains(id));
+      final serverDriverIds = data.pendingDrivers.results
+          .map((d) => d.id)
+          .toSet();
+      _recentlyRemovedDriverIds.removeWhere(
+        (id) => !serverDriverIds.contains(id),
+      );
+      final serverRestaurantIds = data.pendingRestaurants.results
+          .map((r) => r.id)
+          .toSet();
+      _recentlyRemovedRestaurantIds.removeWhere(
+        (id) => !serverRestaurantIds.contains(id),
+      );
 
       _homeData = HomeResponse(
         driversWithLocations: data.driversWithLocations,
         restaurants: data.restaurants,
         pendingDrivers: PaginatedResponse(
-          count: data.pendingDrivers.count -
+          count:
+              data.pendingDrivers.count -
               (data.pendingDrivers.results.length - filteredDrivers.length),
           next: data.pendingDrivers.next,
           previous: data.pendingDrivers.previous,
           results: filteredDrivers,
         ),
         pendingRestaurants: PaginatedResponse(
-          count: data.pendingRestaurants.count -
-              (data.pendingRestaurants.results.length - filteredRestaurants.length),
+          count:
+              data.pendingRestaurants.count -
+              (data.pendingRestaurants.results.length -
+                  filteredRestaurants.length),
           next: data.pendingRestaurants.next,
           previous: data.pendingRestaurants.previous,
           results: filteredRestaurants,
@@ -165,10 +174,12 @@ class AdminProvider extends ChangeNotifier {
         driversCount: data.driversCount,
       );
       _error = null;
-      debugPrint('[AdminProvider] Silent home refresh OK — '
-          '${drivers.length} drivers, '
-          '$restaurantsTotal restaurants, '
-          '$totalOrders orders');
+      debugPrint(
+        '[AdminProvider] Silent home refresh OK — '
+        '${drivers.length} drivers, '
+        '$restaurantsTotal restaurants, '
+        '$totalOrders orders',
+      );
       notifyListeners();
     } on ApiException catch (e) {
       debugPrint('[AdminProvider] Silent home refresh FAILED: ${e.message}');
@@ -182,15 +193,18 @@ class AdminProvider extends ChangeNotifier {
     try {
       final json = await _apiService.getTickets();
       _ticketsTotal = json['count'] ?? 0;
-      _tickets = (json['results'] as List<dynamic>?)
+      _tickets =
+          (json['results'] as List<dynamic>?)
               ?.map((e) => SupportTicket.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [];
       _ticketsError = null;
-      debugPrint('[AdminProvider] Silent tickets refresh OK — '
-          '$_ticketsTotal total, '
-          '${openTickets.length} open, '
-          '${inProgressTickets.length} in-progress');
+      debugPrint(
+        '[AdminProvider] Silent tickets refresh OK — '
+        '$_ticketsTotal total, '
+        '${openTickets.length} open, '
+        '${inProgressTickets.length} in-progress',
+      );
       notifyListeners();
     } on ApiException catch (e) {
       debugPrint('[AdminProvider] Silent tickets refresh FAILED: ${e.message}');
@@ -218,26 +232,34 @@ class AdminProvider extends ChangeNotifier {
         orderType: orderType,
       );
       _error = null;
-      debugPrint('[AdminProvider] fetchHome() SUCCESS — '
-          'drivers: ${drivers.length}, '
-          'restaurants: $restaurantsTotal, '
-          'orders: $totalOrders, '
-          'pending drivers: $pendingDriversTotal, '
-          'pending restaurants: $pendingRestaurantsTotal, '
-          'online: ${driversCount.online}, '
-          'offline: ${driversCount.offline}');
+      debugPrint(
+        '[AdminProvider] fetchHome() SUCCESS — '
+        'drivers: ${drivers.length}, '
+        'restaurants: $restaurantsTotal, '
+        'orders: $totalOrders, '
+        'pending drivers: $pendingDriversTotal, '
+        'pending restaurants: $pendingRestaurantsTotal, '
+        'online: ${driversCount.online}, '
+        'offline: ${driversCount.offline}',
+      );
       for (final d in drivers) {
-        debugPrint('[AdminProvider]   Driver: id=${d.id}, name="${d.name}", '
-            'phone="${d.phone}", online=${d.isOnline}, '
-            'lat=${d.latitude}, lng=${d.longitude}');
+        debugPrint(
+          '[AdminProvider]   Driver: id=${d.id}, name="${d.name}", '
+          'phone="${d.phone}", online=${d.isOnline}, '
+          'lat=${d.latitude}, lng=${d.longitude}',
+        );
       }
       for (final r in restaurants) {
-        debugPrint('[AdminProvider]   Restaurant: id=${r.id}, name="${r.name}", '
-            'status="${r.status}", active=${r.isActive}');
+        debugPrint(
+          '[AdminProvider]   Restaurant: id=${r.id}, name="${r.name}", '
+          'status="${r.status}", active=${r.isActive}',
+        );
       }
     } on ApiException catch (e) {
       _error = e.message;
-      debugPrint('[AdminProvider] fetchHome() FAILED: ${e.message} (${e.statusCode})');
+      debugPrint(
+        '[AdminProvider] fetchHome() FAILED: ${e.message} (${e.statusCode})',
+      );
     } catch (e) {
       _error = 'Connection error. Please try again.';
       debugPrint('[AdminProvider] fetchHome() ERROR: $e');
@@ -254,46 +276,169 @@ class AdminProvider extends ChangeNotifier {
 
   // ─── Driver profile detail ──────────────────────────────────────
 
-  Future<void> fetchDriverProfile(int driverId, {String? driverName}) async {
-    debugPrint('[AdminProvider] fetchDriverProfile() driverId=$driverId, name=$driverName');
+  Future<void> fetchDriverProfile(
+    int driverId, {
+    String? driverName,
+    String? driverPhone,
+  }) async {
+    debugPrint(
+      '[AdminProvider] fetchDriverProfile() '
+      'driverId=$driverId, name=$driverName, phone=$driverPhone',
+    );
     _driverProfileLoading = true;
-    _driverProfile = null;
+    final fallback = _buildCachedDriverProfile(
+      driverId,
+      driverName: driverName,
+      driverPhone: driverPhone,
+    );
+    _driverProfile = fallback;
     notifyListeners();
 
     try {
-      // Paginate through the verification queue to find the driver
       var page = 1;
       while (true) {
         final queue = await _apiService.getVerificationQueue(page: page);
         for (final d in queue.results) {
-          debugPrint('[AdminProvider]   queue driver: id=${d.id}, name="${d.name}"');
+          debugPrint(
+            '[AdminProvider]   queue driver: '
+            'id=${d.id}, name="${d.name}", phone="${d.phone}"',
+          );
         }
-        // Match by queue ID first
-        _driverProfile =
-            queue.results.where((d) => d.id == driverId).firstOrNull;
-        // Then try matching by exact name (only if unique match)
-        if (_driverProfile == null && driverName != null && driverName.isNotEmpty) {
-          final nameMatches =
-              queue.results.where((d) => d.name == driverName).toList();
-          if (nameMatches.length == 1) {
-            _driverProfile = nameMatches.first;
-          }
-          debugPrint('[AdminProvider]   name match for "$driverName": ${nameMatches.length} results');
+        final match = queue.results
+            .where(
+              (d) => _matchesRequestedDriver(
+                d,
+                driverId,
+                driverName: driverName,
+                driverPhone: driverPhone,
+              ),
+            )
+            .firstOrNull;
+        if (match != null) {
+          _driverProfile = fallback != null
+              ? match.mergeFallback(fallback)
+              : match;
         }
-        if (_driverProfile != null || queue.next == null) break;
+        if (match != null || queue.next == null) break;
         page++;
       }
-      debugPrint('[AdminProvider] fetchDriverProfile() '
-          '${_driverProfile != null ? 'FOUND (queue id=${_driverProfile!.id})' : 'NOT FOUND'} '
-          '(searched $page pages)');
+      debugPrint(
+        '[AdminProvider] fetchDriverProfile() '
+        '${_driverProfile != null ? 'FOUND (queue id=${_driverProfile!.id})' : 'NOT FOUND'} '
+        '(searched $page pages)',
+      );
     } on ApiException catch (e) {
-      debugPrint('[AdminProvider] fetchDriverProfile() queue FAILED: ${e.message}');
+      debugPrint(
+        '[AdminProvider] fetchDriverProfile() queue FAILED: ${e.message}',
+      );
     } catch (e) {
       debugPrint('[AdminProvider] fetchDriverProfile() queue ERROR: $e');
     }
 
     _driverProfileLoading = false;
     notifyListeners();
+  }
+
+  DriverProfile? _buildCachedDriverProfile(
+    int driverId, {
+    String? driverName,
+    String? driverPhone,
+  }) {
+    final pending = pendingDrivers
+        .where(
+          (d) => _matchesDriverIdentity(
+            candidateId: d.id,
+            candidateName: d.name,
+            candidatePhone: d.phone,
+            requestedId: driverId,
+            requestedName: driverName,
+            requestedPhone: driverPhone,
+          ),
+        )
+        .firstOrNull;
+    if (pending != null) {
+      return DriverProfile.fromPendingDriver(pending);
+    }
+
+    final liveDriver = drivers
+        .where(
+          (d) => _matchesDriverIdentity(
+            candidateId: d.id,
+            candidateName: d.name,
+            candidatePhone: d.phone,
+            requestedId: driverId,
+            requestedName: driverName,
+            requestedPhone: driverPhone,
+          ),
+        )
+        .firstOrNull;
+    if (liveDriver != null) {
+      return DriverProfile.fromDriverWithLocation(liveDriver);
+    }
+
+    return null;
+  }
+
+  bool _matchesRequestedDriver(
+    DriverProfile profile,
+    int driverId, {
+    String? driverName,
+    String? driverPhone,
+  }) {
+    return _matchesDriverIdentity(
+      candidateId: profile.id,
+      candidateName: profile.name,
+      candidatePhone: profile.phone,
+      requestedId: driverId,
+      requestedName: driverName,
+      requestedPhone: driverPhone,
+    );
+  }
+
+  bool _matchesDriverIdentity({
+    required int candidateId,
+    String? candidateName,
+    String? candidatePhone,
+    required int requestedId,
+    String? requestedName,
+    String? requestedPhone,
+  }) {
+    if (candidateId != 0 && candidateId == requestedId) return true;
+
+    final requestedPhoneNormalized = _normalizePhone(requestedPhone);
+    final candidatePhoneNormalized = _normalizePhone(candidatePhone);
+    if (requestedPhoneNormalized != null &&
+        requestedPhoneNormalized == candidatePhoneNormalized) {
+      return true;
+    }
+
+    final requestedNameNormalized = _normalizeName(requestedName);
+    final candidateNameNormalized = _normalizeName(candidateName);
+    if (requestedNameNormalized == null ||
+        candidateNameNormalized != requestedNameNormalized) {
+      return false;
+    }
+
+    if (requestedPhoneNormalized == null || candidatePhoneNormalized == null) {
+      return true;
+    }
+
+    return requestedPhoneNormalized == candidatePhoneNormalized;
+  }
+
+  String? _normalizePhone(String? value) {
+    if (value == null) return null;
+    final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
+    return digitsOnly.isEmpty ? null : digitsOnly;
+  }
+
+  String? _normalizeName(String? value) {
+    if (value == null) return null;
+    final normalized = value.trim().toLowerCase().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
+    return normalized.isEmpty ? null : normalized;
   }
 
   void clearDriverProfile() {
@@ -303,21 +448,26 @@ class AdminProvider extends ChangeNotifier {
 
   // ─── Approval actions ────────────────────────────────────────────
 
-  Future<void> verifyDriver(int driverId, {
+  Future<void> verifyDriver(
+    int driverId, {
     required String status,
     String? notes,
   }) async {
     debugPrint('[AdminProvider] verifyDriver() id=$driverId, status=$status');
     await _apiService.verifyDriver(driverId, status: status, notes: notes);
     _removePendingDriver(driverId);
-    debugPrint('[AdminProvider] verifyDriver() SUCCESS — removed from pending list');
+    debugPrint(
+      '[AdminProvider] verifyDriver() SUCCESS — removed from pending list',
+    );
   }
 
   Future<void> activateRestaurant(int restaurantId) async {
     debugPrint('[AdminProvider] activateRestaurant() id=$restaurantId');
     await _apiService.activateRestaurant(restaurantId);
     _removePendingRestaurant(restaurantId);
-    debugPrint('[AdminProvider] activateRestaurant() SUCCESS — removed from pending list');
+    debugPrint(
+      '[AdminProvider] activateRestaurant() SUCCESS — removed from pending list',
+    );
   }
 
   void _removePendingDriver(int driverId) {
@@ -375,25 +525,32 @@ class AdminProvider extends ChangeNotifier {
     try {
       final json = await _apiService.getTickets(page: page);
       _ticketsTotal = json['count'] ?? 0;
-      _tickets = (json['results'] as List<dynamic>?)
+      _tickets =
+          (json['results'] as List<dynamic>?)
               ?.map((e) => SupportTicket.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [];
       _ticketsError = null;
-      debugPrint('[AdminProvider] fetchTickets() SUCCESS — '
-          'total: $_ticketsTotal, '
-          'open: ${openTickets.length}, '
-          'in-progress: ${inProgressTickets.length}, '
-          'resolved: ${resolvedTickets.length}, '
-          'closed: ${closedTickets.length}');
+      debugPrint(
+        '[AdminProvider] fetchTickets() SUCCESS — '
+        'total: $_ticketsTotal, '
+        'open: ${openTickets.length}, '
+        'in-progress: ${inProgressTickets.length}, '
+        'resolved: ${resolvedTickets.length}, '
+        'closed: ${closedTickets.length}',
+      );
       for (final t in _tickets) {
-        debugPrint('[AdminProvider]   Ticket #${t.id}: "${t.subject}" '
-            '[${t.status}] [${t.priority}] category=${t.category}, '
-            'requester="${t.requesterName}"');
+        debugPrint(
+          '[AdminProvider]   Ticket #${t.id}: "${t.subject}" '
+          '[${t.status}] [${t.priority}] category=${t.category}, '
+          'requester="${t.requesterName}"',
+        );
       }
     } on ApiException catch (e) {
       _ticketsError = e.message;
-      debugPrint('[AdminProvider] fetchTickets() FAILED: ${e.message} (${e.statusCode})');
+      debugPrint(
+        '[AdminProvider] fetchTickets() FAILED: ${e.message} (${e.statusCode})',
+      );
     } catch (e) {
       _ticketsError = 'Connection error. Please try again.';
       debugPrint('[AdminProvider] fetchTickets() ERROR: $e');
@@ -410,17 +567,23 @@ class AdminProvider extends ChangeNotifier {
 
     try {
       _selectedTicket = await _apiService.getTicket(ticketId);
-      debugPrint('[AdminProvider] fetchTicketDetail() SUCCESS — '
-          'Ticket #${_selectedTicket!.id}: "${_selectedTicket!.subject}" '
-          '[${_selectedTicket!.status}] [${_selectedTicket!.priority}] '
-          'messages: ${_selectedTicket!.messages.length}');
+      debugPrint(
+        '[AdminProvider] fetchTicketDetail() SUCCESS — '
+        'Ticket #${_selectedTicket!.id}: "${_selectedTicket!.subject}" '
+        '[${_selectedTicket!.status}] [${_selectedTicket!.priority}] '
+        'messages: ${_selectedTicket!.messages.length}',
+      );
       for (final m in _selectedTicket!.messages) {
-        debugPrint('[AdminProvider]   Message #${m.id} by "${m.authorName}" '
-            '(${m.authorRole}): "${m.body.length > 80 ? '${m.body.substring(0, 80)}...' : m.body}"');
+        debugPrint(
+          '[AdminProvider]   Message #${m.id} by "${m.authorName}" '
+          '(${m.authorRole}): "${m.body.length > 80 ? '${m.body.substring(0, 80)}...' : m.body}"',
+        );
       }
     } on ApiException catch (e) {
       _ticketsError = e.message;
-      debugPrint('[AdminProvider] fetchTicketDetail() FAILED: ${e.message} (${e.statusCode})');
+      debugPrint(
+        '[AdminProvider] fetchTicketDetail() FAILED: ${e.message} (${e.statusCode})',
+      );
     } catch (e) {
       _ticketsError = 'Connection error. Please try again.';
       debugPrint('[AdminProvider] fetchTicketDetail() ERROR: $e');
@@ -455,7 +618,9 @@ class AdminProvider extends ChangeNotifier {
   }
 
   Future<void> updateTicketStatus(int ticketId, String newStatus) async {
-    debugPrint('[AdminProvider] updateTicketStatus() ticketId=$ticketId, newStatus=$newStatus');
+    debugPrint(
+      '[AdminProvider] updateTicketStatus() ticketId=$ticketId, newStatus=$newStatus',
+    );
     final updated = await _apiService.updateTicket(ticketId, status: newStatus);
     // Update in list
     _tickets = _tickets.map((t) => t.id == ticketId ? updated : t).toList();
@@ -463,17 +628,23 @@ class AdminProvider extends ChangeNotifier {
     if (_selectedTicket?.id == ticketId) {
       _selectedTicket = updated;
     }
-    debugPrint('[AdminProvider] updateTicketStatus() SUCCESS — '
-        'Ticket #${updated.id} now ${updated.status}');
+    debugPrint(
+      '[AdminProvider] updateTicketStatus() SUCCESS — '
+      'Ticket #${updated.id} now ${updated.status}',
+    );
     notifyListeners();
   }
 
   Future<void> addTicketReply(int ticketId, String body) async {
-    debugPrint('[AdminProvider] addTicketReply() ticketId=$ticketId, '
-        'body="${body.length > 60 ? '${body.substring(0, 60)}...' : body}"');
+    debugPrint(
+      '[AdminProvider] addTicketReply() ticketId=$ticketId, '
+      'body="${body.length > 60 ? '${body.substring(0, 60)}...' : body}"',
+    );
     final message = await _apiService.addTicketMessage(ticketId, body: body);
-    debugPrint('[AdminProvider] addTicketReply() SUCCESS — '
-        'Message #${message.id} by "${message.authorName}"');
+    debugPrint(
+      '[AdminProvider] addTicketReply() SUCCESS — '
+      'Message #${message.id} by "${message.authorName}"',
+    );
     // Append message to selected ticket detail
     if (_selectedTicket?.id == ticketId) {
       _selectedTicket = SupportTicket(

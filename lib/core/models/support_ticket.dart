@@ -120,7 +120,9 @@ class TicketMessage {
     );
   }
 
-  bool get isAdmin => authorRole == 'ADMIN';
+  bool get isAdmin => authorRole == 'ADMIN' || authorRole == 'STAFF';
+  bool get isSeller => authorRole == 'SELLER' || authorRole == 'RESTAURANT';
+  bool get isCustomer => !isAdmin && !isSeller;
 }
 
 class TicketAttachment {

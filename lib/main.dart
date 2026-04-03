@@ -22,6 +22,7 @@ void main() async {
 
   final apiService = ApiService();
   final authProvider = AuthProvider(apiService: apiService);
+  apiService.onUnauthorized = () => authProvider.signOut();
   final settingsProvider = SettingsProvider();
   await Future.wait([
     authProvider.tryRestoreSession(),

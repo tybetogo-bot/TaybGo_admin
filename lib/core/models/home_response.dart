@@ -19,7 +19,8 @@ class PaginatedResponse<T> {
       count: json['count'] ?? 0,
       next: json['next'],
       previous: json['previous'],
-      results: (json['results'] as List<dynamic>?)
+      results:
+          (json['results'] as List<dynamic>?)
               ?.map((e) => fromJsonT(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -142,20 +143,28 @@ class DriverProfile {
   final String? email;
   final String name;
   final String status;
+  final String? phone;
   final String vehicleType;
-  final bool acceptsFood;
-  final bool acceptsShipping;
-  final bool acceptsTaxi;
+  final bool? acceptsFood;
+  final bool? acceptsShipping;
+  final bool? acceptsTaxi;
   final String? drivingLicense;
   final String? idDocument;
   final String? otherDocuments;
   final DateTime? createdAt;
+  final DateTime? submittedAt;
+  final bool? isOnline;
+  final String? latitude;
+  final String? longitude;
+  final DateTime? locationUpdatedAt;
+  final bool hasExtendedDetails;
 
   const DriverProfile({
     required this.id,
     this.email,
     required this.name,
     required this.status,
+    this.phone,
     required this.vehicleType,
     required this.acceptsFood,
     required this.acceptsShipping,
@@ -164,31 +173,209 @@ class DriverProfile {
     this.idDocument,
     this.otherDocuments,
     this.createdAt,
+    this.submittedAt,
+    this.isOnline,
+    this.latitude,
+    this.longitude,
+    this.locationUpdatedAt,
+    this.hasExtendedDetails = false,
   });
 
+  bool get hasLocation =>
+      latitude != null &&
+      latitude!.isNotEmpty &&
+      longitude != null &&
+      longitude!.isNotEmpty;
+
+  bool get hasServiceDetails =>
+      acceptsFood != null || acceptsShipping != null || acceptsTaxi != null;
+
+  bool get hasDocuments =>
+      drivingLicense != null || idDocument != null || otherDocuments != null;
+
+  DriverProfile mergeFallback(DriverProfile fallback) {
+    return DriverProfile(
+      id: id != 0 ? id : fallback.id,
+      email: email ?? fallback.email,
+      name: name.isNotEmpty ? name : fallback.name,
+      status: status.isNotEmpty ? status : fallback.status,
+      phone: phone ?? fallback.phone,
+      vehicleType: vehicleType.isNotEmpty ? vehicleType : fallback.vehicleType,
+      acceptsFood: acceptsFood ?? fallback.acceptsFood,
+      acceptsShipping: acceptsShipping ?? fallback.acceptsShipping,
+      acceptsTaxi: acceptsTaxi ?? fallback.acceptsTaxi,
+      drivingLicense: drivingLicense ?? fallback.drivingLicense,
+      idDocument: idDocument ?? fallback.idDocument,
+      otherDocuments: otherDocuments ?? fallback.otherDocuments,
+      createdAt: createdAt ?? fallback.createdAt,
+      submittedAt: submittedAt ?? fallback.submittedAt,
+      isOnline: isOnline ?? fallback.isOnline,
+      latitude: latitude ?? fallback.latitude,
+      longitude: longitude ?? fallback.longitude,
+      locationUpdatedAt: locationUpdatedAt ?? fallback.locationUpdatedAt,
+      hasExtendedDetails: hasExtendedDetails || fallback.hasExtendedDetails,
+    );
+  }
+
+  factory DriverProfile.fromPendingDriver(PendingDriver driver) {
+    return DriverProfile(
+      id: driver.id,
+      name: driver.name,
+      status: driver.status,
+      phone: driver.phone,
+      vehicleType: '',
+      acceptsFood: null,
+      acceptsShipping: null,
+      acceptsTaxi: null,
+      submittedAt: driver.submittedAt,
+    );
+  }
+
+  factory DriverProfile.fromDriverWithLocation(DriverWithLocation driver) {
+    return DriverProfile(
+      id: driver.id,
+      name: driver.name,
+      status: driver.isOnline ? 'ONLINE' : 'OFFLINE',
+      phone: driver.phone,
+      vehicleType: '',
+      acceptsFood: null,
+      acceptsShipping: null,
+      acceptsTaxi: null,
+      isOnline: driver.isOnline,
+      latitude: driver.latitude,
+      longitude: driver.longitude,
+      locationUpdatedAt: driver.locationUpdatedAt,
+    );
+  }
+
   factory DriverProfile.fromJson(Map<String, dynamic> json) {
-    // API returns empty strings for missing documents/email — treat as null
     String? nullIfEmpty(dynamic v) {
       if (v == null) return null;
-      final s = v.toString();
+      final s = v.toString().trim();
       return s.isEmpty ? null : s;
     }
 
+    bool? parseBool(dynamic v) {
+      if (v == null) return null;
+      if (v is bool) return v;
+      if (v is num) return v != 0;
+      final s = v.toString().trim().toLowerCase();
+      if (s == 'true' || s == '1' || s == 'yes') return true;
+      if (s == 'false' || s == '0' || s == 'no') return false;
+      return null;
+    }
+
+    DateTime? parseDate(dynamic v) {
+      if (v == null) return null;
+      return DateTime.tryParse(v.toString());
+    }
+
+    int parseId(dynamic v) {
+      if (v is num) return v.toInt();
+      return int.tryParse(v?.toString() ?? '') ?? 0;
+    }
+
+    final rawDriver = json['driver'];
+    final driver = rawDriver is Map
+        ? Map<String, dynamic>.from(rawDriver)
+        : const <String, dynamic>{};
+    final rawVehicle = json['vehicle'];
+    final vehicle = rawVehicle is Map
+        ? Map<String, dynamic>.from(rawVehicle)
+        : const <String, dynamic>{};
+    final rawDocuments = json['documents'];
+    final documents = rawDocuments is Map
+        ? Map<String, dynamic>.from(rawDocuments)
+        : const <String, dynamic>{};
+    final rawServices = json['service_types'];
+    final services = rawServices is Map
+        ? Map<String, dynamic>.from(rawServices)
+        : const <String, dynamic>{};
+
+    final firstName =
+        nullIfEmpty(json['first_name']) ?? nullIfEmpty(driver['first_name']);
+    final lastName =
+        nullIfEmpty(json['last_name']) ?? nullIfEmpty(driver['last_name']);
+    final fullName =
+        nullIfEmpty(json['name']) ??
+        nullIfEmpty(json['full_name']) ??
+        nullIfEmpty(json['driver_name']) ??
+        nullIfEmpty(driver['name']) ??
+        nullIfEmpty(driver['full_name']) ??
+        [firstName, lastName].whereType<String>().join(' ').trim();
+
     return DriverProfile(
-      id: json['id'] ?? 0,
-      email: nullIfEmpty(json['email']),
-      name: json['name'] ?? '',
-      status: json['status'] ?? 'PENDING',
-      vehicleType: json['vehicle_type'] ?? '',
-      acceptsFood: json['accepts_food'] ?? false,
-      acceptsShipping: json['accepts_shipping'] ?? false,
-      acceptsTaxi: json['accepts_taxi'] ?? false,
-      drivingLicense: nullIfEmpty(json['driving_license']),
-      idDocument: nullIfEmpty(json['id_document']),
-      otherDocuments: nullIfEmpty(json['other_documents']),
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'])
-          : null,
+      id: parseId(json['id'] ?? json['driver_id'] ?? driver['id']),
+      email: nullIfEmpty(json['email'] ?? driver['email']),
+      name: fullName,
+      status:
+          (nullIfEmpty(
+                    json['status'] ??
+                        json['approval_status'] ??
+                        driver['status'],
+                  ) ??
+                  'PENDING')
+              .toUpperCase(),
+      phone: nullIfEmpty(
+        json['phone'] ??
+            json['phone_number'] ??
+            json['driver_phone'] ??
+            driver['phone'] ??
+            driver['phone_number'],
+      ),
+      vehicleType:
+          nullIfEmpty(
+            json['vehicle_type'] ??
+                json['vehicleType'] ??
+                vehicle['type'] ??
+                vehicle['vehicle_type'] ??
+                (rawVehicle is String ? rawVehicle : null),
+          ) ??
+          '',
+      acceptsFood: parseBool(
+        json['accepts_food'] ??
+            services['accepts_food'] ??
+            services['food'] ??
+            json['food_enabled'],
+      ),
+      acceptsShipping: parseBool(
+        json['accepts_shipping'] ??
+            services['accepts_shipping'] ??
+            services['shipping'] ??
+            json['shipping_enabled'],
+      ),
+      acceptsTaxi: parseBool(
+        json['accepts_taxi'] ??
+            services['accepts_taxi'] ??
+            services['taxi'] ??
+            json['taxi_enabled'],
+      ),
+      drivingLicense: nullIfEmpty(
+        json['driving_license'] ??
+            documents['driving_license'] ??
+            documents['license'],
+      ),
+      idDocument: nullIfEmpty(
+        json['id_document'] ??
+            documents['id_document'] ??
+            documents['identity_document'],
+      ),
+      otherDocuments: nullIfEmpty(
+        json['other_documents'] ??
+            documents['other_documents'] ??
+            documents['other'],
+      ),
+      createdAt: parseDate(
+        json['created_at'] ?? json['registered_at'] ?? driver['created_at'],
+      ),
+      submittedAt: parseDate(json['submitted_at']),
+      isOnline: parseBool(json['is_online'] ?? driver['is_online']),
+      latitude: nullIfEmpty(json['latitude'] ?? driver['latitude']),
+      longitude: nullIfEmpty(json['longitude'] ?? driver['longitude']),
+      locationUpdatedAt: parseDate(
+        json['location_updated_at'] ?? driver['location_updated_at'],
+      ),
+      hasExtendedDetails: true,
     );
   }
 }
@@ -248,9 +435,10 @@ class HomeResponse {
         PendingRestaurant.fromJson,
       ),
       ordersCountByStatus:
-          (json['orders_count_by_status'] as Map<String, dynamic>?)
-                  ?.map((k, v) => MapEntry(k, (v as num).toInt())) ??
-              {},
+          (json['orders_count_by_status'] as Map<String, dynamic>?)?.map(
+            (k, v) => MapEntry(k, (v as num).toInt()),
+          ) ??
+          {},
       driversCount: DriversCount.fromJson(
         json['drivers_count'] ?? {'online': 0, 'offline': 0},
       ),

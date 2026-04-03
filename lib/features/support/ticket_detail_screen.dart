@@ -18,6 +18,7 @@ class TicketDetailScreen extends StatefulWidget {
 class _TicketDetailScreenState extends State<TicketDetailScreen> {
   final _replyCtrl = TextEditingController();
   bool _sending = false;
+  bool _detailsExpanded = false;
   String? _restaurantName;
 
   @override
@@ -179,7 +180,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     );
   }
 
-  // ─── Details: clean key-value section ──────────────────────────
+  // ─── Details: collapsible key-value section ────────────────────
 
   Widget _buildDetails(
       SupportTicket t, ThemeData theme, AppLocalizations l) {
@@ -188,7 +189,6 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
@@ -196,46 +196,94 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
       ),
       child: Column(
         children: [
-          _detailRow(Icons.person_outline, l.requester, t.requesterName,
-              theme: theme),
-          if (restaurantDisplay != null) ...[
-            _divider(theme),
-            _detailRow(Icons.restaurant_outlined, l.relatedRestaurant,
-                restaurantDisplay,
-                theme: theme),
-          ],
-          if (t.driver != null) ...[
-            _divider(theme),
-            _detailRow(
-                Icons.local_shipping_outlined,
-                l.relatedDriver,
-                t.driverName ?? '#${t.driver}',
-                theme: theme),
-          ],
-          if (t.order != null) ...[
-            _divider(theme),
-            _detailRow(Icons.receipt_long_outlined, l.relatedOrder,
-                '#${t.order}',
-                theme: theme),
-          ],
-          if (t.assignedTo != null) ...[
-            _divider(theme),
-            _detailRow(
-                Icons.support_agent_rounded,
-                l.assignedTo,
-                t.assignedToName ?? '#${t.assignedTo}',
-                theme: theme, valueColor: AppColors.primary),
-          ],
-          _divider(theme),
-          _detailRow(Icons.access_time_outlined, l.created,
-              _formatDate(t.createdAt),
-              theme: theme),
-          if (t.closedAt != null) ...[
-            _divider(theme),
-            _detailRow(Icons.check_circle_outline, l.closedAt,
-                _formatDate(t.closedAt!),
-                theme: theme),
-          ],
+          InkWell(
+            onTap: () => setState(() => _detailsExpanded = !_detailsExpanded),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 15,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                  const SizedBox(width: 8),
+                  Text(l.requester,
+                      style: TextStyle(
+                          fontSize: 12.5,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.45))),
+                  const SizedBox(width: 6),
+                  Text(t.requesterName,
+                      style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.8))),
+                  const Spacer(),
+                  AnimatedRotation(
+                    turns: _detailsExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(Icons.keyboard_arrow_down_rounded,
+                        size: 18,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.35)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  _divider(theme),
+                  if (restaurantDisplay != null) ...[
+                    _detailRow(Icons.restaurant_outlined, l.relatedRestaurant,
+                        restaurantDisplay,
+                        theme: theme),
+                    _divider(theme),
+                  ],
+                  if (t.driver != null) ...[
+                    _detailRow(
+                        Icons.local_shipping_outlined,
+                        l.relatedDriver,
+                        t.driverName ?? '#${t.driver}',
+                        theme: theme),
+                    _divider(theme),
+                  ],
+                  if (t.order != null) ...[
+                    _detailRow(Icons.receipt_long_outlined, l.relatedOrder,
+                        '#${t.order}',
+                        theme: theme),
+                    _divider(theme),
+                  ],
+                  if (t.assignedTo != null) ...[
+                    _detailRow(
+                        Icons.support_agent_rounded,
+                        l.assignedTo,
+                        t.assignedToName ?? '#${t.assignedTo}',
+                        theme: theme, valueColor: AppColors.primary),
+                    _divider(theme),
+                  ],
+                  _detailRow(Icons.access_time_outlined, l.created,
+                      _formatDate(t.createdAt),
+                      theme: theme),
+                  if (t.closedAt != null) ...[
+                    _divider(theme),
+                    _detailRow(Icons.check_circle_outline, l.closedAt,
+                        _formatDate(t.closedAt!),
+                        theme: theme),
+                  ],
+                ],
+              ),
+            ),
+            crossFadeState: _detailsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
         ],
       ),
     );
@@ -456,6 +504,24 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   }
 }
 
+// ─── Role colors ─────────────────────────────────────────────────
+
+const _adminColor = AppColors.primary;
+const _sellerColor = Color(0xFFFF8F00); // amber
+const _customerColor = AppColors.info;
+
+Color _roleColor(TicketMessage m) {
+  if (m.isAdmin) return _adminColor;
+  if (m.isSeller) return _sellerColor;
+  return _customerColor;
+}
+
+IconData _roleIcon(TicketMessage m) {
+  if (m.isAdmin) return Icons.support_agent_rounded;
+  if (m.isSeller) return Icons.storefront_rounded;
+  return Icons.person_rounded;
+}
+
 // ─── Message Bubble ───────────────────────────────────────────────
 
 class _MessageBubble extends StatelessWidget {
@@ -466,6 +532,7 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isAdmin = message.isAdmin;
+    final color = _roleColor(message);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -480,13 +547,10 @@ class _MessageBubble extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.07),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.person_rounded,
-                  size: 15,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.35)),
+              child: Icon(_roleIcon(message), size: 15, color: color),
             ),
             const SizedBox(width: 8),
           ],
@@ -494,15 +558,9 @@ class _MessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isAdmin
-                    ? AppColors.primary.withValues(alpha: 0.07)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.03),
-                borderRadius:
-                    BorderRadius.circular(AppSpacing.radiusMedium),
-                border: isAdmin
-                    ? Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.12))
-                    : Border.all(color: theme.dividerColor),
+                color: color.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+                border: Border.all(color: color.withValues(alpha: 0.12)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,9 +573,7 @@ class _MessageBubble extends StatelessWidget {
                             style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: isAdmin
-                                    ? AppColors.primary
-                                    : theme.colorScheme.onSurface),
+                                color: color),
                             overflow: TextOverflow.ellipsis),
                       ),
                       const SizedBox(width: 6),
@@ -525,20 +581,14 @@ class _MessageBubble extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: isAdmin
-                              ? AppColors.primary.withValues(alpha: 0.12)
-                              : theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.06),
+                          color: color.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(message.authorRole,
                             style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
-                                color: isAdmin
-                                    ? AppColors.primary
-                                    : theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.45))),
+                                color: color)),
                       ),
                       const SizedBox(width: 8),
                       Text(_fmtTime(message.createdAt),
@@ -598,14 +648,11 @@ class _MessageBubble extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  AppColors.primary.withValues(alpha: 0.18),
-                  AppColors.primary.withValues(alpha: 0.06),
-                ]),
+                color: _adminColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.support_agent_rounded,
-                  size: 15, color: AppColors.primary),
+                  size: 15, color: _adminColor),
             ),
           ],
         ],

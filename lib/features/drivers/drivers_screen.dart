@@ -8,6 +8,7 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/models/home_response.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/city_locator.dart';
+import '../approvals/driver_request_detail_screen.dart';
 
 class DriversScreen extends StatefulWidget {
   const DriversScreen({super.key});
@@ -32,8 +33,10 @@ class _DriversScreenState extends State<DriversScreen> {
       debugPrint('[DriversScreen] No home data cached — fetching');
       Future.microtask(() => admin.fetchHome());
     } else {
-      debugPrint('[DriversScreen] Using cached data — '
-          '${admin.drivers.length} drivers');
+      debugPrint(
+        '[DriversScreen] Using cached data — '
+        '${admin.drivers.length} drivers',
+      );
     }
   }
 
@@ -71,12 +74,16 @@ class _DriversScreenState extends State<DriversScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        l.driversScreenSub(driversCounts.total,
-                            driversCounts.online, driversCounts.offline),
+                        l.driversScreenSub(
+                          driversCounts.total,
+                          driversCounts.online,
+                          driversCounts.offline,
+                        ),
                         style: TextStyle(
                           fontSize: 14,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ],
@@ -135,9 +142,13 @@ class _DriversScreenState extends State<DriversScreen> {
                     style: const TextStyle(fontSize: 13),
                     decoration: InputDecoration(
                       hintText: l.searchByNameOrPhone,
-                      prefixIcon: Icon(Icons.search, size: 18,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.35)),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        size: 18,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.35,
+                        ),
+                      ),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -186,12 +197,14 @@ class _DriversScreenState extends State<DriversScreen> {
             Expanded(
               child: _showMap
                   ? _buildMap(filtered, theme, l)
-                  : LayoutBuilder(builder: (context, constraints) {
-                      if (constraints.maxWidth < 620) {
-                        return _buildCardList(filtered, theme, l);
-                      }
-                      return _buildTable(filtered, theme, l);
-                    }),
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        if (constraints.maxWidth < 620) {
+                          return _buildCardList(filtered, theme, l);
+                        }
+                        return _buildTable(filtered, theme, l);
+                      },
+                    ),
             ),
           ],
         ),
@@ -249,7 +262,10 @@ class _DriversScreenState extends State<DriversScreen> {
   // ─── Region Dropdown ─────────────────────────────────────────
 
   Widget _buildRegionDropdown(
-      List<DriverWithLocation> allDrivers, ThemeData theme, AppLocalizations l) {
+    List<DriverWithLocation> allDrivers,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     final cityEntries = _buildCityEntries(allDrivers);
     if (cityEntries.isEmpty) return const SizedBox.shrink();
 
@@ -272,12 +288,17 @@ class _DriversScreenState extends State<DriversScreen> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedCityKey ?? '_all',
-          icon: Icon(Icons.arrow_drop_down, size: 18,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+          icon: Icon(
+            Icons.arrow_drop_down,
+            size: 18,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+          ),
           isDense: true,
           style: TextStyle(
             fontSize: 12,
-            fontWeight: _selectedCityKey != null ? FontWeight.w600 : FontWeight.w400,
+            fontWeight: _selectedCityKey != null
+                ? FontWeight.w600
+                : FontWeight.w400,
             color: _selectedCityKey != null
                 ? AppColors.primary
                 : theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -288,8 +309,11 @@ class _DriversScreenState extends State<DriversScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.public_rounded, size: 14,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                  Icon(
+                    Icons.public_rounded,
+                    size: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
                   const SizedBox(width: 6),
                   Text(l.allRegions),
                 ],
@@ -304,8 +328,11 @@ class _DriversScreenState extends State<DriversScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.location_on_rounded, size: 14,
-                        color: AppColors.primary.withValues(alpha: 0.5)),
+                    Icon(
+                      Icons.location_on_rounded,
+                      size: 14,
+                      color: AppColors.primary.withValues(alpha: 0.5),
+                    ),
                     const SizedBox(width: 6),
                     Text(label),
                     const SizedBox(width: 4),
@@ -313,7 +340,9 @@ class _DriversScreenState extends State<DriversScreen> {
                       '(${entry.count})',
                       style: TextStyle(
                         fontSize: 11,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.35,
+                        ),
                       ),
                     ),
                   ],
@@ -352,7 +381,10 @@ class _DriversScreenState extends State<DriversScreen> {
   // ─── Map View ─────────────────────────────────────────────────
 
   Widget _buildMap(
-      List<DriverWithLocation> filtered, ThemeData theme, AppLocalizations l) {
+    List<DriverWithLocation> filtered,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     // Collect drivers with valid coordinates
     final driversWithCoords = <_DriverLatLng>[];
     for (final d in filtered) {
@@ -368,13 +400,19 @@ class _DriversScreenState extends State<DriversScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.map_outlined, size: 40,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
+            Icon(
+              Icons.map_outlined,
+              size: 40,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+            ),
             const SizedBox(height: 12),
-            Text(l.noLocationsAvailable,
-                style: TextStyle(
-                    fontSize: 14,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+            Text(
+              l.noLocationsAvailable,
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
           ],
         ),
       );
@@ -382,7 +420,8 @@ class _DriversScreenState extends State<DriversScreen> {
 
     // Compute bounds
     final bounds = LatLngBounds.fromPoints(
-        driversWithCoords.map((d) => d.latLng).toList());
+      driversWithCoords.map((d) => d.latLng).toList(),
+    );
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
@@ -424,7 +463,7 @@ class _DriversScreenState extends State<DriversScreen> {
       width: 120,
       height: 50,
       child: GestureDetector(
-        onTap: () => _showDriverPopup(d, driverLatLng.latLng, theme),
+        onTap: () => _openDriverDetails(d),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -465,10 +504,7 @@ class _DriversScreenState extends State<DriversScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
                 boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.4),
-                    blurRadius: 6,
-                  ),
+                  BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6),
                 ],
               ),
             ),
@@ -478,104 +514,21 @@ class _DriversScreenState extends State<DriversScreen> {
     );
   }
 
-  void _showDriverPopup(
-      DriverWithLocation d, LatLng point, ThemeData theme) {
-    debugPrint('[DriversScreen] Selected driver: '
-        'id=${d.id}, name="${d.name}", phone="${d.phone}", '
-        'online=${d.isOnline}, lat=${d.latitude}, lng=${d.longitude}');
+  void _openDriverDetails(DriverWithLocation d) {
+    debugPrint(
+      '[DriversScreen] Selected driver: '
+      'id=${d.id}, name="${d.name}", phone="${d.phone}", '
+      'online=${d.isOnline}, lat=${d.latitude}, lng=${d.longitude}',
+    );
     final l = AppLocalizations.of(context);
-    final statusColor = d.isOnline ? AppColors.online : AppColors.offline;
-    final statusLabel = d.isOnline ? l.online : l.offline;
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        contentPadding: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                      AppColors.primary.withValues(alpha: 0.12),
-                      AppColors.primary.withValues(alpha: 0.04),
-                    ]),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      d.name
-                          .split(' ')
-                          .map((n) => n.isNotEmpty ? n[0] : '')
-                          .take(2)
-                          .join(),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(d.name,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
-                          )),
-                      const SizedBox(height: 2),
-                      Text(d.phone,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5),
-                          )),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(statusLabel,
-                    style: TextStyle(fontSize: 13, color: statusColor)),
-                const Spacer(),
-                Icon(Icons.location_on_rounded,
-                    size: 14,
-                    color: AppColors.primary.withValues(alpha: 0.6)),
-                const SizedBox(width: 4),
-                Text(
-                  '${d.latitude}, ${d.longitude}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color:
-                        theme.colorScheme.onSurface.withValues(alpha: 0.45),
-                  ),
-                ),
-              ],
-            ),
-          ],
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DriverRequestDetailScreen(
+          driverId: d.id,
+          driverName: d.name,
+          driverPhone: d.phone,
+          showActions: false,
+          pageTitle: l.driver,
         ),
       ),
     );
@@ -584,7 +537,10 @@ class _DriversScreenState extends State<DriversScreen> {
   // ─── List Views ───────────────────────────────────────────────
 
   Widget _buildTable(
-      List<DriverWithLocation> filtered, ThemeData theme, AppLocalizations l) {
+    List<DriverWithLocation> filtered,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     final admin = context.read<AdminProvider>();
 
     return Column(
@@ -594,8 +550,7 @@ class _DriversScreenState extends State<DriversScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(8)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
           ),
           child: Row(
             children: [
@@ -614,8 +569,10 @@ class _DriversScreenState extends State<DriversScreen> {
               ? _emptyState(theme, l, admin.driversCount.total)
               : ListView.builder(
                   itemCount: filtered.length,
-                  itemBuilder: (context, i) =>
-                      _DriverTableRow(driver: filtered[i]),
+                  itemBuilder: (context, i) => _DriverTableRow(
+                    driver: filtered[i],
+                    onTap: () => _openDriverDetails(filtered[i]),
+                  ),
                 ),
         ),
       ],
@@ -623,7 +580,10 @@ class _DriversScreenState extends State<DriversScreen> {
   }
 
   Widget _buildCardList(
-      List<DriverWithLocation> filtered, ThemeData theme, AppLocalizations l) {
+    List<DriverWithLocation> filtered,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     final admin = context.read<AdminProvider>();
     if (filtered.isEmpty) {
       return _emptyState(theme, l, admin.driversCount.total);
@@ -632,7 +592,10 @@ class _DriversScreenState extends State<DriversScreen> {
     return ListView.separated(
       itemCount: filtered.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (_, i) => _DriverCard(driver: filtered[i]),
+      itemBuilder: (_, i) => _DriverCard(
+        driver: filtered[i],
+        onTap: () => _openDriverDetails(filtered[i]),
+      ),
     );
   }
 
@@ -643,17 +606,13 @@ class _DriversScreenState extends State<DriversScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            hasDrivers
-                ? Icons.location_off_rounded
-                : Icons.search_off_rounded,
+            hasDrivers ? Icons.location_off_rounded : Icons.search_off_rounded,
             size: 40,
             color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
           ),
           const SizedBox(height: 12),
           Text(
-            hasDrivers
-                ? l.allDriversOffline
-                : l.noDriversMatchFilters,
+            hasDrivers ? l.allDriversOffline : l.noDriversMatchFilters,
             style: TextStyle(
               fontSize: 14,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
@@ -717,16 +676,16 @@ class _DriversScreenState extends State<DriversScreen> {
     if (_search.isNotEmpty) {
       final q = _search.toLowerCase();
       r = r
-          .where((d) =>
-              d.name.toLowerCase().contains(q) ||
-              d.phone.contains(q))
+          .where((d) => d.name.toLowerCase().contains(q) || d.phone.contains(q))
           .toList();
     }
     if (_selectedCityKey != null) {
       r = r.where((d) => _cityKeyFor(d) == _selectedCityKey).toList();
     }
-    debugPrint('[DriversScreen] Filter: $_filter, search: "$_search", '
-        'city: $_selectedCityKey => ${r.length}/${drivers.length} drivers shown');
+    debugPrint(
+      '[DriversScreen] Filter: $_filter, search: "$_search", '
+      'city: $_selectedCityKey => ${r.length}/${drivers.length} drivers shown',
+    );
     return r;
   }
 
@@ -767,7 +726,11 @@ class _CityEntry {
   final String key;
   final City? city; // null for "_other"
   final int count;
-  const _CityEntry({required this.key, required this.city, required this.count});
+  const _CityEntry({
+    required this.key,
+    required this.city,
+    required this.count,
+  });
 }
 
 // ─── Arrow painter for marker ───────────────────────────────────
@@ -797,8 +760,11 @@ class _MiniStat extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  const _MiniStat(
-      {required this.label, required this.value, required this.color});
+  const _MiniStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -868,7 +834,8 @@ class _Col extends StatelessWidget {
 
 class _DriverTableRow extends StatefulWidget {
   final DriverWithLocation driver;
-  const _DriverTableRow({required this.driver});
+  final VoidCallback onTap;
+  const _DriverTableRow({required this.driver, required this.onTap});
 
   @override
   State<_DriverTableRow> createState() => _DriverTableRowState();
@@ -886,7 +853,8 @@ class _DriverTableRowState extends State<_DriverTableRow> {
     final statusColor = d.isOnline ? AppColors.online : AppColors.offline;
     final statusLabel = d.isOnline ? l.online : l.offline;
 
-    final hasLocation = d.latitude != null &&
+    final hasLocation =
+        d.latitude != null &&
         d.latitude!.isNotEmpty &&
         d.longitude != null &&
         d.longitude!.isNotEmpty;
@@ -894,142 +862,142 @@ class _DriverTableRowState extends State<_DriverTableRow> {
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 100),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            color: _hovered
-                ? theme.colorScheme.onSurface.withValues(alpha: 0.02)
-                : Colors.transparent,
-            child: Row(
-              children: [
-                // Driver info
-                Expanded(
-                  flex: 3,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary.withValues(alpha: 0.12),
-                              AppColors.primary.withValues(alpha: 0.04),
-                            ],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              color: _hovered
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.02)
+                  : Colors.transparent,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primary.withValues(alpha: 0.12),
+                                AppColors.primary.withValues(alpha: 0.04),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Text(
-                            d.name
-                                .split(' ')
-                                .map((n) => n.isNotEmpty ? n[0] : '')
-                                .take(2)
-                                .join(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+                          child: Center(
+                            child: Text(
+                              d.name
+                                  .split(' ')
+                                  .map((n) => n.isNotEmpty ? n[0] : '')
+                                  .take(2)
+                                  .join(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          d.name,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w500,
-                            color: theme.colorScheme.onSurface,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            d.name,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w500,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Status
-                Expanded(
-                  flex: 2,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: statusColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        statusLabel,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.65),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Phone
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    d.phone,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.65),
+                      ],
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-
-                // Location
-                Expanded(
-                  flex: 3,
-                  child: Row(
-                    children: [
-                      Icon(
-                        hasLocation
-                            ? Icons.location_on_rounded
-                            : Icons.location_off_rounded,
-                        size: 14,
-                        color: hasLocation
-                            ? AppColors.primary.withValues(alpha: 0.6)
-                            : theme.colorScheme.onSurface
-                                .withValues(alpha: 0.2),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          hasLocation
-                              ? '${d.latitude}, ${d.longitude}'
-                              : l.noLocation,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5),
+                  Expanded(
+                    flex: 2,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            shape: BoxShape.circle,
                           ),
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          statusLabel,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.65,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      d.phone,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.65,
                         ),
                       ),
-                    ],
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    flex: 3,
+                    child: Row(
+                      children: [
+                        Icon(
+                          hasLocation
+                              ? Icons.location_on_rounded
+                              : Icons.location_off_rounded,
+                          size: 14,
+                          color: hasLocation
+                              ? AppColors.primary.withValues(alpha: 0.6)
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.2,
+                                ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            hasLocation
+                                ? '${d.latitude}, ${d.longitude}'
+                                : l.noLocation,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Divider(color: theme.dividerColor, height: 1),
-        ],
+            Divider(color: theme.dividerColor, height: 1),
+          ],
+        ),
       ),
     );
   }
@@ -1039,7 +1007,8 @@ class _DriverTableRowState extends State<_DriverTableRow> {
 
 class _DriverCard extends StatelessWidget {
   final DriverWithLocation driver;
-  const _DriverCard({required this.driver});
+  final VoidCallback onTap;
+  const _DriverCard({required this.driver, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1050,104 +1019,135 @@ class _DriverCard extends StatelessWidget {
     final statusColor = d.isOnline ? AppColors.online : AppColors.offline;
     final statusLabel = d.isOnline ? l.online : l.offline;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Name + status
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.12),
-                      AppColors.primary.withValues(alpha: 0.04),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.12),
+                        AppColors.primary.withValues(alpha: 0.04),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      d.name
+                          .split(' ')
+                          .map((n) => n.isNotEmpty ? n[0] : '')
+                          .take(2)
+                          .join(),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        d.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        d.phone,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.4,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Center(
-                  child: Text(
-                    d.name
-                        .split(' ')
-                        .map((n) => n.isNotEmpty ? n[0] : '')
-                        .take(2)
-                        .join(),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        statusLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: statusColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      d.name,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      d.phone,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ],
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on_rounded,
+                  size: 14,
+                  color: d.latitude != null && d.longitude != null
+                      ? AppColors.primary.withValues(alpha: 0.6)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.2),
                 ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        shape: BoxShape.circle,
-                      ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    d.latitude != null && d.longitude != null
+                        ? '${d.latitude}, ${d.longitude}'
+                        : l.noLocation,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      statusLabel,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: statusColor,
-                      ),
-                    ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

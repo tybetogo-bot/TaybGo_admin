@@ -3,12 +3,14 @@ class PaginatedResponse<T> {
   final String? next;
   final String? previous;
   final List<T> results;
+  final Object? rawResponse;
 
   const PaginatedResponse({
     required this.count,
     this.next,
     this.previous,
     required this.results,
+    this.rawResponse,
   });
 
   factory PaginatedResponse.fromJson(
@@ -24,40 +26,195 @@ class PaginatedResponse<T> {
               ?.map((e) => fromJsonT(e as Map<String, dynamic>))
               .toList() ??
           [],
+      rawResponse: Map<String, dynamic>.from(json),
     );
   }
 }
 
 class DriverWithLocation {
   final int id;
+  final String? email;
   final String name;
   final String phone;
+  final String status;
   final bool isOnline;
+  final String vehicleType;
+  final bool? acceptsFood;
+  final bool? acceptsShipping;
+  final bool? acceptsTaxi;
+  final String? drivingLicense;
+  final String? idDocument;
+  final String? otherDocuments;
+  final String? carSize;
+  final String? vehiclePlateNumber;
+  final String? vehicleColor;
+  final String? vehicleMake;
+  final String? vehicleModel;
+  final String? vehicleYear;
+  final DateTime? createdAt;
   final String? latitude;
   final String? longitude;
   final DateTime? locationUpdatedAt;
+  final List<DriverDocument> documentItems;
 
   const DriverWithLocation({
     required this.id,
+    this.email,
     required this.name,
     required this.phone,
+    this.status = '',
     required this.isOnline,
+    this.vehicleType = '',
+    this.acceptsFood,
+    this.acceptsShipping,
+    this.acceptsTaxi,
+    this.drivingLicense,
+    this.idDocument,
+    this.otherDocuments,
+    this.carSize,
+    this.vehiclePlateNumber,
+    this.vehicleColor,
+    this.vehicleMake,
+    this.vehicleModel,
+    this.vehicleYear,
+    this.createdAt,
     this.latitude,
     this.longitude,
     this.locationUpdatedAt,
+    this.documentItems = const [],
   });
 
   factory DriverWithLocation.fromJson(Map<String, dynamic> json) {
+    String? nullIfEmpty(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString().trim();
+      return s.isEmpty ? null : s;
+    }
+
+    bool? parseBool(dynamic v) {
+      if (v == null) return null;
+      if (v is bool) return v;
+      if (v is num) return v != 0;
+      final s = v.toString().trim().toLowerCase();
+      if (s == 'true' || s == '1' || s == 'yes') return true;
+      if (s == 'false' || s == '0' || s == 'no') return false;
+      return null;
+    }
+
+    final rawDocuments = json['documents'];
+    final documents = rawDocuments is Map
+        ? Map<String, dynamic>.from(rawDocuments)
+        : const <String, dynamic>{};
+    final rawVehicle = json['vehicle'];
+    final vehicle = rawVehicle is Map
+        ? Map<String, dynamic>.from(rawVehicle)
+        : const <String, dynamic>{};
+    final rawServices = json['service_types'];
+    final services = rawServices is Map
+        ? Map<String, dynamic>.from(rawServices)
+        : const <String, dynamic>{};
+
     return DriverWithLocation(
       id: json['id'] ?? 0,
+      email: nullIfEmpty(json['email']),
       name: json['name'] ?? '',
       phone: json['phone'] ?? '',
+      status: (nullIfEmpty(json['status'] ?? json['approval_status']) ?? '')
+          .toUpperCase(),
       isOnline: json['is_online'] ?? false,
-      latitude: json['latitude'],
-      longitude: json['longitude'],
+      vehicleType:
+          nullIfEmpty(
+            json['vehicle_type'] ??
+                json['vehicleType'] ??
+                vehicle['type'] ??
+                vehicle['vehicle_type'] ??
+                (rawVehicle is String ? rawVehicle : null),
+          ) ??
+          '',
+      acceptsFood: parseBool(
+        json['accepts_food'] ??
+            services['accepts_food'] ??
+            services['food'] ??
+            json['food_enabled'],
+      ),
+      acceptsShipping: parseBool(
+        json['accepts_shipping'] ??
+            services['accepts_shipping'] ??
+            services['shipping'] ??
+            json['shipping_enabled'],
+      ),
+      acceptsTaxi: parseBool(
+        json['accepts_taxi'] ??
+            services['accepts_taxi'] ??
+            services['taxi'] ??
+            json['taxi_enabled'],
+      ),
+      drivingLicense: nullIfEmpty(
+        json['driving_license'] ??
+            documents['driving_license'] ??
+            documents['license'],
+      ),
+      idDocument: nullIfEmpty(
+        json['id_document'] ??
+            documents['id_document'] ??
+            documents['identity_document'],
+      ),
+      otherDocuments: nullIfEmpty(
+        json['other_documents'] ??
+            documents['other_documents'] ??
+            documents['other'],
+      ),
+      carSize: nullIfEmpty(
+        json['car_size'] ??
+            json['carSize'] ??
+            vehicle['car_size'] ??
+            vehicle['carSize'],
+      ),
+      vehiclePlateNumber: nullIfEmpty(
+        json['vehicle_plate_number'] ??
+            json['plate_number'] ??
+            json['vehiclePlateNumber'] ??
+            vehicle['vehicle_plate_number'] ??
+            vehicle['plate_number'] ??
+            vehicle['plateNumber'],
+      ),
+      vehicleColor: nullIfEmpty(
+        json['vehicle_color'] ??
+            json['color'] ??
+            json['vehicleColor'] ??
+            vehicle['vehicle_color'] ??
+            vehicle['color'],
+      ),
+      vehicleMake: nullIfEmpty(
+        json['vehicle_make'] ??
+            json['make'] ??
+            json['vehicleMake'] ??
+            vehicle['vehicle_make'] ??
+            vehicle['make'],
+      ),
+      vehicleModel: nullIfEmpty(
+        json['vehicle_model'] ??
+            json['model'] ??
+            json['vehicleModel'] ??
+            vehicle['vehicle_model'] ??
+            vehicle['model'],
+      ),
+      vehicleYear: nullIfEmpty(
+        json['vehicle_year'] ??
+            json['year'] ??
+            json['vehicleYear'] ??
+            vehicle['vehicle_year'] ??
+            vehicle['year'],
+      ),
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      latitude: nullIfEmpty(json['latitude']),
+      longitude: nullIfEmpty(json['longitude']),
       locationUpdatedAt: json['location_updated_at'] != null
           ? DateTime.tryParse(json['location_updated_at'])
           : null,
+      documentItems: _parseDriverDocuments(json, documents),
     );
   }
 }
@@ -138,6 +295,18 @@ class PendingRestaurant {
   }
 }
 
+class DriverDocument {
+  final String key;
+  final String label;
+  final String? url;
+
+  const DriverDocument({
+    required this.key,
+    required this.label,
+    required this.url,
+  });
+}
+
 class DriverProfile {
   final int id;
   final String? email;
@@ -151,12 +320,19 @@ class DriverProfile {
   final String? drivingLicense;
   final String? idDocument;
   final String? otherDocuments;
+  final String? carSize;
+  final String? vehiclePlateNumber;
+  final String? vehicleColor;
+  final String? vehicleMake;
+  final String? vehicleModel;
+  final String? vehicleYear;
   final DateTime? createdAt;
   final DateTime? submittedAt;
   final bool? isOnline;
   final String? latitude;
   final String? longitude;
   final DateTime? locationUpdatedAt;
+  final List<DriverDocument> documentItems;
   final bool hasExtendedDetails;
 
   const DriverProfile({
@@ -172,12 +348,19 @@ class DriverProfile {
     this.drivingLicense,
     this.idDocument,
     this.otherDocuments,
+    this.carSize,
+    this.vehiclePlateNumber,
+    this.vehicleColor,
+    this.vehicleMake,
+    this.vehicleModel,
+    this.vehicleYear,
     this.createdAt,
     this.submittedAt,
     this.isOnline,
     this.latitude,
     this.longitude,
     this.locationUpdatedAt,
+    this.documentItems = const [],
     this.hasExtendedDetails = false,
   });
 
@@ -190,8 +373,20 @@ class DriverProfile {
   bool get hasServiceDetails =>
       acceptsFood != null || acceptsShipping != null || acceptsTaxi != null;
 
+  bool get hasVehicleDetails =>
+      vehicleType.isNotEmpty ||
+      carSize != null ||
+      vehiclePlateNumber != null ||
+      vehicleColor != null ||
+      vehicleMake != null ||
+      vehicleModel != null ||
+      vehicleYear != null;
+
   bool get hasDocuments =>
-      drivingLicense != null || idDocument != null || otherDocuments != null;
+      documentItems.any((doc) => doc.url != null) ||
+      drivingLicense != null ||
+      idDocument != null ||
+      otherDocuments != null;
 
   DriverProfile mergeFallback(DriverProfile fallback) {
     return DriverProfile(
@@ -207,12 +402,22 @@ class DriverProfile {
       drivingLicense: drivingLicense ?? fallback.drivingLicense,
       idDocument: idDocument ?? fallback.idDocument,
       otherDocuments: otherDocuments ?? fallback.otherDocuments,
+      carSize: carSize ?? fallback.carSize,
+      vehiclePlateNumber: vehiclePlateNumber ?? fallback.vehiclePlateNumber,
+      vehicleColor: vehicleColor ?? fallback.vehicleColor,
+      vehicleMake: vehicleMake ?? fallback.vehicleMake,
+      vehicleModel: vehicleModel ?? fallback.vehicleModel,
+      vehicleYear: vehicleYear ?? fallback.vehicleYear,
       createdAt: createdAt ?? fallback.createdAt,
       submittedAt: submittedAt ?? fallback.submittedAt,
       isOnline: isOnline ?? fallback.isOnline,
       latitude: latitude ?? fallback.latitude,
       longitude: longitude ?? fallback.longitude,
       locationUpdatedAt: locationUpdatedAt ?? fallback.locationUpdatedAt,
+      documentItems: _mergeDriverDocuments(
+        documentItems,
+        fallback.documentItems,
+      ),
       hasExtendedDetails: hasExtendedDetails || fallback.hasExtendedDetails,
     );
   }
@@ -227,24 +432,62 @@ class DriverProfile {
       acceptsFood: null,
       acceptsShipping: null,
       acceptsTaxi: null,
+      carSize: null,
+      vehiclePlateNumber: null,
+      vehicleColor: null,
+      vehicleMake: null,
+      vehicleModel: null,
+      vehicleYear: null,
       submittedAt: driver.submittedAt,
+      documentItems: const [],
     );
   }
 
   factory DriverProfile.fromDriverWithLocation(DriverWithLocation driver) {
+    final hasExtendedDetails =
+        driver.vehicleType.isNotEmpty ||
+        driver.acceptsFood != null ||
+        driver.acceptsShipping != null ||
+        driver.acceptsTaxi != null ||
+        driver.drivingLicense != null ||
+        driver.idDocument != null ||
+        driver.otherDocuments != null ||
+        driver.carSize != null ||
+        driver.vehiclePlateNumber != null ||
+        driver.vehicleColor != null ||
+        driver.vehicleMake != null ||
+        driver.vehicleModel != null ||
+        driver.vehicleYear != null ||
+        driver.documentItems.isNotEmpty;
+
     return DriverProfile(
       id: driver.id,
+      email: driver.email,
       name: driver.name,
-      status: driver.isOnline ? 'ONLINE' : 'OFFLINE',
+      status: driver.status.isNotEmpty
+          ? driver.status
+          : (driver.isOnline ? 'ONLINE' : 'OFFLINE'),
       phone: driver.phone,
-      vehicleType: '',
-      acceptsFood: null,
-      acceptsShipping: null,
-      acceptsTaxi: null,
+      vehicleType: driver.vehicleType,
+      acceptsFood: driver.acceptsFood,
+      acceptsShipping: driver.acceptsShipping,
+      acceptsTaxi: driver.acceptsTaxi,
+      drivingLicense: driver.drivingLicense,
+      idDocument: driver.idDocument,
+      otherDocuments: driver.otherDocuments,
+      carSize: driver.carSize,
+      vehiclePlateNumber: driver.vehiclePlateNumber,
+      vehicleColor: driver.vehicleColor,
+      vehicleMake: driver.vehicleMake,
+      vehicleModel: driver.vehicleModel,
+      vehicleYear: driver.vehicleYear,
+      createdAt: driver.createdAt,
       isOnline: driver.isOnline,
       latitude: driver.latitude,
       longitude: driver.longitude,
       locationUpdatedAt: driver.locationUpdatedAt,
+      documentItems: driver.documentItems,
+      hasExtendedDetails: hasExtendedDetails,
     );
   }
 
@@ -287,10 +530,19 @@ class DriverProfile {
     final documents = rawDocuments is Map
         ? Map<String, dynamic>.from(rawDocuments)
         : const <String, dynamic>{};
+    final rawDriverDocuments = driver['documents'];
+    final driverDocuments = rawDriverDocuments is Map
+        ? Map<String, dynamic>.from(rawDriverDocuments)
+        : const <String, dynamic>{};
     final rawServices = json['service_types'];
     final services = rawServices is Map
         ? Map<String, dynamic>.from(rawServices)
         : const <String, dynamic>{};
+    final documentItems = _parseDriverDocuments(
+      json,
+      documents,
+      driverDocuments: driverDocuments,
+    );
 
     final firstName =
         nullIfEmpty(json['first_name']) ?? nullIfEmpty(driver['first_name']);
@@ -332,6 +584,48 @@ class DriverProfile {
                 (rawVehicle is String ? rawVehicle : null),
           ) ??
           '',
+      carSize: nullIfEmpty(
+        json['car_size'] ??
+            json['carSize'] ??
+            vehicle['car_size'] ??
+            vehicle['carSize'],
+      ),
+      vehiclePlateNumber: nullIfEmpty(
+        json['vehicle_plate_number'] ??
+            json['plate_number'] ??
+            json['vehiclePlateNumber'] ??
+            vehicle['vehicle_plate_number'] ??
+            vehicle['plate_number'] ??
+            vehicle['plateNumber'],
+      ),
+      vehicleColor: nullIfEmpty(
+        json['vehicle_color'] ??
+            json['color'] ??
+            json['vehicleColor'] ??
+            vehicle['vehicle_color'] ??
+            vehicle['color'],
+      ),
+      vehicleMake: nullIfEmpty(
+        json['vehicle_make'] ??
+            json['make'] ??
+            json['vehicleMake'] ??
+            vehicle['vehicle_make'] ??
+            vehicle['make'],
+      ),
+      vehicleModel: nullIfEmpty(
+        json['vehicle_model'] ??
+            json['model'] ??
+            json['vehicleModel'] ??
+            vehicle['vehicle_model'] ??
+            vehicle['model'],
+      ),
+      vehicleYear: nullIfEmpty(
+        json['vehicle_year'] ??
+            json['year'] ??
+            json['vehicleYear'] ??
+            vehicle['vehicle_year'] ??
+            vehicle['year'],
+      ),
       acceptsFood: parseBool(
         json['accepts_food'] ??
             services['accepts_food'] ??
@@ -375,9 +669,142 @@ class DriverProfile {
       locationUpdatedAt: parseDate(
         json['location_updated_at'] ?? driver['location_updated_at'],
       ),
+      documentItems: documentItems,
       hasExtendedDetails: true,
     );
   }
+}
+
+List<DriverDocument> _parseDriverDocuments(
+  Map<String, dynamic> json,
+  Map<String, dynamic> documents, {
+  Map<String, dynamic> driverDocuments = const {},
+}) {
+  final items = <DriverDocument>[];
+  final seenKeys = <String>{};
+  const canonicalKeys = <String>[
+    'driving_license',
+    'id_document',
+    'health_insurance_document',
+    'address_document',
+    'bank_document',
+    'other_documents',
+  ];
+
+  void addDocument(String key, dynamic value, {bool allowMissing = false}) {
+    if (seenKeys.contains(key)) return;
+    final url = _extractDocumentUrl(value);
+    if (url == null && !allowMissing) return;
+    seenKeys.add(key);
+    items.add(
+      DriverDocument(key: key, label: _humanizeDocumentKey(key), url: url),
+    );
+  }
+
+  final hasDocumentSignals =
+      documents.isNotEmpty ||
+      driverDocuments.isNotEmpty ||
+      canonicalKeys.any(json.containsKey);
+  if (!hasDocumentSignals) return items;
+
+  for (final key in canonicalKeys) {
+    addDocument(
+      key,
+      json[key] ?? documents[key] ?? driverDocuments[key],
+      allowMissing: true,
+    );
+  }
+
+  for (final entry in documents.entries) {
+    addDocument(entry.key, entry.value);
+  }
+
+  for (final entry in driverDocuments.entries) {
+    addDocument(entry.key, entry.value);
+  }
+
+  return items;
+}
+
+List<DriverDocument> _mergeDriverDocuments(
+  List<DriverDocument> current,
+  List<DriverDocument> fallback,
+) {
+  if (current.isEmpty) return fallback;
+  if (fallback.isEmpty) return current;
+
+  final merged = <DriverDocument>[];
+  final seen = <String>{};
+
+  void addAll(List<DriverDocument> docs) {
+    for (final doc in docs) {
+      if (seen.add(doc.key)) {
+        merged.add(doc);
+      }
+    }
+  }
+
+  addAll(current);
+  addAll(fallback);
+  return merged;
+}
+
+String _humanizeDocumentKey(String key) {
+  final normalized = key.replaceAll(RegExp(r'[_-]+'), ' ').trim();
+  if (normalized.isEmpty) return key;
+
+  return normalized
+      .split(RegExp(r'\s+'))
+      .map((part) {
+        final lower = part.toLowerCase();
+        if (lower == 'id') return 'ID';
+        if (lower == 'url') return 'URL';
+        if (part.length == 1) return part.toUpperCase();
+        return part[0].toUpperCase() + part.substring(1).toLowerCase();
+      })
+      .join(' ');
+}
+
+String? _extractDocumentUrl(dynamic value) {
+  if (value == null) return null;
+
+  if (value is String) {
+    final text = value.trim();
+    return text.isEmpty ? null : text;
+  }
+
+  if (value is Map) {
+    final map = Map<String, dynamic>.from(value);
+    for (final key in const [
+      'url',
+      'file_url',
+      'image_url',
+      'document_url',
+      'path',
+      'link',
+    ]) {
+      final candidate = map[key];
+      final url = _extractDocumentUrl(candidate);
+      if (url != null) return url;
+    }
+
+    for (final candidate in map.values) {
+      final url = _extractDocumentUrl(candidate);
+      if (url != null) return url;
+    }
+    return null;
+  }
+
+  if (value is Iterable) {
+    for (final candidate in value) {
+      final url = _extractDocumentUrl(candidate);
+      if (url != null) return url;
+    }
+    return null;
+  }
+
+  final text = value.toString().trim();
+  return text.isEmpty ? null : text;
 }
 
 class DriversCount {
@@ -403,6 +830,7 @@ class HomeResponse {
   final PaginatedResponse<PendingRestaurant> pendingRestaurants;
   final Map<String, int> ordersCountByStatus;
   final DriversCount driversCount;
+  final Object? rawResponse;
 
   const HomeResponse({
     required this.driversWithLocations,
@@ -411,6 +839,7 @@ class HomeResponse {
     required this.pendingRestaurants,
     required this.ordersCountByStatus,
     required this.driversCount,
+    this.rawResponse,
   });
 
   int get totalOrders =>
@@ -442,6 +871,7 @@ class HomeResponse {
       driversCount: DriversCount.fromJson(
         json['drivers_count'] ?? {'online': 0, 'offline': 0},
       ),
+      rawResponse: Map<String, dynamic>.from(json),
     );
   }
 }

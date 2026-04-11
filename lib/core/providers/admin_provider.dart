@@ -11,6 +11,7 @@ class AdminProvider extends ChangeNotifier {
   HomeResponse? _homeData;
   bool _isLoading = false;
   String? _error;
+  Object? _driverRequestProfileQueueRawResponse;
 
   // ─── Ticket state ──────────────────────────────────────────────
   List<SupportTicket> _tickets = [];
@@ -21,11 +22,18 @@ class AdminProvider extends ChangeNotifier {
   bool _ticketDetailLoading = false;
 
   // ─── Driver profile detail ────────────────────────────────────
+  DriverProfile? get driverProfile => _driverProfile;
+  bool get driverProfileLoading => _driverProfileLoading;
   DriverProfile? _driverProfile;
   bool _driverProfileLoading = false;
 
-  DriverProfile? get driverProfile => _driverProfile;
-  bool get driverProfileLoading => _driverProfileLoading;
+  DriverProfile? _driverRequestProfile;
+  bool _driverRequestProfileLoading = false;
+
+  DriverProfile? get driverRequestProfile => _driverRequestProfile;
+  bool get driverRequestProfileLoading => _driverRequestProfileLoading;
+  Object? get driverRequestProfileQueueRawResponse =>
+      _driverRequestProfileQueueRawResponse;
 
   // ─── Polling ───────────────────────────────────────────────────
   Timer? _pollTimer;
@@ -41,6 +49,7 @@ class AdminProvider extends ChangeNotifier {
   // ─── State getters ──────────────────────────────────────────────
 
   HomeResponse? get homeData => _homeData;
+  Object? get homeRawResponse => _homeData?.rawResponse;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -160,6 +169,7 @@ class AdminProvider extends ChangeNotifier {
           next: data.pendingDrivers.next,
           previous: data.pendingDrivers.previous,
           results: filteredDrivers,
+          rawResponse: data.pendingDrivers.rawResponse,
         ),
         pendingRestaurants: PaginatedResponse(
           count:
@@ -169,9 +179,11 @@ class AdminProvider extends ChangeNotifier {
           next: data.pendingRestaurants.next,
           previous: data.pendingRestaurants.previous,
           results: filteredRestaurants,
+          rawResponse: data.pendingRestaurants.rawResponse,
         ),
         ordersCountByStatus: data.ordersCountByStatus,
         driversCount: data.driversCount,
+        rawResponse: data.rawResponse,
       );
       _error = null;
       debugPrint(
@@ -286,18 +298,69 @@ class AdminProvider extends ChangeNotifier {
       'driverId=$driverId, name=$driverName, phone=$driverPhone',
     );
     _driverProfileLoading = true;
-    final fallback = _buildCachedDriverProfile(
+    _driverProfile = _buildLiveDriverProfile(
       driverId,
       driverName: driverName,
       driverPhone: driverPhone,
     );
-    _driverProfile = fallback;
+    notifyListeners();
+
+    try {
+      if (_driverProfile == null && _homeData == null) {
+        debugPrint(
+          '[AdminProvider] fetchDriverProfile() no cached home data — fetching',
+        );
+        _homeData = await _apiService.getHome();
+        _driverProfile = _buildLiveDriverProfile(
+          driverId,
+          driverName: driverName,
+          driverPhone: driverPhone,
+        );
+      }
+      if (_driverProfile != null) {
+        debugPrint(
+          '[AdminProvider] fetchDriverProfile() FOUND '
+          '(home id=${_driverProfile!.id})',
+        );
+      } else {
+        debugPrint(
+          '[AdminProvider] fetchDriverProfile() NOT FOUND in home data',
+        );
+      }
+    } on ApiException catch (e) {
+      debugPrint('[AdminProvider] fetchDriverProfile() FAILED: ${e.message}');
+    } catch (e) {
+      debugPrint('[AdminProvider] fetchDriverProfile() ERROR: $e');
+    }
+
+    _driverProfileLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> fetchDriverRequestProfile(
+    int driverId, {
+    String? driverName,
+    String? driverPhone,
+  }) async {
+    debugPrint(
+      '[AdminProvider] fetchDriverRequestProfile() '
+      'driverId=$driverId, name=$driverName, phone=$driverPhone',
+    );
+    _driverRequestProfileLoading = true;
+    _driverRequestProfileQueueRawResponse = null;
+    final fallback = _buildPendingDriverProfile(
+      driverId,
+      driverName: driverName,
+      driverPhone: driverPhone,
+    );
+    _driverRequestProfile = fallback;
     notifyListeners();
 
     try {
       var page = 1;
       while (true) {
         final queue = await _apiService.getVerificationQueue(page: page);
+        _driverRequestProfileQueueRawResponse = queue.rawResponse;
         for (final d in queue.results) {
           debugPrint(
             '[AdminProvider]   queue driver: '
@@ -315,7 +378,7 @@ class AdminProvider extends ChangeNotifier {
             )
             .firstOrNull;
         if (match != null) {
-          _driverProfile = fallback != null
+          _driverRequestProfile = fallback != null
               ? match.mergeFallback(fallback)
               : match;
         }
@@ -323,23 +386,23 @@ class AdminProvider extends ChangeNotifier {
         page++;
       }
       debugPrint(
-        '[AdminProvider] fetchDriverProfile() '
-        '${_driverProfile != null ? 'FOUND (queue id=${_driverProfile!.id})' : 'NOT FOUND'} '
+        '[AdminProvider] fetchDriverRequestProfile() '
+        '${_driverRequestProfile != null ? 'FOUND (queue id=${_driverRequestProfile!.id})' : 'NOT FOUND'} '
         '(searched $page pages)',
       );
     } on ApiException catch (e) {
       debugPrint(
-        '[AdminProvider] fetchDriverProfile() queue FAILED: ${e.message}',
+        '[AdminProvider] fetchDriverRequestProfile() queue FAILED: ${e.message}',
       );
     } catch (e) {
-      debugPrint('[AdminProvider] fetchDriverProfile() queue ERROR: $e');
+      debugPrint('[AdminProvider] fetchDriverRequestProfile() queue ERROR: $e');
     }
 
-    _driverProfileLoading = false;
+    _driverRequestProfileLoading = false;
     notifyListeners();
   }
 
-  DriverProfile? _buildCachedDriverProfile(
+  DriverProfile? _buildPendingDriverProfile(
     int driverId, {
     String? driverName,
     String? driverPhone,
@@ -360,6 +423,14 @@ class AdminProvider extends ChangeNotifier {
       return DriverProfile.fromPendingDriver(pending);
     }
 
+    return null;
+  }
+
+  DriverProfile? _buildLiveDriverProfile(
+    int driverId, {
+    String? driverName,
+    String? driverPhone,
+  }) {
     final liveDriver = drivers
         .where(
           (d) => _matchesDriverIdentity(
@@ -446,19 +517,32 @@ class AdminProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearDriverRequestProfile() {
+    _driverRequestProfile = null;
+    _driverRequestProfileQueueRawResponse = null;
+    notifyListeners();
+  }
+
   // ─── Approval actions ────────────────────────────────────────────
 
-  Future<void> verifyDriver(
+  Future<void> updateDriverStatus(
     int driverId, {
     required String status,
     String? notes,
   }) async {
-    debugPrint('[AdminProvider] verifyDriver() id=$driverId, status=$status');
-    await _apiService.verifyDriver(driverId, status: status, notes: notes);
-    _removePendingDriver(driverId);
     debugPrint(
-      '[AdminProvider] verifyDriver() SUCCESS — removed from pending list',
+      '[AdminProvider] updateDriverStatus() id=$driverId, status=$status',
     );
+    await _apiService.updateDriverStatus(
+      driverId,
+      status: status,
+      notes: notes,
+    );
+    if (status == 'APPROVED' || status == 'REJECTED') {
+      _removePendingDriver(driverId);
+    }
+    _updateDriverStatusInState(driverId, status);
+    debugPrint('[AdminProvider] updateDriverStatus() SUCCESS');
   }
 
   Future<void> activateRestaurant(int restaurantId) async {
@@ -484,11 +568,104 @@ class AdminProvider extends ChangeNotifier {
         next: _homeData!.pendingDrivers.next,
         previous: _homeData!.pendingDrivers.previous,
         results: updated,
+        rawResponse: _homeData!.pendingDrivers.rawResponse,
       ),
       pendingRestaurants: _homeData!.pendingRestaurants,
       ordersCountByStatus: _homeData!.ordersCountByStatus,
       driversCount: _homeData!.driversCount,
+      rawResponse: _homeData!.rawResponse,
     );
+    notifyListeners();
+  }
+
+  void _updateDriverStatusInState(int driverId, String status) {
+    final normalizedStatus = status.toUpperCase();
+
+    if (_driverProfile?.id == driverId) {
+      final profile = _driverProfile!;
+      _driverProfile = DriverProfile(
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        status: normalizedStatus,
+        phone: profile.phone,
+        vehicleType: profile.vehicleType,
+        acceptsFood: profile.acceptsFood,
+        acceptsShipping: profile.acceptsShipping,
+        acceptsTaxi: profile.acceptsTaxi,
+        drivingLicense: profile.drivingLicense,
+        idDocument: profile.idDocument,
+        otherDocuments: profile.otherDocuments,
+        carSize: profile.carSize,
+        vehiclePlateNumber: profile.vehiclePlateNumber,
+        vehicleColor: profile.vehicleColor,
+        vehicleMake: profile.vehicleMake,
+        vehicleModel: profile.vehicleModel,
+        vehicleYear: profile.vehicleYear,
+        createdAt: profile.createdAt,
+        submittedAt: profile.submittedAt,
+        isOnline: normalizedStatus == 'SUSPENDED' ? false : profile.isOnline,
+        latitude: profile.latitude,
+        longitude: profile.longitude,
+        locationUpdatedAt: profile.locationUpdatedAt,
+        documentItems: profile.documentItems,
+        hasExtendedDetails: profile.hasExtendedDetails,
+      );
+    }
+
+    if (_homeData != null) {
+      final updatedDrivers = _homeData!.driversWithLocations.results
+          .map(
+            (driver) => driver.id != driverId
+                ? driver
+                : DriverWithLocation(
+                    id: driver.id,
+                    email: driver.email,
+                    name: driver.name,
+                    phone: driver.phone,
+                    status: normalizedStatus,
+                    isOnline: normalizedStatus == 'SUSPENDED'
+                        ? false
+                        : driver.isOnline,
+                    vehicleType: driver.vehicleType,
+                    acceptsFood: driver.acceptsFood,
+                    acceptsShipping: driver.acceptsShipping,
+                    acceptsTaxi: driver.acceptsTaxi,
+                    drivingLicense: driver.drivingLicense,
+                    idDocument: driver.idDocument,
+                    otherDocuments: driver.otherDocuments,
+                    carSize: driver.carSize,
+                    vehiclePlateNumber: driver.vehiclePlateNumber,
+                    vehicleColor: driver.vehicleColor,
+                    vehicleMake: driver.vehicleMake,
+                    vehicleModel: driver.vehicleModel,
+                    vehicleYear: driver.vehicleYear,
+                    createdAt: driver.createdAt,
+                    latitude: driver.latitude,
+                    longitude: driver.longitude,
+                    locationUpdatedAt: driver.locationUpdatedAt,
+                    documentItems: driver.documentItems,
+                  ),
+          )
+          .toList();
+
+      _homeData = HomeResponse(
+        driversWithLocations: PaginatedResponse(
+          count: _homeData!.driversWithLocations.count,
+          next: _homeData!.driversWithLocations.next,
+          previous: _homeData!.driversWithLocations.previous,
+          results: updatedDrivers,
+          rawResponse: _homeData!.driversWithLocations.rawResponse,
+        ),
+        restaurants: _homeData!.restaurants,
+        pendingDrivers: _homeData!.pendingDrivers,
+        pendingRestaurants: _homeData!.pendingRestaurants,
+        ordersCountByStatus: _homeData!.ordersCountByStatus,
+        driversCount: _homeData!.driversCount,
+        rawResponse: _homeData!.rawResponse,
+      );
+    }
+
     notifyListeners();
   }
 
@@ -507,9 +684,11 @@ class AdminProvider extends ChangeNotifier {
         next: _homeData!.pendingRestaurants.next,
         previous: _homeData!.pendingRestaurants.previous,
         results: updated,
+        rawResponse: _homeData!.pendingRestaurants.rawResponse,
       ),
       ordersCountByStatus: _homeData!.ordersCountByStatus,
       driversCount: _homeData!.driversCount,
+      rawResponse: _homeData!.rawResponse,
     );
     notifyListeners();
   }
@@ -612,6 +791,11 @@ class AdminProvider extends ChangeNotifier {
     _ticketsError = null;
     _selectedTicket = null;
     _ticketDetailLoading = false;
+    _driverProfile = null;
+    _driverProfileLoading = false;
+    _driverRequestProfile = null;
+    _driverRequestProfileLoading = false;
+    _driverRequestProfileQueueRawResponse = null;
     _recentlyRemovedDriverIds.clear();
     _recentlyRemovedRestaurantIds.clear();
     notifyListeners();

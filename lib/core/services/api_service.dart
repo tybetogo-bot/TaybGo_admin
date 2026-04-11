@@ -72,14 +72,16 @@ class ApiService {
     }
   }
 
-  /// Approve or reject a driver.
-  /// [status] should be "APPROVED" or "REJECTED".
-  Future<void> verifyDriver(
+  /// Update a driver's admin status.
+  /// [status] should be "APPROVED", "REJECTED", or "SUSPENDED".
+  Future<void> updateDriverStatus(
     int driverId, {
     required String status,
     String? notes,
   }) async {
-    final uri = Uri.parse('$baseUrl/api/admin/drivers/$driverId/verify/');
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/drivers/$driverId/update-status/',
+    );
     final payload = <String, dynamic>{'status': status};
     if (notes != null) payload['notes'] = notes;
 
@@ -91,7 +93,7 @@ class ApiService {
 
     if (response.statusCode == 200) return;
     if (response.statusCode == 401) _throwUnauthorized();
-    String detail = 'Failed to verify driver';
+    String detail = 'Failed to update driver status';
     try {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (body['detail'] != null) detail = body['detail'].toString();
@@ -146,10 +148,16 @@ class ApiService {
       next: _asNullableString(page.next),
       previous: _asNullableString(page.previous),
       results: page.results,
+      rawResponse: page.rawResponse,
     );
   }
 
-  _VerificationQueuePage _extractVerificationQueuePage(dynamic decoded) {
+  _VerificationQueuePage _extractVerificationQueuePage(
+    dynamic decoded, {
+    Object? rawResponse,
+  }) {
+    final response = rawResponse ?? decoded;
+
     if (decoded is List) {
       final results = _asDriverProfiles(decoded);
       return _VerificationQueuePage(
@@ -157,6 +165,7 @@ class ApiService {
         next: null,
         previous: null,
         results: results,
+        rawResponse: response,
       );
     }
 
@@ -172,7 +181,7 @@ class ApiService {
     if (nestedData is Map) {
       final nestedMap = Map<String, dynamic>.from(nestedData);
       if (nestedMap['results'] is List) {
-        return _extractVerificationQueuePage(nestedMap);
+        return _extractVerificationQueuePage(nestedMap, rawResponse: response);
       }
     }
 
@@ -190,6 +199,7 @@ class ApiService {
         next: json['next'],
         previous: json['previous'],
         results: results,
+        rawResponse: response,
       );
     }
 
@@ -199,6 +209,7 @@ class ApiService {
         next: null,
         previous: null,
         results: [DriverProfile.fromJson(json)],
+        rawResponse: response,
       );
     }
 
@@ -426,12 +437,14 @@ class _VerificationQueuePage {
   final dynamic next;
   final dynamic previous;
   final List<DriverProfile> results;
+  final Object? rawResponse;
 
   const _VerificationQueuePage({
     required this.count,
     required this.next,
     required this.previous,
     required this.results,
+    this.rawResponse,
   });
 }
 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -8,12 +10,12 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 
-class DriverRequestDetailScreen extends StatefulWidget {
+class DriverProfileScreen extends StatefulWidget {
   final int driverId;
   final String driverName;
   final String driverPhone;
 
-  const DriverRequestDetailScreen({
+  const DriverProfileScreen({
     super.key,
     required this.driverId,
     required this.driverName,
@@ -21,12 +23,13 @@ class DriverRequestDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<DriverRequestDetailScreen> createState() =>
-      _DriverRequestDetailScreenState();
+  State<DriverProfileScreen> createState() => _DriverProfileScreenState();
 }
 
-class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
-  bool _actionBusy = false;
+class _DriverProfileScreenState extends State<DriverProfileScreen> {
+  bool _vehicleSectionExpanded = false;
+  bool _documentsSectionExpanded = false;
+  bool _statusActionBusy = false;
   late final AdminProvider _admin;
 
   @override
@@ -40,55 +43,82 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
   void dispose() {
     Future.microtask(() {
       try {
-        _admin.clearDriverRequestProfile();
+        _admin.clearDriverProfile();
       } catch (_) {}
     });
     super.dispose();
   }
 
   Future<void> _loadProfile() {
-    return _admin.fetchDriverRequestProfile(
+    return _admin.fetchDriverProfile(
       widget.driverId,
       driverName: widget.driverName,
       driverPhone: widget.driverPhone,
     );
   }
 
-  Future<void> _updateStatus(String status) async {
-    if (_actionBusy) return;
-    setState(() => _actionBusy = true);
-    final admin = context.read<AdminProvider>();
+  Future<void> _changeDriverStatus(
+    DriverProfile profile, {
+    required String status,
+  }) async {
+    if (_statusActionBusy) return;
+
     final l = AppLocalizations.of(context);
-    final nav = Navigator.of(context);
-    try {
-      await admin.updateDriverStatus(widget.driverId, status: status);
-      if (!mounted) return;
-      final msg = status == 'APPROVED'
-          ? l.driverApproved(widget.driverName)
-          : l.driverRejected(widget.driverName);
-      final color = status == 'APPROVED' ? AppColors.success : AppColors.error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg, style: const TextStyle(fontSize: 13)),
-          backgroundColor: color,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          width: 300,
+    final displayName = profile.name.isNotEmpty
+        ? profile.name
+        : widget.driverName;
+    final isSuspending = status == 'SUSPENDED';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(isSuspending ? l.suspendDriver : l.activateDriver),
+        content: Text(
+          isSuspending
+              ? l.suspendDriverConfirm(displayName)
+              : l.activateDriverConfirm(displayName),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: isSuspending
+                  ? AppColors.warning
+                  : AppColors.success,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isSuspending ? l.suspend : l.activate),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _statusActionBusy = true);
+    try {
+      await context.read<AdminProvider>().updateDriverStatus(
+        widget.driverId,
+        status: status,
       );
-      nav.pop();
+      if (!mounted) return;
+      _showSnack(
+        context,
+        isSuspending
+            ? l.driverSuspended(displayName)
+            : l.driverActivated(displayName),
+        isSuspending ? AppColors.warning : AppColors.success,
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l.failed('$e'), style: const TextStyle(fontSize: 13)),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          width: 300,
-        ),
-      );
-      setState(() => _actionBusy = false);
+      _showSnack(context, l.failed('$e'), AppColors.error);
+    } finally {
+      if (mounted) {
+        setState(() => _statusActionBusy = false);
+      }
     }
   }
 
@@ -97,11 +127,11 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
     final admin = context.watch<AdminProvider>();
-    final profile = admin.driverRequestProfile;
-    final loading = admin.driverRequestProfileLoading;
+    final profile = admin.driverProfile;
+    final loading = admin.driverProfileLoading;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.driverRequest), centerTitle: false),
+      appBar: AppBar(title: Text(l.driver), centerTitle: false),
       body: loading && profile == null
           ? Center(
               child: Column(
@@ -166,10 +196,14 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeaderCard(context, profile),
+              if (_shouldShowStatusAction(profile)) ...[
+                const SizedBox(height: 16),
+                _buildActionsCard(context, profile),
+              ],
               const SizedBox(height: 16),
               _buildSection(
                 context,
-                title: l.requestDetails,
+                title: 'Driver Details',
                 icon: Icons.assignment_outlined,
                 children: [
                   _buildDetailRow(context, 'ID', '${profile.id}'),
@@ -179,11 +213,11 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
                       l.registeredDate,
                       _fmtDateTimeFull(profile.createdAt!),
                     ),
-                  if (profile.submittedAt != null)
+                  if (profile.locationUpdatedAt != null)
                     _buildDetailRow(
                       context,
-                      l.submittedDate,
-                      _fmtDateTimeFull(profile.submittedAt!),
+                      'Last updated',
+                      _fmtDateTimeFull(profile.locationUpdatedAt!),
                     ),
                 ],
               ),
@@ -193,22 +227,35 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
                 title: l.contactInfo,
                 icon: Icons.contact_phone_outlined,
                 children: [
-                  _buildDetailRow(
+                  _buildPhoneRow(
                     context,
-                    l.phone,
-                    contactPhone.isNotEmpty ? contactPhone : l.notProvided,
+                    label: l.phone,
+                    phone: contactPhone,
+                    notProvidedText: l.notProvided,
                   ),
                   if (profile.email != null)
                     _buildDetailRow(context, l.email, profile.email!),
                 ],
               ),
-              if (profile.hasVehicleDetails) ...[
+              if (profile.isOnline != null || profile.hasLocation) ...[
                 const SizedBox(height: 16),
                 _buildSection(
                   context,
-                  title: 'Vehicle Details',
-                  icon: Icons.directions_car_outlined,
-                  children: _buildVehicleDetails(context, profile, l),
+                  title: l.location,
+                  icon: Icons.location_on_outlined,
+                  children: [
+                    _buildDetailRow(
+                      context,
+                      l.location,
+                      profile.hasLocation
+                          ? '${profile.latitude}, ${profile.longitude}'
+                          : l.noLocation,
+                    ),
+                    if (profile.hasLocation) ...[
+                      const SizedBox(height: 10),
+                      _buildLocationMapPreview(context, profile),
+                    ],
+                  ],
                 ),
               ],
               if (profile.hasServiceDetails) ...[
@@ -220,61 +267,33 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
                   children: [_buildServiceChips(context, profile, l)],
                 ),
               ],
+              if (profile.hasVehicleDetails) ...[
+                const SizedBox(height: 16),
+                _buildCollapsibleSection(
+                  context,
+                  title: 'Vehicle Details',
+                  icon: Icons.directions_car_outlined,
+                  expanded: _vehicleSectionExpanded,
+                  onToggle: () => setState(
+                    () => _vehicleSectionExpanded = !_vehicleSectionExpanded,
+                  ),
+                  children: _buildVehicleDetails(context, profile, l),
+                ),
+              ],
               if (profile.hasDocuments) ...[
                 const SizedBox(height: 16),
-                _buildSection(
+                _buildCollapsibleSection(
                   context,
                   title: l.documents,
                   icon: Icons.folder_outlined,
+                  expanded: _documentsSectionExpanded,
+                  onToggle: () => setState(
+                    () =>
+                        _documentsSectionExpanded = !_documentsSectionExpanded,
+                  ),
                   children: _buildDocumentsList(context, profile, l),
                 ),
               ],
-              const SizedBox(height: 32),
-              if (_actionBusy)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: () => _updateStatus('REJECTED'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.error,
-                            side: const BorderSide(color: AppColors.error),
-                            textStyle: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          child: Text(l.decline),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () => _updateStatus('APPROVED'),
-                          style: ElevatedButton.styleFrom(
-                            textStyle: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          child: Text(l.approve),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               const SizedBox(height: 24),
             ],
           ),
@@ -368,6 +387,61 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
     );
   }
 
+  Widget _buildActionsCard(BuildContext context, DriverProfile profile) {
+    final l = AppLocalizations.of(context);
+    final isSuspended = profile.status.toUpperCase() == 'SUSPENDED';
+
+    return _buildSection(
+      context,
+      title: l.actions,
+      icon: Icons.manage_accounts_outlined,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: _statusActionBusy
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              : OutlinedButton.icon(
+                  onPressed: () => _changeDriverStatus(
+                    profile,
+                    status: isSuspended ? 'APPROVED' : 'SUSPENDED',
+                  ),
+                  icon: Icon(
+                    isSuspended
+                        ? Icons.check_circle_outline
+                        : Icons.block_rounded,
+                    size: 18,
+                  ),
+                  label: Text(isSuspended ? l.activateDriver : l.suspendDriver),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isSuspended
+                        ? AppColors.success
+                        : AppColors.warning,
+                    side: BorderSide(
+                      color: isSuspended
+                          ? AppColors.success
+                          : AppColors.warning,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSection(
     BuildContext context, {
     required String title,
@@ -413,6 +487,85 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
     );
   }
 
+  Widget _buildCollapsibleSection(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required bool expanded,
+    required VoidCallback onToggle,
+    required List<Widget> children,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: onToggle,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    Icon(
+                      icon,
+                      size: 16,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      expanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            ClipRect(
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                child: expanded
+                    ? Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [const SizedBox(height: 4), ...children],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDetailRow(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
 
@@ -444,6 +597,137 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildPhoneRow(
+    BuildContext context, {
+    required String label,
+    required String phone,
+    required String notProvidedText,
+  }) {
+    final theme = Theme.of(context);
+    final canCall = _dialablePhone(phone) != null;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    phone.isNotEmpty ? phone : notProvidedText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: canCall ? () => _callPhone(phone) : null,
+                  icon: Icon(
+                    Icons.call_outlined,
+                    size: 18,
+                    color: canCall
+                        ? AppColors.primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  splashRadius: 18,
+                  tooltip: 'Call',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationMapPreview(BuildContext context, DriverProfile profile) {
+    final theme = Theme.of(context);
+    final point = _locationPoint(profile);
+    if (point == null) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: 160,
+          width: double.infinity,
+          child: FlutterMap(
+            options: MapOptions(
+              initialCameraFit: CameraFit.coordinates(
+                coordinates: [point],
+                padding: const EdgeInsets.all(48),
+                maxZoom: 15,
+              ),
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.none,
+              ),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.taybgo.admin',
+              ),
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: point,
+                    width: 34,
+                    height: 34,
+                    child: Center(
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.35),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  LatLng? _locationPoint(DriverProfile profile) {
+    final lat = double.tryParse(profile.latitude ?? '');
+    final lng = double.tryParse(profile.longitude ?? '');
+    if (lat == null || lng == null) return null;
+    return LatLng(lat, lng);
   }
 
   Widget _buildServiceChips(
@@ -953,6 +1237,23 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  Future<void> _callPhone(String phone) async {
+    final dialable = _dialablePhone(phone);
+    if (dialable == null) return;
+
+    final uri = Uri(scheme: 'tel', path: dialable);
+    await launchUrl(uri);
+  }
+
+  String? _dialablePhone(String phone) {
+    final trimmed = phone.trim();
+    if (trimmed.isEmpty) return null;
+
+    final normalized = trimmed.replaceAll(RegExp(r'[^\d+]'), '');
+    if (normalized.isEmpty) return null;
+    return normalized;
+  }
+
   String _vehicleLabel(AppLocalizations l, String type) {
     switch (type.toUpperCase()) {
       case 'BIKE':
@@ -990,18 +1291,49 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
   }
 
   String _statusText(AppLocalizations l, DriverProfile profile) {
+    switch (profile.status.toUpperCase()) {
+      case 'SUSPENDED':
+      case 'REJECTED':
+      case 'PENDING':
+        return l.statusLabel(profile.status);
+    }
+    if (profile.isOnline != null) {
+      return profile.isOnline == true ? l.online : l.offline;
+    }
     return l.statusLabel(profile.status);
   }
 
   Color _statusColor(DriverProfile profile) {
     switch (profile.status.toUpperCase()) {
-      case 'APPROVED':
-        return AppColors.success;
+      case 'SUSPENDED':
+        return AppColors.warning;
       case 'REJECTED':
         return AppColors.error;
-      default:
+      case 'PENDING':
         return AppColors.warning;
     }
+
+    if (profile.isOnline != null) {
+      return profile.isOnline == true ? AppColors.online : AppColors.offline;
+    }
+    return AppColors.warning;
+  }
+
+  bool _shouldShowStatusAction(DriverProfile profile) {
+    final status = profile.status.toUpperCase();
+    return profile.id != 0 && status != 'PENDING' && status != 'REJECTED';
+  }
+
+  void _showSnack(BuildContext context, String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontSize: 13)),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        width: 320,
+      ),
+    );
   }
 }
 

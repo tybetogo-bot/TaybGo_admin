@@ -8,7 +8,7 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/models/home_response.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/city_locator.dart';
-import '../approvals/driver_request_detail_screen.dart';
+import 'driver_profile_screen.dart';
 
 class DriversScreen extends StatefulWidget {
   const DriversScreen({super.key});
@@ -47,7 +47,12 @@ class _DriversScreenState extends State<DriversScreen> {
     final l = AppLocalizations.of(context);
 
     final all = admin.drivers;
-    final driversCounts = admin.driversCount;
+    final suspendedCount = all.where(_isSuspended).length;
+    final onlineCount = all.where((d) => !_isSuspended(d) && d.isOnline).length;
+    final offlineCount = all
+        .where((d) => !_isSuspended(d) && !d.isOnline)
+        .length;
+    final totalCount = all.length;
     final filtered = _apply(all);
 
     return Scaffold(
@@ -74,11 +79,18 @@ class _DriversScreenState extends State<DriversScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        l.driversScreenSub(
-                          driversCounts.total,
-                          driversCounts.online,
-                          driversCounts.offline,
-                        ),
+                        suspendedCount > 0
+                            ? l.driversScreenSubWithSuspended(
+                                totalCount,
+                                onlineCount,
+                                offlineCount,
+                                suspendedCount,
+                              )
+                            : l.driversScreenSub(
+                                totalCount,
+                                onlineCount,
+                                offlineCount,
+                              ),
                         style: TextStyle(
                           fontSize: 14,
                           color: theme.colorScheme.onSurface.withValues(
@@ -108,20 +120,26 @@ class _DriversScreenState extends State<DriversScreen> {
                 children: [
                   _MiniStat(
                     label: l.total,
-                    value: '${driversCounts.total}',
+                    value: '$totalCount',
                     color: theme.colorScheme.onSurface,
                   ),
                   const SizedBox(width: 10),
                   _MiniStat(
                     label: l.online,
-                    value: '${driversCounts.online}',
+                    value: '$onlineCount',
                     color: AppColors.online,
                   ),
                   const SizedBox(width: 10),
                   _MiniStat(
                     label: l.offline,
-                    value: '${driversCounts.offline}',
+                    value: '$offlineCount',
                     color: AppColors.offline,
+                  ),
+                  const SizedBox(width: 10),
+                  _MiniStat(
+                    label: l.suspended,
+                    value: '$suspendedCount',
+                    color: AppColors.warning,
                   ),
                 ],
               ),
@@ -156,6 +174,7 @@ class _DriversScreenState extends State<DriversScreen> {
                 _filterChipBtn(l.all, 'all'),
                 _filterChipBtn(l.online, 'online'),
                 _filterChipBtn(l.offline, 'offline'),
+                _filterChipBtn(l.suspended, 'suspended'),
                 const SizedBox(width: 8),
                 // Region dropdown
                 _buildRegionDropdown(all, theme, l),
@@ -451,7 +470,9 @@ class _DriversScreenState extends State<DriversScreen> {
 
   Marker _buildMarker(_DriverLatLng driverLatLng, ThemeData theme) {
     final d = driverLatLng.driver;
-    final color = d.isOnline ? AppColors.online : AppColors.offline;
+    final color = d.status.toUpperCase() == 'SUSPENDED'
+        ? AppColors.warning
+        : (d.isOnline ? AppColors.online : AppColors.offline);
     final initials = d.name
         .split(' ')
         .map((n) => n.isNotEmpty ? n[0] : '')
@@ -520,15 +541,12 @@ class _DriversScreenState extends State<DriversScreen> {
       'id=${d.id}, name="${d.name}", phone="${d.phone}", '
       'online=${d.isOnline}, lat=${d.latitude}, lng=${d.longitude}',
     );
-    final l = AppLocalizations.of(context);
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => DriverRequestDetailScreen(
+        builder: (_) => DriverProfileScreen(
           driverId: d.id,
           driverName: d.name,
           driverPhone: d.phone,
-          showActions: false,
-          pageTitle: l.driver,
         ),
       ),
     );
@@ -566,7 +584,7 @@ class _DriversScreenState extends State<DriversScreen> {
         // Rows
         Expanded(
           child: filtered.isEmpty
-              ? _emptyState(theme, l, admin.driversCount.total)
+              ? _emptyState(theme, l, admin.drivers.length)
               : ListView.builder(
                   itemCount: filtered.length,
                   itemBuilder: (context, i) => _DriverTableRow(
@@ -586,7 +604,7 @@ class _DriversScreenState extends State<DriversScreen> {
   ) {
     final admin = context.read<AdminProvider>();
     if (filtered.isEmpty) {
-      return _emptyState(theme, l, admin.driversCount.total);
+      return _emptyState(theme, l, admin.drivers.length);
     }
 
     return ListView.separated(
@@ -600,25 +618,27 @@ class _DriversScreenState extends State<DriversScreen> {
   }
 
   Widget _emptyState(ThemeData theme, AppLocalizations l, int totalDrivers) {
-    final hasDrivers = totalDrivers > 0;
+    final showAllOfflineState = _filter == 'all' && totalDrivers > 0;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            hasDrivers ? Icons.location_off_rounded : Icons.search_off_rounded,
+            showAllOfflineState
+                ? Icons.location_off_rounded
+                : Icons.search_off_rounded,
             size: 40,
             color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
           ),
           const SizedBox(height: 12),
           Text(
-            hasDrivers ? l.allDriversOffline : l.noDriversMatchFilters,
+            showAllOfflineState ? l.allDriversOffline : l.noDriversMatchFilters,
             style: TextStyle(
               fontSize: 14,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ),
-          if (hasDrivers) ...[
+          if (showAllOfflineState) ...[
             const SizedBox(height: 4),
             Text(
               l.driversOfflineHint(totalDrivers),
@@ -669,9 +689,11 @@ class _DriversScreenState extends State<DriversScreen> {
   List<DriverWithLocation> _apply(List<DriverWithLocation> drivers) {
     var r = drivers;
     if (_filter == 'online') {
-      r = r.where((d) => d.isOnline).toList();
+      r = r.where((d) => !_isSuspended(d) && d.isOnline).toList();
     } else if (_filter == 'offline') {
-      r = r.where((d) => !d.isOnline).toList();
+      r = r.where((d) => !_isSuspended(d) && !d.isOnline).toList();
+    } else if (_filter == 'suspended') {
+      r = r.where(_isSuspended).toList();
     }
     if (_search.isNotEmpty) {
       final q = _search.toLowerCase();
@@ -687,6 +709,10 @@ class _DriversScreenState extends State<DriversScreen> {
       'city: $_selectedCityKey => ${r.length}/${drivers.length} drivers shown',
     );
     return r;
+  }
+
+  bool _isSuspended(DriverWithLocation driver) {
+    return driver.status.toUpperCase() == 'SUSPENDED';
   }
 
   Widget _filterChipBtn(String label, String value) {
@@ -850,8 +876,13 @@ class _DriverTableRowState extends State<_DriverTableRow> {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
 
-    final statusColor = d.isOnline ? AppColors.online : AppColors.offline;
-    final statusLabel = d.isOnline ? l.online : l.offline;
+    final isSuspended = d.status.toUpperCase() == 'SUSPENDED';
+    final statusColor = isSuspended
+        ? AppColors.warning
+        : (d.isOnline ? AppColors.online : AppColors.offline);
+    final statusLabel = isSuspended
+        ? l.suspended
+        : (d.isOnline ? l.online : l.offline);
 
     final hasLocation =
         d.latitude != null &&
@@ -908,14 +939,42 @@ class _DriverTableRowState extends State<_DriverTableRow> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            d.name,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w500,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                d.name,
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (isSuspended) ...[
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    l.suspended,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.warning,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ],
@@ -1016,8 +1075,13 @@ class _DriverCard extends StatelessWidget {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
 
-    final statusColor = d.isOnline ? AppColors.online : AppColors.offline;
-    final statusLabel = d.isOnline ? l.online : l.offline;
+    final isSuspended = d.status.toUpperCase() == 'SUSPENDED';
+    final statusColor = isSuspended
+        ? AppColors.warning
+        : (d.isOnline ? AppColors.online : AppColors.offline);
+    final statusLabel = isSuspended
+        ? l.suspended
+        : (d.isOnline ? l.online : l.offline);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

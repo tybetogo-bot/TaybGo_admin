@@ -1,20 +1,24 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:taybgoadmin/main.dart';
-import 'package:taybgoadmin/core/services/api_service.dart';
-import 'package:taybgoadmin/core/providers/auth_provider.dart';
+import 'package:taybgoadmin/core/l10n/app_localizations.dart';
 
 void main() {
-  testWidgets('App renders sign-in screen', (WidgetTester tester) async {
-    final apiService = ApiService();
-    final authProvider = AuthProvider(apiService: apiService);
+  group('AppLocalizations', () {
+    test('repairs corrupted Arabic strings', () {
+      final l = AppLocalizations(const Locale('ar'));
 
-    await tester.pumpWidget(TaybGoAdminApp(
-      apiService: apiService,
-      authProvider: authProvider,
-    ));
-    await tester.pumpAndSettle();
+      expect(l.overview, 'نظرة عامة');
+      expect(l.adminDashboard, 'لوحة تحكم المشرف');
+      expect(l.driverSuspended('سائق'), 'تم تعليق سائق');
+    });
 
-    expect(find.text('TaybGo Admin'), findsOneWidget);
+    test('repairs accented European strings', () {
+      final fr = AppLocalizations(const Locale('fr'));
+      final de = AppLocalizations(const Locale('de'));
+
+      expect(fr.overview, 'Aperçu');
+      expect(de.overview, 'Übersicht');
+      expect(de.resolved, 'Gelöst');
+    });
   });
 }

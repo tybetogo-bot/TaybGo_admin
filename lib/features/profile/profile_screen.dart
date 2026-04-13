@@ -15,6 +15,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  static const String _appVersion = '1.0.0+1';
+  static const String _releaseDate = '14 April 2026';
+
   @override
   void initState() {
     super.initState();
@@ -139,7 +142,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: BorderSide(
-                        color: AppColors.error.withValues(alpha: 0.3)),
+                      color: AppColors.error.withValues(alpha: 0.3),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
@@ -152,7 +156,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileCard(
-      AuthProvider auth, ThemeData theme, AppLocalizations l) {
+    AuthProvider auth,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     if (auth.profileLoading && auth.userProfile == null) {
       return ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 500),
@@ -180,17 +187,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Column(
             children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 32,
-                  color:
-                      theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 32,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              ),
               const SizedBox(height: 8),
               Text(
                 auth.profileError!,
                 style: TextStyle(
                   fontSize: 13,
-                  color:
-                      theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 8),
@@ -211,7 +218,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final email = profile['email'] as String? ?? '';
     final phone = profile['phone'] as String? ?? '';
     final isVerified = profile['is_verified'] as bool? ?? false;
-    final roles = (profile['roles'] as List<dynamic>?)
+    final roles =
+        (profile['roles'] as List<dynamic>?)
             ?.map((r) => r.toString())
             .toList() ??
         [];
@@ -221,16 +229,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final initials = name.isNotEmpty
         ? name
-            .split(' ')
-            .where((w) => w.isNotEmpty)
-            .take(2)
-            .map((w) => w[0].toUpperCase())
-            .join()
+              .split(' ')
+              .where((w) => w.isNotEmpty)
+              .take(2)
+              .map((w) => w[0].toUpperCase())
+              .join()
         : '?';
 
     final monthNames = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final joinedDate = createdAt != null
         ? '${monthNames[createdAt.month]} ${createdAt.day}, ${createdAt.year}'
@@ -284,15 +303,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       email,
                       style: TextStyle(
                         fontSize: 13,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.45),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.45,
+                        ),
                       ),
                     ),
                   ],
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: isVerified
                           ? AppColors.success.withValues(alpha: 0.08)
@@ -336,14 +358,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 children: [
                   if (phone.isNotEmpty)
-                    _profileRow(
-                        theme, Icons.phone_outlined, l.phone, phone),
+                    _profileRow(theme, Icons.phone_outlined, l.phone, phone),
                   if (roles.isNotEmpty)
-                    _profileRow(theme, Icons.shield_outlined, l.roles,
-                        roles.map((r) => r[0].toUpperCase() + r.substring(1).toLowerCase()).join(', ')),
+                    _profileRow(
+                      theme,
+                      Icons.shield_outlined,
+                      l.roles,
+                      roles
+                          .map(
+                            (r) =>
+                                r[0].toUpperCase() +
+                                r.substring(1).toLowerCase(),
+                          )
+                          .join(', '),
+                    ),
                   if (joinedDate != null)
-                    _profileRow(theme, Icons.calendar_today_outlined,
-                        l.memberSince, joinedDate),
+                    _profileRow(
+                      theme,
+                      Icons.calendar_today_outlined,
+                      l.memberSince,
+                      joinedDate,
+                    ),
+                  _profileRow(
+                    theme,
+                    Icons.info_outline_rounded,
+                    l.version,
+                    _appVersion,
+                  ),
+                  _profileRow(
+                    theme,
+                    Icons.event_outlined,
+                    l.releaseDate,
+                    _releaseDate,
+                  ),
                 ],
               ),
             ),
@@ -354,7 +401,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _profileRow(
-      ThemeData theme, IconData icon, String label, String value) {
+    ThemeData theme,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       child: Row(
@@ -367,10 +418,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
-              child: Icon(icon,
-                  size: 16,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.4)),
+              child: Icon(
+                icon,
+                size: 16,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
             ),
           ),
           const SizedBox(width: 14),
@@ -382,8 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color:
-                      theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   letterSpacing: 0.3,
                 ),
               ),
@@ -422,8 +473,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               context.read<SettingsProvider>().resetToDefaults();
               context.read<AuthProvider>().signOut();
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: Text(l.signOut),
           ),
         ],
@@ -461,10 +511,11 @@ class _SectionCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
               child: Row(
                 children: [
-                  Icon(icon,
-                      size: 18,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.5)),
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     title,
@@ -520,13 +571,12 @@ class _ThemeOptionState extends State<_ThemeOption> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           color: widget.selected
               ? AppColors.primary.withValues(alpha: 0.06)
               : _hovered
-                  ? theme.colorScheme.onSurface.withValues(alpha: 0.03)
-                  : Colors.transparent,
+              ? theme.colorScheme.onSurface.withValues(alpha: 0.03)
+              : Colors.transparent,
           child: Row(
             children: [
               if (widget.icon != null) ...[
@@ -535,8 +585,7 @@ class _ThemeOptionState extends State<_ThemeOption> {
                   size: 18,
                   color: widget.selected
                       ? AppColors.primary
-                      : theme.colorScheme.onSurface
-                          .withValues(alpha: 0.45),
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.45),
                 ),
                 const SizedBox(width: 12),
               ],
@@ -562,8 +611,7 @@ class _ThemeOptionState extends State<_ThemeOption> {
                     fontWeight: FontWeight.w600,
                     color: widget.selected
                         ? AppColors.primary
-                        : theme.colorScheme.onSurface
-                            .withValues(alpha: 0.35),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.35),
                   ),
                 ),
               if (widget.trailing != null) const SizedBox(width: 10),
@@ -576,8 +624,7 @@ class _ThemeOptionState extends State<_ThemeOption> {
                   border: Border.all(
                     color: widget.selected
                         ? AppColors.primary
-                        : theme.colorScheme.onSurface
-                            .withValues(alpha: 0.2),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.2),
                     width: widget.selected ? 6 : 1.5,
                   ),
                 ),

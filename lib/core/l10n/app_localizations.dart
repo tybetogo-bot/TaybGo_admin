@@ -1182,6 +1182,20 @@ class AppLocalizations {
     fr: 'Membre depuis',
     de: 'Mitglied seit',
   );
+  String get version => _t(
+    'Version',
+    'Ã˜Â§Ã™â€žÃ˜Â§Ã™â€žÃ™Â·Ã™â€¦',
+    nl: 'Versie',
+    fr: 'Version',
+    de: 'Version',
+  );
+  String get releaseDate => _t(
+    'Release date',
+    'Ã˜ÂªÃ˜Â§Ã™â€žÃ™Â¬Ã™Ë†Ã˜Â±Ã™â€žÃ˜Â§Ã™â€ž',
+    nl: 'Releasedatum',
+    fr: 'Date de sortie',
+    de: 'VerÃƒÆ’Ã…Â¸entlichungsdatum',
+  );
   String get settings => _t(
     'Settings',
     'Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª',

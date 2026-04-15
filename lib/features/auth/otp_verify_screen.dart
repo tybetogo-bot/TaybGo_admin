@@ -39,84 +39,97 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 900;
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 900;
 
-          if (isWide) {
-            return Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isDark
-                            ? [const Color(0xFF0A1A0F), const Color(0xFF0A0F0A)]
-                            : [const Color(0xFFF0FAF2), const Color(0xFFFAFAFA)],
+            if (isWide) {
+              return Row(
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF0A1A0F),
+                                  const Color(0xFF0A0F0A),
+                                ]
+                              : [
+                                  const Color(0xFFF0FAF2),
+                                  const Color(0xFFFAFAFA),
+                                ],
+                        ),
                       ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset('assets/TaybGo_green.png', width: 180),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusFull),
-                            ),
-                            child: Text(
-                              l.adminDashboard,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.primary,
-                                letterSpacing: 0.5,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset('assets/TaybGo_green.png', width: 180),
+                            const SizedBox(height: 24),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusFull,
+                                ),
+                              ),
+                              child: Text(
+                                l.adminDashboard,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.primary,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 48),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 60),
-                            child: Text(
-                              l.manageDescription,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 15,
-                                height: 1.6,
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.4),
+                            const SizedBox(height: 48),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 60,
+                              ),
+                              child: Text(
+                                l.manageDescription,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  height: 1.6,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 4,
-                  child: _buildForm(context, auth, theme, l),
-                ),
-              ],
-            );
-          }
-          return _buildForm(context, auth, theme, l, showLogo: true);
-        },
-      ),
+                  Expanded(flex: 4, child: _buildForm(context, auth, theme, l)),
+                ],
+              );
+            }
+            return _buildForm(context, auth, theme, l, showLogo: true);
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildForm(BuildContext context, AuthProvider auth, ThemeData theme,
-      AppLocalizations l,
-      {bool showLogo = false}) {
+  Widget _buildForm(
+    BuildContext context,
+    AuthProvider auth,
+    ThemeData theme,
+    AppLocalizations l, {
+    bool showLogo = false,
+  }) {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 48),
@@ -148,8 +161,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                   l.enterCodeSentTo(auth.phone ?? ''),
                   style: TextStyle(
                     fontSize: 15,
-                    color:
-                        theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
 
@@ -163,18 +175,25 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                       border: Border.all(
                         color: AppColors.warning.withValues(alpha: 0.3),
                       ),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusSmall),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusSmall,
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.bug_report_outlined,
-                            size: 18, color: AppColors.warning),
+                        Icon(
+                          Icons.bug_report_outlined,
+                          size: 18,
+                          color: AppColors.warning,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: RichText(
                             text: TextSpan(
-                              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: theme.colorScheme.onSurface,
+                              ),
                               children: [
                                 TextSpan(text: l.testOtpLabel),
                                 TextSpan(
@@ -204,18 +223,14 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _handleVerify(),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   style: const TextStyle(
                     fontSize: 20,
                     letterSpacing: 8,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
-                    hintText: '------',
-                  ),
+                  decoration: const InputDecoration(hintText: '------'),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
                       return l.enterOtpCode;
@@ -231,19 +246,25 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.08),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSmall),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSmall,
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              size: 16, color: AppColors.error),
+                          Icon(
+                            Icons.error_outline,
+                            size: 16,
+                            color: AppColors.error,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               auth.error!,
                               style: TextStyle(
-                                  fontSize: 13, color: AppColors.error),
+                                fontSize: 13,
+                                color: AppColors.error,
+                              ),
                             ),
                           ),
                         ],
@@ -261,11 +282,17 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
-                        : Text(l.verify,
+                        : Text(
+                            l.verify,
                             style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w600)),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -281,8 +308,9 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                       l.changePhoneNumber,
                       style: TextStyle(
                         fontSize: 13,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                   ),

@@ -20,12 +20,12 @@ class AdminShell extends StatefulWidget {
   ];
 
   static List<String> _labels(AppLocalizations l) => [
-        l.overview,
-        l.approvals,
-        l.drivers,
-        l.support,
-        l.profile,
-      ];
+    l.overview,
+    l.approvals,
+    l.drivers,
+    l.support,
+    l.profile,
+  ];
 
   @override
   State<AdminShell> createState() => _AdminShellState();
@@ -72,8 +72,7 @@ class _AdminShellState extends State<AdminShell> {
               child: Row(
                 children: List.generate(AdminShell._icons.length, (i) {
                   final item = AdminShell._icons[i];
-                  final selected =
-                      widget.navigationShell.currentIndex == i;
+                  final selected = widget.navigationShell.currentIndex == i;
                   return Expanded(
                     child: GestureDetector(
                       onTap: () => _onTap(i),
@@ -86,8 +85,9 @@ class _AdminShellState extends State<AdminShell> {
                             size: 22,
                             color: selected
                                 ? AppColors.primary
-                                : theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.4),
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.4,
+                                  ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -99,8 +99,9 @@ class _AdminShellState extends State<AdminShell> {
                                   : FontWeight.w400,
                               color: selected
                                   ? AppColors.primary
-                                  : theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.4),
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.4,
+                                    ),
                             ),
                           ),
                         ],
@@ -134,8 +135,10 @@ class _AdminShellState extends State<AdminShell> {
   }
 
   void _onTap(int i) {
-    widget.navigationShell.goBranch(i,
-        initialLocation: i == widget.navigationShell.currentIndex);
+    widget.navigationShell.goBranch(
+      i,
+      initialLocation: i == widget.navigationShell.currentIndex,
+    );
   }
 }
 
@@ -176,8 +179,7 @@ class _Sidebar extends StatelessWidget {
           SizedBox(
             height: 68,
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                  horizontal: expanded ? 20 : 0),
+              padding: EdgeInsets.symmetric(horizontal: expanded ? 20 : 0),
               child: Row(
                 mainAxisAlignment: expanded
                     ? MainAxisAlignment.start
@@ -201,8 +203,8 @@ class _Sidebar extends StatelessWidget {
             // Badge count for approvals
             int? badge;
             if (i == 1) {
-              final count = admin.pendingDriversTotal +
-                  admin.pendingRestaurantsTotal;
+              final count =
+                  admin.pendingDriversTotal + admin.pendingRestaurantsTotal;
               if (count > 0) badge = count;
             }
             if (i == 3) {
@@ -258,8 +260,8 @@ class _SidebarItemState extends State<_SidebarItem> {
     final color = widget.selected
         ? AppColors.primary
         : _hovered
-            ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-            : theme.colorScheme.onSurface.withValues(alpha: 0.5);
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+        : theme.colorScheme.onSurface.withValues(alpha: 0.5);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -275,14 +277,13 @@ class _SidebarItemState extends State<_SidebarItem> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             height: 42,
-            padding: EdgeInsets.symmetric(
-                horizontal: widget.expanded ? 14 : 0),
+            padding: EdgeInsets.symmetric(horizontal: widget.expanded ? 14 : 0),
             decoration: BoxDecoration(
               color: widget.selected
                   ? AppColors.primary.withValues(alpha: 0.1)
                   : _hovered
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
-                      : Colors.transparent,
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
             ),
             child: Row(
@@ -308,7 +309,9 @@ class _SidebarItemState extends State<_SidebarItem> {
                   if (widget.badge != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),

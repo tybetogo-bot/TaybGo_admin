@@ -58,84 +58,97 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 900;
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 900;
 
-          if (isWide) {
-            return Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isDark
-                            ? [const Color(0xFF0A1A0F), const Color(0xFF0A0F0A)]
-                            : [const Color(0xFFF0FAF2), const Color(0xFFFAFAFA)],
+            if (isWide) {
+              return Row(
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF0A1A0F),
+                                  const Color(0xFF0A0F0A),
+                                ]
+                              : [
+                                  const Color(0xFFF0FAF2),
+                                  const Color(0xFFFAFAFA),
+                                ],
+                        ),
                       ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset('assets/TaybGo_green.png', width: 180),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusFull),
-                            ),
-                            child: Text(
-                              l.adminDashboard,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.primary,
-                                letterSpacing: 0.5,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset('assets/TaybGo_green.png', width: 180),
+                            const SizedBox(height: 24),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusFull,
+                                ),
+                              ),
+                              child: Text(
+                                l.adminDashboard,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.primary,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 48),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 60),
-                            child: Text(
-                              l.manageDescription,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 15,
-                                height: 1.6,
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.4),
+                            const SizedBox(height: 48),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 60,
+                              ),
+                              child: Text(
+                                l.manageDescription,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  height: 1.6,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 4,
-                  child: _buildForm(context, auth, theme, l),
-                ),
-              ],
-            );
-          }
-          return _buildForm(context, auth, theme, l, showLogo: true);
-        },
-      ),
+                  Expanded(flex: 4, child: _buildForm(context, auth, theme, l)),
+                ],
+              );
+            }
+            return _buildForm(context, auth, theme, l, showLogo: true);
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildForm(BuildContext context, AuthProvider auth, ThemeData theme,
-      AppLocalizations l,
-      {bool showLogo = false}) {
+  Widget _buildForm(
+    BuildContext context,
+    AuthProvider auth,
+    ThemeData theme,
+    AppLocalizations l, {
+    bool showLogo = false,
+  }) {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 48),
@@ -173,8 +186,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   l.enterPhoneToSignIn,
                   style: TextStyle(
                     fontSize: 15,
-                    color:
-                        theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -187,9 +199,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _handleRequestOtp(),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     hintText: '5XXXXXXXX',
                     prefixIcon: InkWell(
@@ -216,8 +226,9 @@ class _SignInScreenState extends State<SignInScreen> {
                             Icon(
                               Icons.arrow_drop_down,
                               size: 18,
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.5),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                           ],
                         ),
@@ -239,19 +250,25 @@ class _SignInScreenState extends State<SignInScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.08),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSmall),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSmall,
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              size: 16, color: AppColors.error),
+                          Icon(
+                            Icons.error_outline,
+                            size: 16,
+                            color: AppColors.error,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               auth.error!,
                               style: TextStyle(
-                                  fontSize: 13, color: AppColors.error),
+                                fontSize: 13,
+                                color: AppColors.error,
+                              ),
                             ),
                           ),
                         ],
@@ -269,11 +286,17 @@ class _SignInScreenState extends State<SignInScreen> {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
-                        : Text(l.sendOtp,
+                        : Text(
+                            l.sendOtp,
                             style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w600)),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -356,8 +379,11 @@ class _LanguageSelector extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.language, size: 18,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+            Icon(
+              Icons.language,
+              size: 18,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
             const SizedBox(width: 6),
             Text(
               _languages
@@ -373,8 +399,11 @@ class _LanguageSelector extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.arrow_drop_down, size: 16,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+            Icon(
+              Icons.arrow_drop_down,
+              size: 16,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
           ],
         ),
       ),

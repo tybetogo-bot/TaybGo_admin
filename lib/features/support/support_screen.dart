@@ -62,8 +62,9 @@ class _SupportScreenState extends State<SupportScreen> {
                         ),
                         style: TextStyle(
                           fontSize: 14,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ],
@@ -88,8 +89,11 @@ class _SupportScreenState extends State<SupportScreen> {
                 children: [
                   _tab(l.all, 'all', admin.tickets.length),
                   _tab(l.open, 'open', admin.openTickets.length),
-                  _tab(l.inProgress, 'inProgress',
-                      admin.inProgressTickets.length),
+                  _tab(
+                    l.inProgress,
+                    'inProgress',
+                    admin.inProgressTickets.length,
+                  ),
                   _tab(l.resolved, 'resolved', admin.resolvedTickets.length),
                   _tab(l.closed, 'closed', admin.closedTickets.length),
                 ],
@@ -99,17 +103,19 @@ class _SupportScreenState extends State<SupportScreen> {
             Divider(color: theme.dividerColor, height: 1),
 
             // Content
-            Expanded(
-              child: _buildContent(admin, tickets, theme, l),
-            ),
+            Expanded(child: _buildContent(admin, tickets, theme, l)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContent(AdminProvider admin, List<SupportTicket> tickets,
-      ThemeData theme, AppLocalizations l) {
+  Widget _buildContent(
+    AdminProvider admin,
+    List<SupportTicket> tickets,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     if (admin.ticketsLoading && admin.tickets.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -119,9 +125,11 @@ class _SupportScreenState extends State<SupportScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded,
-                size: 40,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+            Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+            ),
             const SizedBox(height: 12),
             Text(
               admin.ticketsError!,
@@ -145,10 +153,11 @@ class _SupportScreenState extends State<SupportScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.inbox_rounded,
-                size: 40,
-                color:
-                    theme.colorScheme.onSurface.withValues(alpha: 0.15)),
+            Icon(
+              Icons.inbox_rounded,
+              size: 40,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+            ),
             const SizedBox(height: 12),
             Text(
               l.noTicketsFound,
@@ -224,8 +233,7 @@ class _SupportScreenState extends State<SupportScreen> {
             if (count > 0) ...[
               const SizedBox(width: 6),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
                   color: selected
                       ? AppColors.primary.withValues(alpha: 0.12)
@@ -239,8 +247,7 @@ class _SupportScreenState extends State<SupportScreen> {
                     fontWeight: FontWeight.w600,
                     color: selected
                         ? AppColors.primary
-                        : theme.colorScheme.onSurface
-                            .withValues(alpha: 0.45),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.45),
                   ),
                 ),
               ),
@@ -258,10 +265,7 @@ class _TicketRow extends StatefulWidget {
   final SupportTicket ticket;
   final VoidCallback onTap;
 
-  const _TicketRow({
-    required this.ticket,
-    required this.onTap,
-  });
+  const _TicketRow({required this.ticket, required this.onTap});
 
   @override
   State<_TicketRow> createState() => _TicketRowState();
@@ -290,9 +294,7 @@ class _TicketRowState extends State<_TicketRow> {
             color: _hovered
                 ? theme.colorScheme.onSurface.withValues(alpha: 0.02)
                 : Colors.transparent,
-            border: Border(
-              bottom: BorderSide(color: theme.dividerColor),
-            ),
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,8 +341,9 @@ class _TicketRowState extends State<_TicketRow> {
                       '${t.requesterName} · ${t.category}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.4),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                     ),
                   ),
@@ -348,8 +351,7 @@ class _TicketRowState extends State<_TicketRow> {
                     '#${t.id}',
                     style: TextStyle(
                       fontSize: 11,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.3),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                       fontFamily: 'monospace',
                     ),
                   ),

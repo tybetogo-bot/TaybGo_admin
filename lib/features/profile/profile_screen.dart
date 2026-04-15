@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/providers/auth_provider.dart';
-import '../../core/providers/admin_provider.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/l10n/app_localizations.dart';
 
@@ -469,7 +468,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<AdminProvider>().clearAll();
               context.read<SettingsProvider>().resetToDefaults();
               context.read<AuthProvider>().signOut();
             },

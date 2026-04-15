@@ -21,7 +21,9 @@ void main() async {
   }
 
   final apiService = ApiService();
+  final adminProvider = AdminProvider(apiService: apiService);
   final authProvider = AuthProvider(apiService: apiService);
+  authProvider.onSignedOut = adminProvider.clearAll;
   apiService.onUnauthorized = () => authProvider.signOut();
   final settingsProvider = SettingsProvider();
   await Future.wait([
@@ -29,21 +31,26 @@ void main() async {
     settingsProvider.loadSettings(),
   ]);
 
-  runApp(TaybGoAdminApp(
-    apiService: apiService,
-    authProvider: authProvider,
-    settingsProvider: settingsProvider,
-  ));
+  runApp(
+    TaybGoAdminApp(
+      apiService: apiService,
+      adminProvider: adminProvider,
+      authProvider: authProvider,
+      settingsProvider: settingsProvider,
+    ),
+  );
 }
 
 class TaybGoAdminApp extends StatefulWidget {
   final ApiService apiService;
+  final AdminProvider adminProvider;
   final AuthProvider authProvider;
   final SettingsProvider settingsProvider;
 
   const TaybGoAdminApp({
     super.key,
     required this.apiService,
+    required this.adminProvider,
     required this.authProvider,
     required this.settingsProvider,
   });
@@ -52,13 +59,28 @@ class TaybGoAdminApp extends StatefulWidget {
   State<TaybGoAdminApp> createState() => _TaybGoAdminAppState();
 }
 
-class _TaybGoAdminAppState extends State<TaybGoAdminApp> {
+class _TaybGoAdminAppState extends State<TaybGoAdminApp>
+    with WidgetsBindingObserver {
   late final AppRouter _appRouter;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _appRouter = AppRouter(authProvider: widget.authProvider);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.authProvider.validateSession(forceRemote: true);
+    }
   }
 
   @override
@@ -66,8 +88,7 @@ class _TaybGoAdminAppState extends State<TaybGoAdminApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: widget.authProvider),
-        ChangeNotifierProvider(
-            create: (_) => AdminProvider(apiService: widget.apiService)),
+        ChangeNotifierProvider.value(value: widget.adminProvider),
         ChangeNotifierProvider.value(value: widget.settingsProvider),
       ],
       child: Consumer<SettingsProvider>(

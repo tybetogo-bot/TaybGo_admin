@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:http/http.dart' as http;
+import '../auth/auth_error_keys.dart';
 import '../config/env_config.dart';
 import '../models/home_response.dart';
 import '../models/support_ticket.dart';
 
 class ApiService {
   String get baseUrl => EnvConfig.baseUrl;
-
-  static const String _otpTargetRole = 'admin';
 
   final http.Client _client;
   String? _authToken;
@@ -37,41 +36,47 @@ class ApiService {
 
   Map<String, dynamic> _otpPayload({
     required String phone,
+    required String targetRole,
     String? code,
   }) {
     final payload = <String, dynamic>{
       'phone': phone,
-      'target_role': _otpTargetRole,
+      'target_role': targetRole,
     };
     if (code != null) payload['code'] = code;
     return payload;
   }
 
-  Future<Map<String, dynamic>> requestOtp(String phone) async {
+  Future<Map<String, dynamic>> requestOtp(
+    String phone, {
+    required String targetRole,
+  }) async {
     final uri = Uri.parse('$baseUrl/api/auth/otp/request/');
     final response = await _client.post(
       uri,
       headers: _headers,
-      body: jsonEncode(_otpPayload(phone: phone)),
+      body: jsonEncode(_otpPayload(phone: phone, targetRole: targetRole)),
     );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw ApiException(
-        body['detail'] ?? 'Failed to request OTP',
-        response.statusCode,
-      );
+      throw _otpException(response, fallbackMessage: 'Failed to request OTP');
     }
   }
 
-  Future<Map<String, String>> verifyOtp(String phone, String code) async {
+  Future<Map<String, String>> verifyOtp(
+    String phone,
+    String code, {
+    required String targetRole,
+  }) async {
     final uri = Uri.parse('$baseUrl/api/auth/otp/verify/');
     final response = await _client.post(
       uri,
       headers: _headers,
-      body: jsonEncode(_otpPayload(phone: phone, code: code)),
+      body: jsonEncode(
+        _otpPayload(phone: phone, targetRole: targetRole, code: code),
+      ),
     );
 
     if (response.statusCode == 200) {
@@ -81,9 +86,59 @@ class ApiService {
         'access': json['access'] as String,
       };
     } else {
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw ApiException(body['detail'] ?? 'Invalid OTP', response.statusCode);
+      throw _otpException(response, fallbackMessage: 'Invalid OTP');
     }
+  }
+
+  ApiException _otpException(
+    http.Response response, {
+    required String fallbackMessage,
+  }) {
+    final detail = _extractApiErrorDetail(response);
+    if (_isOtpConflict(response.statusCode, detail)) {
+      return ApiException(
+        AuthErrorKeys.phoneAlreadyRegistered,
+        response.statusCode,
+      );
+    }
+
+    return ApiException(detail ?? fallbackMessage, response.statusCode);
+  }
+
+  String? _extractApiErrorDetail(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map) {
+        return null;
+      }
+
+      final body = Map<String, dynamic>.from(decoded);
+      final detail = body['detail'] ?? body['message'] ?? body['error'];
+      return detail?.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _isOtpConflict(int statusCode, String? detail) {
+    if (statusCode == 409) {
+      return true;
+    }
+
+    final normalized = detail?.toLowerCase();
+    if (normalized == null || normalized.isEmpty) {
+      return false;
+    }
+
+    return normalized.contains('already registered') ||
+        normalized.contains('already exists') ||
+        normalized.contains('phone already') ||
+        normalized.contains('phone number already') ||
+        normalized.contains('account already') ||
+        (normalized.contains('role') &&
+            (normalized.contains('conflict') ||
+                normalized.contains('mismatch') ||
+                normalized.contains('registered')));
   }
 
   /// Update a driver's admin status.

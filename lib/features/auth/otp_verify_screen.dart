@@ -260,7 +260,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              auth.error!,
+                              l.resolveError(auth.error!),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: AppColors.error,

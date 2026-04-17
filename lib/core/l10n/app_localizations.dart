@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../auth/auth_error_keys.dart';
+
 class AppLocalizations {
   final Locale locale;
   static final Map<String, String> _decodedTextCache = {};
@@ -25,6 +27,9 @@ class AppLocalizations {
 
   bool get isArabic => locale.languageCode == 'ar';
 
+  static const errorPhoneAlreadyRegisteredKey =
+      AuthErrorKeys.phoneAlreadyRegistered;
+
   String _t(String en, String ar, {String? nl, String? fr, String? de}) {
     final value = switch (locale.languageCode) {
       'ar' => ar,
@@ -36,6 +41,21 @@ class AppLocalizations {
 
     return _repairMojibake(value);
   }
+
+  String resolveError(String value) {
+    return switch (value) {
+      errorPhoneAlreadyRegisteredKey => errorAuthPhoneAlreadyRegistered,
+      _ => _repairMojibake(value),
+    };
+  }
+
+  String get errorAuthPhoneAlreadyRegistered => _t(
+    'This number is already registered.',
+    'هذا الرقم مسجل بالفعل.',
+    nl: 'Dit nummer is al geregistreerd.',
+    fr: 'Ce numéro est déjà enregistré.',
+    de: 'Diese Nummer ist bereits registriert.',
+  );
 
   static String _repairMojibake(String value) {
     return _decodedTextCache.putIfAbsent(value, () {

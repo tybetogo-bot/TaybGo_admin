@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 class AuthProvider extends ChangeNotifier {
   static const _keyAccess = 'auth_access_token';
   static const _keyRefresh = 'auth_refresh_token';
+  static const _adminTargetRole = 'admin';
   static const _sessionCheckInterval = Duration(minutes: 1);
   static const _remoteValidationInterval = Duration(minutes: 5);
   static const _tokenExpirySkew = Duration(seconds: 30);
@@ -17,6 +18,7 @@ class AuthProvider extends ChangeNotifier {
   String? _error;
   String? _phone;
   String? _testOtp;
+  String? _pendingOtpTargetRole;
   String? _accessToken;
   String? _refreshToken;
 
@@ -39,6 +41,7 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   String? get phone => _phone;
   String? get testOtp => _testOtp;
+  String? get pendingOtpTargetRole => _pendingOtpTargetRole;
   String? get accessToken => _accessToken;
 
   Map<String, dynamic>? get userProfile => _userProfile;
@@ -83,13 +86,37 @@ class AuthProvider extends ChangeNotifier {
 
   /// Request OTP for the given phone number (no country code).
   Future<bool> requestOtp(String phone) async {
+    return _requestOtpWithRole(phone: phone, targetRole: _adminTargetRole);
+  }
+
+  Future<bool> resendOtp() async {
+    final phone = _phone;
+    final targetRole = _pendingOtpTargetRole;
+
+    if (phone == null || targetRole == null) {
+      _error = 'Phone number not set';
+      notifyListeners();
+      return false;
+    }
+
+    return _requestOtpWithRole(phone: phone, targetRole: targetRole);
+  }
+
+  Future<bool> _requestOtpWithRole({
+    required String phone,
+    required String targetRole,
+  }) async {
     _isLoading = true;
     _error = null;
+    _phone = phone;
+    _pendingOtpTargetRole = targetRole;
     notifyListeners();
 
     try {
-      final response = await _apiService.requestOtp(phone);
-      _phone = phone;
+      final response = await _apiService.requestOtp(
+        phone,
+        targetRole: targetRole,
+      );
       _testOtp = response['otp'] as String?;
       _isLoading = false;
       notifyListeners();
@@ -109,7 +136,10 @@ class AuthProvider extends ChangeNotifier {
 
   /// Verify the OTP code and obtain JWT tokens.
   Future<bool> verifyOtp(String code) async {
-    if (_phone == null) {
+    final phone = _phone;
+    final targetRole = _pendingOtpTargetRole;
+
+    if (phone == null || targetRole == null) {
       _error = 'Phone number not set';
       notifyListeners();
       return false;
@@ -120,7 +150,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final tokens = await _apiService.verifyOtp(_phone!, code);
+      final tokens = await _apiService.verifyOtp(
+        phone,
+        code,
+        targetRole: targetRole,
+      );
       _accessToken = tokens['access'];
       _refreshToken = tokens['refresh'];
       _apiService.setAuthToken(_accessToken!);
@@ -128,6 +162,7 @@ class AuthProvider extends ChangeNotifier {
       _isAuthenticated = true;
       _lastRemoteValidationAt = DateTime.now();
       _startSessionMonitoring();
+      _pendingOtpTargetRole = null;
       _testOtp = null;
       _isLoading = false;
       notifyListeners();
@@ -262,6 +297,7 @@ class AuthProvider extends ChangeNotifier {
     _refreshToken = null;
     _phone = null;
     _testOtp = null;
+    _pendingOtpTargetRole = null;
     _userProfile = null;
     _profileError = null;
     _stopSessionMonitoring();

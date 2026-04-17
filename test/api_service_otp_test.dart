@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:taybgoadmin/core/auth/auth_error_keys.dart';
 import 'package:taybgoadmin/core/config/env_config.dart';
 import 'package:taybgoadmin/core/services/api_service.dart';
 
@@ -23,7 +24,7 @@ void main() {
       }),
     );
 
-    final response = await api.requestOtp('555123456');
+    final response = await api.requestOtp('555123456', targetRole: 'admin');
 
     expect(capturedUri?.path, '/api/auth/otp/request/');
     expect(
@@ -48,20 +49,47 @@ void main() {
       }),
     );
 
-    final tokens = await api.verifyOtp('555123456', '999999');
+    final tokens = await api.verifyOtp(
+      '555123456',
+      '999999',
+      targetRole: 'admin',
+    );
 
     expect(capturedUri?.path, '/api/auth/otp/verify/');
     expect(
       capturedBody,
-      equals({
-        'phone': '555123456',
-        'code': '999999',
-        'target_role': 'admin',
-      }),
+      equals({'phone': '555123456', 'code': '999999', 'target_role': 'admin'}),
     );
     expect(
       tokens,
       equals({'refresh': 'refresh-token', 'access': 'access-token'}),
+    );
+  });
+
+  test('requestOtp maps backend conflict detail to the generic key', () async {
+    final api = ApiService(
+      client: MockClient(
+        (_) async => http.Response(
+          jsonEncode({
+            'detail':
+                'A user with this phone number already exists for another role.',
+          }),
+          409,
+        ),
+      ),
+    );
+
+    expect(
+      () => api.requestOtp('555123456', targetRole: 'admin'),
+      throwsA(
+        isA<ApiException>()
+            .having(
+              (error) => error.message,
+              'message',
+              AuthErrorKeys.phoneAlreadyRegistered,
+            )
+            .having((error) => error.statusCode, 'statusCode', 409),
+      ),
     );
   });
 }

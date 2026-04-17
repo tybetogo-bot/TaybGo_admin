@@ -144,6 +144,7 @@ firebase deploy --only hosting
 ## API
 
 Requests are sent to the configured environment base URL with Bearer token auth.
+OTP auth requests include `target_role: admin` in both the request and verify payloads so the backend scopes login to admin users.
 
 | Method | Endpoint | Purpose |
 |---|---|---|

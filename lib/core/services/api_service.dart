@@ -8,6 +8,8 @@ import '../models/support_ticket.dart';
 class ApiService {
   String get baseUrl => EnvConfig.baseUrl;
 
+  static const String _otpTargetRole = 'admin';
+
   final http.Client _client;
   String? _authToken;
   VoidCallback? onUnauthorized;
@@ -33,12 +35,24 @@ class ApiService {
     throw const ApiException('Unauthorized', 401);
   }
 
+  Map<String, dynamic> _otpPayload({
+    required String phone,
+    String? code,
+  }) {
+    final payload = <String, dynamic>{
+      'phone': phone,
+      'target_role': _otpTargetRole,
+    };
+    if (code != null) payload['code'] = code;
+    return payload;
+  }
+
   Future<Map<String, dynamic>> requestOtp(String phone) async {
     final uri = Uri.parse('$baseUrl/api/auth/otp/request/');
     final response = await _client.post(
       uri,
       headers: _headers,
-      body: jsonEncode({'phone': phone}),
+      body: jsonEncode(_otpPayload(phone: phone)),
     );
 
     if (response.statusCode == 200) {
@@ -57,7 +71,7 @@ class ApiService {
     final response = await _client.post(
       uri,
       headers: _headers,
-      body: jsonEncode({'phone': phone, 'code': code}),
+      body: jsonEncode(_otpPayload(phone: phone, code: code)),
     );
 
     if (response.statusCode == 200) {

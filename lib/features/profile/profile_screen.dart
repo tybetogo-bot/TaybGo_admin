@@ -14,8 +14,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const String _appVersion = '1.0.1+2';
-  static const String _releaseDate = '16 April 2026';
+  static const String _appVersion = '1.0.2+3';
+  static const String _releaseDate = '17 April 2026';
 
   @override
   void initState() {

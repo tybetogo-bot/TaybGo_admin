@@ -11,14 +11,16 @@ import '../../core/utils/city_locator.dart';
 import 'driver_profile_screen.dart';
 
 class DriversScreen extends StatefulWidget {
-  const DriversScreen({super.key});
+  final String initialFilter;
+
+  const DriversScreen({super.key, this.initialFilter = 'all'});
 
   @override
   State<DriversScreen> createState() => _DriversScreenState();
 }
 
 class _DriversScreenState extends State<DriversScreen> {
-  String _filter = 'all';
+  late String _filter;
   String _search = '';
   String? _selectedCityKey; // null = all regions
   bool _showMap = false;
@@ -27,6 +29,7 @@ class _DriversScreenState extends State<DriversScreen> {
   @override
   void initState() {
     super.initState();
+    _filter = _normalizeFilter(widget.initialFilter);
     debugPrint('[DriversScreen] initState');
     final admin = context.read<AdminProvider>();
     if (admin.homeData == null) {
@@ -37,6 +40,14 @@ class _DriversScreenState extends State<DriversScreen> {
         '[DriversScreen] Using cached data — '
         '${admin.drivers.length} drivers',
       );
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant DriversScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialFilter != widget.initialFilter) {
+      setState(() => _filter = _normalizeFilter(widget.initialFilter));
     }
   }
 
@@ -122,24 +133,32 @@ class _DriversScreenState extends State<DriversScreen> {
                     label: l.total,
                     value: '$totalCount',
                     color: theme.colorScheme.onSurface,
+                    selected: _filter == 'all',
+                    onTap: () => _setFilter('all'),
                   ),
                   const SizedBox(width: 10),
                   _MiniStat(
                     label: l.online,
                     value: '$onlineCount',
                     color: AppColors.online,
+                    selected: _filter == 'online',
+                    onTap: () => _setFilter('online'),
                   ),
                   const SizedBox(width: 10),
                   _MiniStat(
                     label: l.offline,
                     value: '$offlineCount',
                     color: AppColors.offline,
+                    selected: _filter == 'offline',
+                    onTap: () => _setFilter('offline'),
                   ),
                   const SizedBox(width: 10),
                   _MiniStat(
                     label: l.suspended,
                     value: '$suspendedCount',
                     color: AppColors.warning,
+                    selected: _filter == 'suspended',
+                    onTap: () => _setFilter('suspended'),
                   ),
                 ],
               ),
@@ -715,6 +734,15 @@ class _DriversScreenState extends State<DriversScreen> {
     return driver.status.toUpperCase() == 'SUSPENDED';
   }
 
+  void _setFilter(String filter) {
+    setState(() => _filter = _normalizeFilter(filter));
+  }
+
+  String _normalizeFilter(String value) {
+    const allowed = {'all', 'online', 'offline', 'suspended'};
+    return allowed.contains(value) ? value : 'all';
+  }
+
   Widget _filterChipBtn(String label, String value) {
     final selected = _filter == value;
     return FilterChip(
@@ -786,45 +814,65 @@ class _MiniStat extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
   const _MiniStat({
     required this.label,
     required this.value,
     required this.color,
+    required this.selected,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: theme.cardTheme.color,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-          border: Border.all(color: theme.dividerColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: color,
-                letterSpacing: -0.5,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: selected
+                  ? color.withValues(alpha: 0.08)
+                  : theme.cardTheme.color,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+              border: Border.all(
+                color: selected
+                    ? color.withValues(alpha: 0.45)
+                    : theme.dividerColor,
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    color: selected
+                        ? color
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

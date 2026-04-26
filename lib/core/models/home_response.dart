@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class PaginatedResponse<T> {
   final int count;
   final String? next;
@@ -221,25 +223,283 @@ class DriverWithLocation {
 
 class HomeRestaurant {
   final int id;
+  final int ownerUser;
   final String name;
+  final String? logo;
+  final RestaurantAddress? address;
+  final String phone;
+  final RestaurantWorkHours workHours;
   final String status;
+  final DateTime? createdAt;
   final bool isActive;
 
   const HomeRestaurant({
     required this.id,
+    required this.ownerUser,
     required this.name,
+    this.logo,
+    this.address,
+    required this.phone,
+    required this.workHours,
     required this.status,
+    this.createdAt,
     required this.isActive,
   });
 
   factory HomeRestaurant.fromJson(Map<String, dynamic> json) {
+    final rawAddress = json['address'];
     return HomeRestaurant(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      status: json['status'] ?? '',
-      isActive: json['is_active'] ?? false,
+      id: _intValue(json['id']),
+      ownerUser: _intValue(json['owner_user']),
+      name: _stringValue(json['name']),
+      logo: _nullIfEmpty(json['logo']),
+      address: rawAddress is Map
+          ? RestaurantAddress.fromJson(Map<String, dynamic>.from(rawAddress))
+          : null,
+      phone: _stringValue(json['phone']),
+      workHours: RestaurantWorkHours.fromJson(json['work_hours']),
+      status: _stringValue(json['status']).toUpperCase(),
+      createdAt: _dateValue(json['created_at']),
+      isActive: _boolValue(json['is_active']) ?? false,
     );
   }
+
+  RestaurantOpeningSnapshot openingStatus([DateTime? now]) {
+    return workHours.openingStatus(now ?? DateTime.now());
+  }
+
+  bool isOpenNow([DateTime? now]) {
+    return isActive && openingStatus(now).isOpenNow;
+  }
+
+  String get city => address?.city ?? '';
+  String get displayAddress => address?.displayLine ?? '';
+}
+
+class RestaurantAddress {
+  final int id;
+  final String label;
+  final bool isDefault;
+  final String? lat;
+  final String? lng;
+  final String fullAddress;
+  final String streetName;
+  final String houseNumber;
+  final String city;
+  final String postalCode;
+  final String country;
+  final DateTime? createdAt;
+
+  const RestaurantAddress({
+    required this.id,
+    required this.label,
+    required this.isDefault,
+    this.lat,
+    this.lng,
+    required this.fullAddress,
+    required this.streetName,
+    required this.houseNumber,
+    required this.city,
+    required this.postalCode,
+    required this.country,
+    this.createdAt,
+  });
+
+  factory RestaurantAddress.fromJson(Map<String, dynamic> json) {
+    return RestaurantAddress(
+      id: _intValue(json['id']),
+      label: _stringValue(json['label']),
+      isDefault: _boolValue(json['is_default']) ?? false,
+      lat: _nullIfEmpty(json['lat']),
+      lng: _nullIfEmpty(json['lng']),
+      fullAddress: _stringValue(json['full_address']),
+      streetName: _stringValue(json['street_name']),
+      houseNumber: _stringValue(json['house_number']),
+      city: _stringValue(json['city']),
+      postalCode: _stringValue(json['postal_code']),
+      country: _stringValue(json['country']),
+      createdAt: _dateValue(json['created_at']),
+    );
+  }
+
+  String get displayLine {
+    if (fullAddress.trim().isNotEmpty) return fullAddress.trim();
+
+    final street = [
+      streetName,
+      houseNumber,
+    ].where((part) => part.trim().isNotEmpty).join(' ');
+    final parts = [
+      street,
+      city,
+      postalCode,
+      country,
+    ].where((part) => part.trim().isNotEmpty).toList();
+    return parts.join(', ');
+  }
+
+  bool get hasCoordinates =>
+      lat != null &&
+      lat!.trim().isNotEmpty &&
+      lng != null &&
+      lng!.trim().isNotEmpty;
+}
+
+class RestaurantWorkHours {
+  static const dayKeys = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ];
+
+  final Map<String, List<RestaurantTimeRange>> days;
+
+  const RestaurantWorkHours({required this.days});
+
+  factory RestaurantWorkHours.empty() {
+    return RestaurantWorkHours(
+      days: {for (final day in dayKeys) day: const <RestaurantTimeRange>[]},
+    );
+  }
+
+  factory RestaurantWorkHours.fromJson(dynamic value) {
+    dynamic raw = value;
+    if (raw is String) {
+      final trimmed = raw.trim();
+      if (trimmed.isEmpty) return RestaurantWorkHours.empty();
+      try {
+        raw = jsonDecode(trimmed);
+      } catch (_) {
+        return RestaurantWorkHours.empty();
+      }
+    }
+
+    if (raw is! Map) return RestaurantWorkHours.empty();
+
+    final source = Map<String, dynamic>.from(raw);
+    final parsed = <String, List<RestaurantTimeRange>>{};
+    for (final day in dayKeys) {
+      final rawRanges = source[day] ?? source[_capitalize(day)];
+      if (rawRanges is List) {
+        parsed[day] = rawRanges
+            .whereType<Map>()
+            .map((range) {
+              return RestaurantTimeRange.fromJson(
+                Map<String, dynamic>.from(range),
+              );
+            })
+            .where((range) => range.isValid)
+            .toList();
+      } else {
+        parsed[day] = const <RestaurantTimeRange>[];
+      }
+    }
+
+    return RestaurantWorkHours(days: parsed);
+  }
+
+  List<RestaurantTimeRange> rangesFor(String dayKey) {
+    return days[dayKey] ?? const <RestaurantTimeRange>[];
+  }
+
+  bool get hasAnyHours => days.values.any((ranges) => ranges.isNotEmpty);
+
+  RestaurantOpeningSnapshot openingStatus(DateTime now) {
+    final todayKey = dayKeyFor(now);
+    final yesterdayKey = dayKeyFor(now.subtract(const Duration(days: 1)));
+    final nowMinutes = now.hour * 60 + now.minute;
+
+    for (final range in rangesFor(yesterdayKey)) {
+      if (range.crossesMidnight && nowMinutes < range.closeMinutes!) {
+        return RestaurantOpeningSnapshot(
+          isOpenNow: true,
+          currentDayKey: yesterdayKey,
+          currentRange: range,
+        );
+      }
+    }
+
+    for (final range in rangesFor(todayKey)) {
+      if (range.isOpenOnStartDay(nowMinutes)) {
+        return RestaurantOpeningSnapshot(
+          isOpenNow: true,
+          currentDayKey: todayKey,
+          currentRange: range,
+        );
+      }
+    }
+
+    for (var offset = 0; offset <= 7; offset++) {
+      final day = now.add(Duration(days: offset));
+      final key = dayKeyFor(day);
+      final ranges = [...rangesFor(key)]
+        ..sort((a, b) => a.openMinutes!.compareTo(b.openMinutes!));
+
+      for (final range in ranges) {
+        if (offset > 0 || range.openMinutes! > nowMinutes) {
+          return RestaurantOpeningSnapshot(
+            isOpenNow: false,
+            nextDayKey: key,
+            nextRange: range,
+            nextDaysAhead: offset,
+          );
+        }
+      }
+    }
+
+    return const RestaurantOpeningSnapshot(isOpenNow: false);
+  }
+
+  static String dayKeyFor(DateTime date) => dayKeys[date.weekday - 1];
+}
+
+class RestaurantTimeRange {
+  final String open;
+  final String close;
+
+  const RestaurantTimeRange({required this.open, required this.close});
+
+  factory RestaurantTimeRange.fromJson(Map<String, dynamic> json) {
+    return RestaurantTimeRange(
+      open: _stringValue(json['open']),
+      close: _stringValue(json['close']),
+    );
+  }
+
+  int? get openMinutes => _parseClockMinutes(open);
+  int? get closeMinutes => _parseClockMinutes(close);
+  bool get isValid => openMinutes != null && closeMinutes != null;
+  bool get crossesMidnight => isValid && closeMinutes! <= openMinutes!;
+
+  bool isOpenOnStartDay(int minute) {
+    if (!isValid) return false;
+    if (crossesMidnight) return minute >= openMinutes!;
+    return minute >= openMinutes! && minute < closeMinutes!;
+  }
+
+  String get display => '$open - $close';
+}
+
+class RestaurantOpeningSnapshot {
+  final bool isOpenNow;
+  final String? currentDayKey;
+  final RestaurantTimeRange? currentRange;
+  final String? nextDayKey;
+  final RestaurantTimeRange? nextRange;
+  final int? nextDaysAhead;
+
+  const RestaurantOpeningSnapshot({
+    required this.isOpenNow,
+    this.currentDayKey,
+    this.currentRange,
+    this.nextDayKey,
+    this.nextRange,
+    this.nextDaysAhead,
+  });
 }
 
 class PendingDriver {
@@ -874,4 +1134,48 @@ class HomeResponse {
       rawResponse: Map<String, dynamic>.from(json),
     );
   }
+}
+
+String _stringValue(dynamic value) => value?.toString().trim() ?? '';
+
+String? _nullIfEmpty(dynamic value) {
+  if (value == null) return null;
+  final text = value.toString().trim();
+  return text.isEmpty ? null : text;
+}
+
+int _intValue(dynamic value) {
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+bool? _boolValue(dynamic value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  final text = value.toString().trim().toLowerCase();
+  if (text == 'true' || text == '1' || text == 'yes') return true;
+  if (text == 'false' || text == '0' || text == 'no') return false;
+  return null;
+}
+
+DateTime? _dateValue(dynamic value) {
+  if (value == null) return null;
+  return DateTime.tryParse(value.toString());
+}
+
+int? _parseClockMinutes(String value) {
+  final match = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(value.trim());
+  if (match == null) return null;
+
+  final hour = int.tryParse(match.group(1)!);
+  final minute = int.tryParse(match.group(2)!);
+  if (hour == null || minute == null) return null;
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  return hour * 60 + minute;
+}
+
+String _capitalize(String value) {
+  if (value.isEmpty) return value;
+  return value[0].toUpperCase() + value.substring(1);
 }

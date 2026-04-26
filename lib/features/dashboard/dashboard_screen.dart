@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -126,6 +127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 admin.driversCount.offline,
                               ),
                               accent: AppColors.online,
+                              onTap: () => context.go('/drivers?filter=online'),
                             ),
                             _StatCard(
                               width: cardW,
@@ -136,6 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 l,
                               ),
                               accent: const Color(0xFF6366F1),
+                              onTap: () => context.go('/restaurants'),
                             ),
                             _StatCard(
                               width: cardW,
@@ -147,6 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 admin.pendingRestaurantsTotal,
                               ),
                               accent: AppColors.warning,
+                              onTap: () => context.go('/approvals'),
                             ),
                           ],
                         );
@@ -315,6 +319,7 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final Color accent;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.width,
@@ -322,12 +327,13 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.subtitle,
     required this.accent,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
+    final card = SizedBox(
       width: width,
       height: 140,
       child: Container(
@@ -385,6 +391,13 @@ class _StatCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+
+    if (onTap == null) return card;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(onTap: onTap, child: card),
     );
   }
 }

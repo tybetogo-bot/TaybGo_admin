@@ -507,6 +507,238 @@ class AppLocalizations {
     de: 'Keine Restaurants geladen',
   );
 
+  String restaurantsScreenSub(int total, int active, int open) => _t(
+    '$total restaurants - $active active - $open open now',
+    '$total مطاعم - $active نشط - $open مفتوح الآن',
+    nl: '$total restaurants - $active actief - $open nu open',
+    fr: '$total restaurants - $active actifs - $open ouverts',
+    de: '$total Restaurants - $active aktiv - $open jetzt offen',
+  );
+  String get restaurant => _t(
+    'Restaurant',
+    'مطعم',
+    nl: 'Restaurant',
+    fr: 'Restaurant',
+    de: 'Restaurant',
+  );
+  String get restaurantDetails => _t(
+    'Restaurant Details',
+    'تفاصيل المطعم',
+    nl: 'Restaurantdetails',
+    fr: 'Details du restaurant',
+    de: 'Restaurantdetails',
+  );
+  String get restaurantInfo => _t(
+    'Restaurant Info',
+    'معلومات المطعم',
+    nl: 'Restaurantinformatie',
+    fr: 'Informations du restaurant',
+    de: 'Restaurantinformationen',
+  );
+  String get searchRestaurants => _t(
+    'Search restaurants...',
+    'ابحث عن المطاعم...',
+    nl: 'Restaurants zoeken...',
+    fr: 'Rechercher des restaurants...',
+    de: 'Restaurants suchen...',
+  );
+  String get active =>
+      _t('Active', 'نشط', nl: 'Actief', fr: 'Actif', de: 'Aktiv');
+  String get inactive =>
+      _t('Inactive', 'غير نشط', nl: 'Inactief', fr: 'Inactif', de: 'Inaktiv');
+  String get approved => _t(
+    'Approved',
+    'موافق عليه',
+    nl: 'Goedgekeurd',
+    fr: 'Approuve',
+    de: 'Genehmigt',
+  );
+  String get openNow => _t(
+    'Open now',
+    'مفتوح الآن',
+    nl: 'Nu open',
+    fr: 'Ouvert',
+    de: 'Jetzt offen',
+  );
+  String get closedNow => _t(
+    'Closed now',
+    'مغلق الآن',
+    nl: 'Nu gesloten',
+    fr: 'Ferme',
+    de: 'Jetzt geschlossen',
+  );
+  String get allStatuses => _t(
+    'All statuses',
+    'كل الحالات',
+    nl: 'Alle statussen',
+    fr: 'Tous les statuts',
+    de: 'Alle Status',
+  );
+  String get allCities => _t(
+    'All cities',
+    'كل المدن',
+    nl: 'Alle steden',
+    fr: 'Toutes les villes',
+    de: 'Alle Staedte',
+  );
+  String get openingHours => _t(
+    'Opening Hours',
+    'ساعات العمل',
+    nl: 'Openingstijden',
+    fr: 'Horaires',
+    de: 'Oeffnungszeiten',
+  );
+  String get workingHours => _t(
+    'Working Hours',
+    'ساعات العمل',
+    nl: 'Werkuren',
+    fr: 'Heures de travail',
+    de: 'Arbeitszeiten',
+  );
+  String get noRestaurantsMatchFilters => _t(
+    'No restaurants match your filters',
+    'لا توجد مطاعم تطابق الفلاتر',
+    nl: 'Geen restaurants passen bij uw filters',
+    fr: 'Aucun restaurant ne correspond aux filtres',
+    de: 'Keine Restaurants entsprechen den Filtern',
+  );
+  String get noHoursAvailable => _t(
+    'No hours available',
+    'لا توجد ساعات عمل',
+    nl: 'Geen openingstijden beschikbaar',
+    fr: 'Aucun horaire disponible',
+    de: 'Keine Zeiten verfuegbar',
+  );
+  String openUntil(String time) => _t(
+    'Open until $time',
+    'مفتوح حتى $time',
+    nl: 'Open tot $time',
+    fr: 'Ouvert jusqu a $time',
+    de: 'Offen bis $time',
+  );
+  String opensTodayAt(String time) => _t(
+    'Opens today at $time',
+    'يفتح اليوم في $time',
+    nl: 'Opent vandaag om $time',
+    fr: 'Ouvre aujourd hui a $time',
+    de: 'Oeffnet heute um $time',
+  );
+  String opensDayAt(String day, String time) => _t(
+    'Opens $day at $time',
+    'يفتح $day في $time',
+    nl: 'Opent $day om $time',
+    fr: 'Ouvre $day a $time',
+    de: 'Oeffnet $day um $time',
+  );
+  String get ownerUser => _t(
+    'Owner user',
+    'حساب المالك',
+    nl: 'Eigenaar',
+    fr: 'Utilisateur proprietaire',
+    de: 'Inhaber-Benutzer',
+  );
+  String get currentHoursStatus => _t(
+    'Hours status',
+    'حالة الدوام',
+    nl: 'Urenstatus',
+    fr: 'Statut des horaires',
+    de: 'Zeitstatus',
+  );
+  String get yes => _t('Yes', 'نعم', nl: 'Ja', fr: 'Oui', de: 'Ja');
+  String get no => _t('No', 'لا', nl: 'Nee', fr: 'Non', de: 'Nein');
+  String get address =>
+      _t('Address', 'العنوان', nl: 'Adres', fr: 'Adresse', de: 'Adresse');
+  String get label =>
+      _t('Label', 'التسمية', nl: 'Label', fr: 'Libelle', de: 'Bezeichnung');
+  String get fullAddress => _t(
+    'Full address',
+    'العنوان الكامل',
+    nl: 'Volledig adres',
+    fr: 'Adresse complete',
+    de: 'Vollstaendige Adresse',
+  );
+  String get streetName =>
+      _t('Street', 'الشارع', nl: 'Straat', fr: 'Rue', de: 'Strasse');
+  String get houseNumber => _t(
+    'House number',
+    'رقم المنزل',
+    nl: 'Huisnummer',
+    fr: 'Numero',
+    de: 'Hausnummer',
+  );
+  String get city =>
+      _t('City', 'المدينة', nl: 'Stad', fr: 'Ville', de: 'Stadt');
+  String get postalCode => _t(
+    'Postal code',
+    'الرمز البريدي',
+    nl: 'Postcode',
+    fr: 'Code postal',
+    de: 'Postleitzahl',
+  );
+  String get country =>
+      _t('Country', 'البلد', nl: 'Land', fr: 'Pays', de: 'Land');
+  String get coordinates => _t(
+    'Coordinates',
+    'الإحداثيات',
+    nl: 'Coordinaten',
+    fr: 'Coordonnees',
+    de: 'Koordinaten',
+  );
+  String weekdayName(String key) {
+    return switch (key) {
+      'monday' => _t(
+        'Monday',
+        'الاثنين',
+        nl: 'Maandag',
+        fr: 'Lundi',
+        de: 'Montag',
+      ),
+      'tuesday' => _t(
+        'Tuesday',
+        'الثلاثاء',
+        nl: 'Dinsdag',
+        fr: 'Mardi',
+        de: 'Dienstag',
+      ),
+      'wednesday' => _t(
+        'Wednesday',
+        'الأربعاء',
+        nl: 'Woensdag',
+        fr: 'Mercredi',
+        de: 'Mittwoch',
+      ),
+      'thursday' => _t(
+        'Thursday',
+        'الخميس',
+        nl: 'Donderdag',
+        fr: 'Jeudi',
+        de: 'Donnerstag',
+      ),
+      'friday' => _t(
+        'Friday',
+        'الجمعة',
+        nl: 'Vrijdag',
+        fr: 'Vendredi',
+        de: 'Freitag',
+      ),
+      'saturday' => _t(
+        'Saturday',
+        'السبت',
+        nl: 'Zaterdag',
+        fr: 'Samedi',
+        de: 'Samstag',
+      ),
+      'sunday' => _t(
+        'Sunday',
+        'الأحد',
+        nl: 'Zondag',
+        fr: 'Dimanche',
+        de: 'Sonntag',
+      ),
+      _ => key,
+    };
+  }
+
   // Dynamic dashboard strings
   String driversCountSummary(int total, int online, int offline) => _t(
     '$total total Ã‚Â· $online online',

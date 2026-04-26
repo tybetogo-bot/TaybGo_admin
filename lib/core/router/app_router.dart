@@ -8,6 +8,8 @@ import '../../features/approvals/approvals_screen.dart';
 import '../../features/approvals/driver_request_detail_screen.dart';
 import '../../features/approvals/restaurant_request_detail_screen.dart';
 import '../../features/drivers/drivers_screen.dart';
+import '../../features/restaurants/restaurant_detail_screen.dart';
+import '../../features/restaurants/restaurants_screen.dart';
 import '../../features/support/support_screen.dart';
 import '../../features/support/ticket_detail_screen.dart';
 import '../../features/profile/profile_screen.dart';
@@ -88,7 +90,28 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/drivers',
-                builder: (context, state) => const DriversScreen(),
+                builder: (context, state) => DriversScreen(
+                  initialFilter: state.uri.queryParameters['filter'] ?? 'all',
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/restaurants',
+                builder: (context, state) => RestaurantsScreen(
+                  initialFilter: state.uri.queryParameters['filter'] ?? 'all',
+                ),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return RestaurantDetailScreen(restaurantId: id);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

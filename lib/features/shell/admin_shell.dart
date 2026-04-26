@@ -15,6 +15,7 @@ class AdminShell extends StatefulWidget {
     _IconDef(Icons.space_dashboard_outlined, Icons.space_dashboard_rounded),
     _IconDef(Icons.how_to_reg_outlined, Icons.how_to_reg_rounded),
     _IconDef(Icons.local_shipping_outlined, Icons.local_shipping_rounded),
+    _IconDef(Icons.storefront_outlined, Icons.storefront_rounded),
     _IconDef(Icons.forum_outlined, Icons.forum_rounded),
     _IconDef(Icons.person_outline, Icons.person_rounded),
   ];
@@ -23,6 +24,7 @@ class AdminShell extends StatefulWidget {
     l.overview,
     l.approvals,
     l.drivers,
+    l.restaurants,
     l.support,
     l.profile,
   ];
@@ -207,7 +209,7 @@ class _Sidebar extends StatelessWidget {
                   admin.pendingDriversTotal + admin.pendingRestaurantsTotal;
               if (count > 0) badge = count;
             }
-            if (i == 3) {
+            if (i == 4) {
               final count = admin.openTickets.length;
               if (count > 0) badge = count;
             }

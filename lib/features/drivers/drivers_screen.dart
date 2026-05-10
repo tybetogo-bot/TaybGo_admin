@@ -12,8 +12,13 @@ import 'driver_profile_screen.dart';
 
 class DriversScreen extends StatefulWidget {
   final String initialFilter;
+  final bool showHeader;
 
-  const DriversScreen({super.key, this.initialFilter = 'all'});
+  const DriversScreen({
+    super.key,
+    this.initialFilter = 'all',
+    this.showHeader = true,
+  });
 
   @override
   State<DriversScreen> createState() => _DriversScreenState();
@@ -68,183 +73,170 @@ class _DriversScreenState extends State<DriversScreen> {
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(28, 28, 28, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l.drivers,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        suspendedCount > 0
-                            ? l.driversScreenSubWithSuspended(
-                                totalCount,
-                                onlineCount,
-                                offlineCount,
-                                suspendedCount,
-                              )
-                            : l.driversScreenSub(
-                                totalCount,
-                                onlineCount,
-                                offlineCount,
-                              ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
+        padding: EdgeInsets.fromLTRB(28, widget.showHeader ? 28 : 0, 28, 0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.showHeader) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l.drivers,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                              letterSpacing: -0.5,
+                            ),
                           ),
-                        ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        debugPrint('[DriversScreen] Manual refresh triggered');
+                        admin.refreshHome();
+                      },
+                      icon: const Icon(Icons.refresh_rounded, size: 20),
+                      tooltip: l.refresh,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
+
+              // Status overview cards
+              LayoutBuilder(
+                builder: (context, c) {
+                  const gap = 10.0;
+                  final cols = c.maxWidth >= 820
+                      ? 4
+                      : c.maxWidth >= 260
+                      ? 2
+                      : 1;
+                  final cardWidth = (c.maxWidth - gap * (cols - 1)) / cols;
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      _MiniStat(
+                        width: cardWidth,
+                        label: l.total,
+                        value: '$totalCount',
+                        color: theme.colorScheme.onSurface,
+                        selected: _filter == 'all',
+                        onTap: () => _setFilter('all'),
+                      ),
+                      _MiniStat(
+                        width: cardWidth,
+                        label: l.online,
+                        value: '$onlineCount',
+                        color: AppColors.online,
+                        selected: _filter == 'online',
+                        onTap: () => _setFilter('online'),
+                      ),
+                      _MiniStat(
+                        width: cardWidth,
+                        label: l.offline,
+                        value: '$offlineCount',
+                        color: AppColors.offline,
+                        selected: _filter == 'offline',
+                        onTap: () => _setFilter('offline'),
+                      ),
+                      _MiniStat(
+                        width: cardWidth,
+                        label: l.suspended,
+                        value: '$suspendedCount',
+                        color: AppColors.warning,
+                        selected: _filter == 'suspended',
+                        onTap: () => _setFilter('suspended'),
                       ),
                     ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    debugPrint('[DriversScreen] Manual refresh triggered');
-                    admin.refreshHome();
-                  },
-                  icon: const Icon(Icons.refresh_rounded, size: 20),
-                  tooltip: l.refresh,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
 
-            // Status overview cards
-            SizedBox(
-              height: 80,
-              child: Row(
+              // Search + filter + view toggle row
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  _MiniStat(
-                    label: l.total,
-                    value: '$totalCount',
-                    color: theme.colorScheme.onSurface,
-                    selected: _filter == 'all',
-                    onTap: () => _setFilter('all'),
+                  SizedBox(
+                    width: 280,
+                    height: 40,
+                    child: TextField(
+                      onChanged: (v) => setState(() => _search = v),
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: l.searchByNameOrPhone,
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 18,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.35,
+                          ),
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  _MiniStat(
-                    label: l.online,
-                    value: '$onlineCount',
-                    color: AppColors.online,
-                    selected: _filter == 'online',
-                    onTap: () => _setFilter('online'),
-                  ),
-                  const SizedBox(width: 10),
-                  _MiniStat(
-                    label: l.offline,
-                    value: '$offlineCount',
-                    color: AppColors.offline,
-                    selected: _filter == 'offline',
-                    onTap: () => _setFilter('offline'),
-                  ),
-                  const SizedBox(width: 10),
-                  _MiniStat(
-                    label: l.suspended,
-                    value: '$suspendedCount',
-                    color: AppColors.warning,
-                    selected: _filter == 'suspended',
-                    onTap: () => _setFilter('suspended'),
+                  // Region dropdown
+                  _buildRegionDropdown(all, theme, l),
+                  const SizedBox(width: 8),
+                  // Map / List toggle
+                  Container(
+                    height: 34,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: theme.dividerColor),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _viewToggleBtn(
+                          icon: Icons.list_rounded,
+                          label: l.listView,
+                          selected: !_showMap,
+                          onTap: () => setState(() => _showMap = false),
+                          isLeft: true,
+                          theme: theme,
+                        ),
+                        _viewToggleBtn(
+                          icon: Icons.map_rounded,
+                          label: l.mapView,
+                          selected: _showMap,
+                          onTap: () => setState(() => _showMap = true),
+                          isLeft: false,
+                          theme: theme,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-            // Search + filter + view toggle row
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizedBox(
-                  width: 280,
-                  height: 40,
-                  child: TextField(
-                    onChanged: (v) => setState(() => _search = v),
-                    style: const TextStyle(fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: l.searchByNameOrPhone,
-                      prefixIcon: Icon(
-                        Icons.search,
-                        size: 18,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.35,
-                        ),
-                      ),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
+              // Content
+              if (_showMap)
+                SizedBox(height: 520, child: _buildMap(filtered, theme, l))
+              else
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth < 620) {
+                      return _buildCardList(filtered, theme, l);
+                    }
+                    return _buildTable(filtered, theme, l);
+                  },
                 ),
-                _filterChipBtn(l.all, 'all'),
-                _filterChipBtn(l.online, 'online'),
-                _filterChipBtn(l.offline, 'offline'),
-                _filterChipBtn(l.suspended, 'suspended'),
-                const SizedBox(width: 8),
-                // Region dropdown
-                _buildRegionDropdown(all, theme, l),
-                const SizedBox(width: 8),
-                // Map / List toggle
-                Container(
-                  height: 34,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.dividerColor),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _viewToggleBtn(
-                        icon: Icons.list_rounded,
-                        label: l.listView,
-                        selected: !_showMap,
-                        onTap: () => setState(() => _showMap = false),
-                        isLeft: true,
-                        theme: theme,
-                      ),
-                      _viewToggleBtn(
-                        icon: Icons.map_rounded,
-                        label: l.mapView,
-                        selected: _showMap,
-                        onTap: () => setState(() => _showMap = true),
-                        isLeft: false,
-                        theme: theme,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Content
-            Expanded(
-              child: _showMap
-                  ? _buildMap(filtered, theme, l)
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (constraints.maxWidth < 620) {
-                          return _buildCardList(filtered, theme, l);
-                        }
-                        return _buildTable(filtered, theme, l);
-                      },
-                    ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -283,6 +275,8 @@ class _DriversScreenState extends State<DriversScreen> {
             const SizedBox(width: 4),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
@@ -353,7 +347,14 @@ class _DriversScreenState extends State<DriversScreen> {
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                   const SizedBox(width: 6),
-                  Text(l.allRegions),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 160),
+                    child: Text(
+                      l.allRegions,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -372,7 +373,14 @@ class _DriversScreenState extends State<DriversScreen> {
                       color: AppColors.primary.withValues(alpha: 0.5),
                     ),
                     const SizedBox(width: 6),
-                    Text(label),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 160),
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '(${entry.count})',
@@ -600,18 +608,18 @@ class _DriversScreenState extends State<DriversScreen> {
         ),
         Divider(color: theme.dividerColor, height: 1),
 
-        // Rows
-        Expanded(
-          child: filtered.isEmpty
-              ? _emptyState(theme, l, admin.drivers.length)
-              : ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (context, i) => _DriverTableRow(
-                    driver: filtered[i],
-                    onTap: () => _openDriverDetails(filtered[i]),
-                  ),
-                ),
-        ),
+        if (filtered.isEmpty)
+          SizedBox(
+            height: 360,
+            child: _emptyState(theme, l, admin.drivers.length),
+          )
+        else
+          ...filtered.map(
+            (driver) => _DriverTableRow(
+              driver: driver,
+              onTap: () => _openDriverDetails(driver),
+            ),
+          ),
       ],
     );
   }
@@ -626,13 +634,18 @@ class _DriversScreenState extends State<DriversScreen> {
       return _emptyState(theme, l, admin.drivers.length);
     }
 
-    return ListView.separated(
-      itemCount: filtered.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (_, i) => _DriverCard(
-        driver: filtered[i],
-        onTap: () => _openDriverDetails(filtered[i]),
-      ),
+    return Column(
+      children: [
+        ...filtered.map(
+          (driver) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _DriverCard(
+              driver: driver,
+              onTap: () => _openDriverDetails(driver),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -742,28 +755,6 @@ class _DriversScreenState extends State<DriversScreen> {
     const allowed = {'all', 'online', 'offline', 'suspended'};
     return allowed.contains(value) ? value : 'all';
   }
-
-  Widget _filterChipBtn(String label, String value) {
-    final selected = _filter == value;
-    return FilterChip(
-      selected: selected,
-      showCheckmark: false,
-      label: Text(label),
-      labelStyle: TextStyle(
-        fontSize: 12,
-        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-      ),
-      onSelected: (_) => setState(() => _filter = value),
-      selectedColor: AppColors.primary.withValues(alpha: 0.12),
-      side: BorderSide(
-        color: selected
-            ? AppColors.primary.withValues(alpha: 0.3)
-            : Theme.of(context).dividerColor,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      visualDensity: VisualDensity.compact,
-    );
-  }
 }
 
 // ─── Helper: Driver + parsed LatLng ─────────────────────────────
@@ -811,6 +802,7 @@ class _ArrowPainter extends CustomPainter {
 // ─── Mini Stat Card ──────────────────────────────────────────────
 
 class _MiniStat extends StatelessWidget {
+  final double width;
   final String label;
   final String value;
   final Color color;
@@ -818,6 +810,7 @@ class _MiniStat extends StatelessWidget {
   final VoidCallback onTap;
 
   const _MiniStat({
+    required this.width,
     required this.label,
     required this.value,
     required this.color,
@@ -828,13 +821,15 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Expanded(
+    return SizedBox(
+      width: width,
+      height: 58,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             decoration: BoxDecoration(
               color: selected
                   ? color.withValues(alpha: 0.08)
@@ -846,28 +841,32 @@ class _MiniStat extends StatelessWidget {
                     : theme.dividerColor,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
               children: [
                 Text(
                   value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: color,
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                    color: selected
-                        ? color
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      color: selected
+                          ? color
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                    ),
                   ),
                 ),
               ],
@@ -893,6 +892,8 @@ class _Col extends StatelessWidget {
       flex: flex,
       child: Text(
         label.toUpperCase(),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 10.5,
           fontWeight: FontWeight.w600,
@@ -1014,6 +1015,8 @@ class _DriverTableRowState extends State<_DriverTableRow> {
                                   ),
                                   child: Text(
                                     l.suspended,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -1043,6 +1046,8 @@ class _DriverTableRowState extends State<_DriverTableRow> {
                         const SizedBox(width: 8),
                         Text(
                           statusLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13,
                             color: theme.colorScheme.onSurface.withValues(
@@ -1180,6 +1185,8 @@ class _DriverCard extends StatelessWidget {
                     children: [
                       Text(
                         d.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1189,6 +1196,8 @@ class _DriverCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         d.phone,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
                           color: theme.colorScheme.onSurface.withValues(
@@ -1222,6 +1231,8 @@ class _DriverCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         statusLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,

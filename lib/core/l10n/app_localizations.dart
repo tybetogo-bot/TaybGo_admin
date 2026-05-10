@@ -190,6 +190,27 @@ class AppLocalizations {
     fr: 'Chauffeurs',
     de: 'Fahrer',
   );
+  String get driversAndRestaurantsNav => _t(
+    'Partners',
+    'الشركاء',
+    nl: 'Partners',
+    fr: 'Partenaires',
+    de: 'Partner',
+  );
+  String get driversAndRestaurantsTitle => _t(
+    'Drivers & Restaurants',
+    'السائقون والمطاعم',
+    nl: 'Chauffeurs & restaurants',
+    fr: 'Chauffeurs et restaurants',
+    de: 'Fahrer und Restaurants',
+  );
+  String managementSubtitle(int drivers, int restaurants) => _t(
+    '$drivers drivers and $restaurants restaurants',
+    '$drivers سائق و $restaurants مطعم',
+    nl: '$drivers chauffeurs en $restaurants restaurants',
+    fr: '$drivers chauffeurs et $restaurants restaurants',
+    de: '$drivers Fahrer und $restaurants Restaurants',
+  );
   String get support => _t(
     'Support',
     'Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â¹Ã™â€¦',
@@ -393,6 +414,393 @@ class AppLocalizations {
     nl: 'bestellingen',
     fr: 'commandes',
     de: 'Bestellungen',
+  );
+  String get ordersNav => _t(
+    'Orders',
+    'الطلبات',
+    nl: 'Bestellingen',
+    fr: 'Commandes',
+    de: 'Bestellungen',
+  );
+  String get ordersTitle => _t(
+    'Orders',
+    'الطلبات',
+    nl: 'Bestellingen',
+    fr: 'Commandes',
+    de: 'Bestellingen',
+  );
+  String ordersSubtitle(int shown, int total) => _t(
+    '$shown shown of $total orders',
+    '$shown معروض من $total طلب',
+    nl: '$shown weergegeven van $total bestellingen',
+    fr: '$shown affichées sur $total commandes',
+    de: '$shown von $total Bestellungen angezeigt',
+  );
+  String get searchOrders => _t(
+    'Search orders...',
+    'ابحث في الطلبات...',
+    nl: 'Bestellingen zoeken...',
+    fr: 'Rechercher des commandes...',
+    de: 'Bestellungen suchen...',
+  );
+  String get clear =>
+      _t('Clear', 'مسح', nl: 'Wissen', fr: 'Effacer', de: 'Leeren');
+  String get orderType => _t(
+    'Order type',
+    'نوع الطلب',
+    nl: 'Besteltype',
+    fr: 'Type de commande',
+    de: 'Bestelltyp',
+  );
+  String get allTypes => _t(
+    'All types',
+    'كل الأنواع',
+    nl: 'Alle typen',
+    fr: 'Tous les types',
+    de: 'Alle Typen',
+  );
+  String get allOrderStatuses => _t(
+    'All statuses',
+    'كل الحالات',
+    nl: 'Alle statussen',
+    fr: 'Tous les statuts',
+    de: 'Alle Status',
+  );
+  String get activeOrders => _t(
+    'Active orders',
+    'الطلبات النشطة',
+    nl: 'Actieve bestellingen',
+    fr: 'Commandes actives',
+    de: 'Aktive Bestellungen',
+  );
+  String get visibleAmount => _t(
+    'Visible amount',
+    'إجمالي المعروض',
+    nl: 'Zichtbaar bedrag',
+    fr: 'Montant visible',
+    de: 'Sichtbarer Betrag',
+  );
+  String get noOrdersFound => _t(
+    'No orders found',
+    'لم يتم العثور على طلبات',
+    nl: 'Geen bestellingen gevonden',
+    fr: 'Aucune commande trouvée',
+    de: 'Keine Bestellungen gefunden',
+  );
+  String get ordersPermissionDeniedSubtitle => _t(
+    'Order access is restricted for this account',
+    'الوصول إلى الطلبات مقيد لهذا الحساب',
+    nl: 'Besteltoegang is beperkt voor dit account',
+    fr: "L'accès aux commandes est limité pour ce compte",
+    de: 'Der Bestellzugriff ist für dieses Konto eingeschränkt',
+  );
+  String get ordersPermissionDeniedTitle => _t(
+    'Order access is restricted',
+    'الوصول إلى الطلبات مقيد',
+    nl: 'Besteltoegang is beperkt',
+    fr: 'Accès aux commandes limité',
+    de: 'Bestellzugriff eingeschränkt',
+  );
+  String get ordersPermissionDeniedBody => _t(
+    'This account can open the admin dashboard, but the API is not granting permission to view admin orders. Grant order access, then retry.',
+    'يمكن لهذا الحساب فتح لوحة الإدارة، لكن واجهة API لا تمنحه صلاحية عرض طلبات الإدارة. امنح صلاحية الطلبات ثم أعد المحاولة.',
+    nl: 'Dit account kan het beheerdersdashboard openen, maar de API geeft geen toestemming om adminbestellingen te bekijken. Geef besteltoegang en probeer het opnieuw.',
+    fr: "Ce compte peut ouvrir le tableau de bord admin, mais l'API ne lui accorde pas l'autorisation de voir les commandes admin. Accordez l'accès aux commandes, puis réessayez.",
+    de: 'Dieses Konto kann das Admin-Dashboard öffnen, aber die API erlaubt keinen Zugriff auf Admin-Bestellungen. Gewähren Sie Bestellzugriff und versuchen Sie es erneut.',
+  );
+  String orderNumber(int id) => _t(
+    'Order #$id',
+    'طلب #$id',
+    nl: 'Bestelling #$id',
+    fr: 'Commande n° $id',
+    de: 'Bestellung #$id',
+  );
+  String pageNumber(int page) => _t(
+    'Page $page',
+    'الصفحة $page',
+    nl: 'Pagina $page',
+    fr: 'Page $page',
+    de: 'Seite $page',
+  );
+  String get previousPage => _t(
+    'Previous page',
+    'الصفحة السابقة',
+    nl: 'Vorige pagina',
+    fr: 'Page précédente',
+    de: 'Vorherige Seite',
+  );
+  String get nextPage => _t(
+    'Next page',
+    'الصفحة التالية',
+    nl: 'Volgende pagina',
+    fr: 'Page suivante',
+    de: 'Nächste Seite',
+  );
+  String get orderDetails => _t(
+    'Order details',
+    'تفاصيل الطلب',
+    nl: 'Bestelgegevens',
+    fr: 'Détails de la commande',
+    de: 'Bestelldetails',
+  );
+  String get customer =>
+      _t('Customer', 'العميل', nl: 'Klant', fr: 'Client', de: 'Kunde');
+  String get accepted => _t(
+    'Accepted',
+    'مقبول',
+    nl: 'Geaccepteerd',
+    fr: 'Acceptée',
+    de: 'Akzeptiert',
+  );
+  String get searchingForDriver => _t(
+    'Searching for driver',
+    'جار البحث عن سائق',
+    nl: 'Zoeken naar chauffeur',
+    fr: 'Recherche de chauffeur',
+    de: 'Fahrer wird gesucht',
+  );
+  String get driverNotificationSent => _t(
+    'Driver notified',
+    'تم إشعار السائق',
+    nl: 'Chauffeur geïnformeerd',
+    fr: 'Chauffeur notifié',
+    de: 'Fahrer benachrichtigt',
+  );
+  String get onTheWay => _t(
+    'On the way',
+    'في الطريق',
+    nl: 'Onderweg',
+    fr: 'En route',
+    de: 'Unterwegs',
+  );
+  String get delivered => _t(
+    'Delivered',
+    'تم التسليم',
+    nl: 'Bezorgd',
+    fr: 'Livrée',
+    de: 'Geliefert',
+  );
+  String get completed => _t(
+    'Completed',
+    'مكتمل',
+    nl: 'Voltooid',
+    fr: 'Terminée',
+    de: 'Abgeschlossen',
+  );
+  String get rejected =>
+      _t('Rejected', 'مرفوض', nl: 'Afgewezen', fr: 'Rejetée', de: 'Abgelehnt');
+  String get expired =>
+      _t('Expired', 'منتهي', nl: 'Verlopen', fr: 'Expirée', de: 'Abgelaufen');
+  String get cancelled => _t(
+    'Cancelled',
+    'ملغى',
+    nl: 'Geannuleerd',
+    fr: 'Annulée',
+    de: 'Storniert',
+  );
+  String get cash =>
+      _t('Cash', 'نقدا', nl: 'Contant', fr: 'Espèces', de: 'Bar');
+  String get card => _t('Card', 'بطاقة', nl: 'Kaart', fr: 'Carte', de: 'Karte');
+  String get other =>
+      _t('Other', 'أخرى', nl: 'Overig', fr: 'Autre', de: 'Andere');
+  String get paid =>
+      _t('Paid', 'مدفوع', nl: 'Betaald', fr: 'Payée', de: 'Bezahlt');
+  String get unpaid => _t(
+    'Unpaid',
+    'غير مدفوع',
+    nl: 'Onbetaald',
+    fr: 'Non payée',
+    de: 'Unbezahlt',
+  );
+  String get route =>
+      _t('Route', 'المسار', nl: 'Route', fr: 'Itinéraire', de: 'Route');
+  String get people =>
+      _t('People', 'الأشخاص', nl: 'Personen', fr: 'Personnes', de: 'Personen');
+  String get pricing =>
+      _t('Pricing', 'التسعير', nl: 'Prijs', fr: 'Tarification', de: 'Preise');
+  String get dispatch => _t(
+    'Dispatch',
+    'الإرسال',
+    nl: 'Dispatch',
+    fr: 'Répartition',
+    de: 'Disposition',
+  );
+  String get pickupAddress => _t(
+    'Pickup address',
+    'عنوان الاستلام',
+    nl: 'Ophaaladres',
+    fr: 'Adresse de prise en charge',
+    de: 'Abholadresse',
+  );
+  String get dropoffAddress => _t(
+    'Dropoff address',
+    'عنوان التسليم',
+    nl: 'Afleveradres',
+    fr: 'Adresse de livraison',
+    de: 'Lieferadresse',
+  );
+  String get assignedDriver => _t(
+    'Assigned driver',
+    'السائق المعين',
+    nl: 'Toegewezen chauffeur',
+    fr: 'Chauffeur assigné',
+    de: 'Zugewiesener Fahrer',
+  );
+  String get unassignedDriver => _t(
+    'Unassigned driver',
+    'لا يوجد سائق معين',
+    nl: 'Geen chauffeur toegewezen',
+    fr: 'Aucun chauffeur assigné',
+    de: 'Kein Fahrer zugewiesen',
+  );
+  String get unknownCustomer => _t(
+    'Unknown customer',
+    'عميل غير معروف',
+    nl: 'Onbekende klant',
+    fr: 'Client inconnu',
+    de: 'Unbekannter Kunde',
+  );
+  String get unknownRestaurant => _t(
+    'Unknown restaurant',
+    'مطعم غير معروف',
+    nl: 'Onbekend restaurant',
+    fr: 'Restaurant inconnu',
+    de: 'Unbekanntes Restaurant',
+  );
+  String get deliveryInstructions => _t(
+    'Delivery instructions',
+    'تعليمات التسليم',
+    nl: 'Bezorginstructies',
+    fr: 'Instructions de livraison',
+    de: 'Lieferhinweise',
+  );
+  String get noDeliveryInstructions => _t(
+    'No delivery instructions',
+    'لا توجد تعليمات تسليم',
+    nl: 'Geen bezorginstructies',
+    fr: 'Aucune instruction de livraison',
+    de: 'Keine Lieferhinweise',
+  );
+  String get subtotal => _t(
+    'Subtotal',
+    'المجموع الفرعي',
+    nl: 'Subtotaal',
+    fr: 'Sous-total',
+    de: 'Zwischensumme',
+  );
+  String get deliveryFee => _t(
+    'Delivery fee',
+    'رسوم التوصيل',
+    nl: 'Bezorgkosten',
+    fr: 'Frais de livraison',
+    de: 'Liefergebühr',
+  );
+  String get discount =>
+      _t('Discount', 'الخصم', nl: 'Korting', fr: 'Remise', de: 'Rabatt');
+  String get tip =>
+      _t('Tip', 'إكرامية', nl: 'Fooi', fr: 'Pourboire', de: 'Trinkgeld');
+  String get coupon =>
+      _t('Coupon', 'قسيمة', nl: 'Coupon', fr: 'Coupon', de: 'Coupon');
+  String get totalAmount => _t(
+    'Total amount',
+    'المبلغ الإجمالي',
+    nl: 'Totaalbedrag',
+    fr: 'Montant total',
+    de: 'Gesamtbetrag',
+  );
+  String get payment =>
+      _t('Payment', 'الدفع', nl: 'Betaling', fr: 'Paiement', de: 'Zahlung');
+  String get packageDetails => _t(
+    'Package details',
+    'تفاصيل الطرد',
+    nl: 'Pakketgegevens',
+    fr: 'Détails du colis',
+    de: 'Paketdetails',
+  );
+  String get packageSize =>
+      _t('Size', 'الحجم', nl: 'Grootte', fr: 'Taille', de: 'Größe');
+  String get packageWeight =>
+      _t('Weight', 'الوزن', nl: 'Gewicht', fr: 'Poids', de: 'Gewicht');
+  String get packageContent =>
+      _t('Content', 'المحتوى', nl: 'Inhoud', fr: 'Contenu', de: 'Inhalt');
+  String get requestedVehicle => _t(
+    'Requested vehicle',
+    'المركبة المطلوبة',
+    nl: 'Gevraagd voertuig',
+    fr: 'Véhicule demandé',
+    de: 'Gewünschtes Fahrzeug',
+  );
+  String get requestedDelivery => _t(
+    'Requested delivery',
+    'التوصيل المطلوب',
+    nl: 'Gevraagde bezorging',
+    fr: 'Livraison demandée',
+    de: 'Gewünschte Lieferung',
+  );
+  String get carSize => _t(
+    'Car size',
+    'حجم السيارة',
+    nl: 'Autogrootte',
+    fr: 'Taille de voiture',
+    de: 'Autogröße',
+  );
+  String get orderItems => _t(
+    'Order items',
+    'عناصر الطلب',
+    nl: 'Bestelitems',
+    fr: 'Articles de commande',
+    de: 'Bestellpositionen',
+  );
+  String get noItems => _t(
+    'No items',
+    'لا توجد عناصر',
+    nl: 'Geen items',
+    fr: 'Aucun article',
+    de: 'Keine Positionen',
+  );
+  String get unitPrice => _t(
+    'Unit price',
+    'سعر الوحدة',
+    nl: 'Eenheidsprijs',
+    fr: 'Prix unitaire',
+    de: 'Stückpreis',
+  );
+  String get orderMode => _t(
+    'Order mode',
+    'وضع الطلب',
+    nl: 'Bestelmodus',
+    fr: 'Mode de commande',
+    de: 'Bestellmodus',
+  );
+  String get manual =>
+      _t('Manual', 'يدوي', nl: 'Handmatig', fr: 'Manuel', de: 'Manuell');
+  String get automatic => _t(
+    'Automatic',
+    'تلقائي',
+    nl: 'Automatisch',
+    fr: 'Automatique',
+    de: 'Automatisch',
+  );
+  String get dispatchStarted => _t(
+    'Dispatch started',
+    'بدأ الإرسال',
+    nl: 'Dispatch gestart',
+    fr: 'Répartition démarrée',
+    de: 'Disposition gestartet',
+  );
+  String get updatedAt => _t(
+    'Updated',
+    'تم التحديث',
+    nl: 'Bijgewerkt',
+    fr: 'Mise à jour',
+    de: 'Aktualisiert',
+  );
+  String get statusHistory => _t(
+    'Status history',
+    'سجل الحالة',
+    nl: 'Statusgeschiedenis',
+    fr: 'Historique des statuts',
+    de: 'Statusverlauf',
   );
   String get fleetStatus => _t(
     'Fleet Status',

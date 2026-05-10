@@ -222,6 +222,8 @@ class _SupportScreenState extends State<SupportScreen> {
           children: [
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
@@ -242,6 +244,8 @@ class _SupportScreenState extends State<SupportScreen> {
                 ),
                 child: Text(
                   '$count',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -339,6 +343,8 @@ class _TicketRowState extends State<_TicketRow> {
                   Expanded(
                     child: Text(
                       '${t.requesterName} · ${t.category}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
                         color: theme.colorScheme.onSurface.withValues(
@@ -349,6 +355,8 @@ class _TicketRowState extends State<_TicketRow> {
                   ),
                   Text(
                     '#${t.id}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 11,
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.3),

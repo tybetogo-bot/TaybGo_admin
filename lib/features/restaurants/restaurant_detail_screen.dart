@@ -196,6 +196,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
               children: [
                 Text(
                   restaurant.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -207,6 +209,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                   restaurant.displayAddress.isNotEmpty
                       ? restaurant.displayAddress
                       : l.notProvided,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 13,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -329,12 +333,16 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
             ],
@@ -358,6 +366,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
             width: 136,
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
@@ -367,6 +377,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
           Expanded(
             child: Text(
               value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -437,6 +449,8 @@ class _HoursDayRow extends StatelessWidget {
             width: 110,
             child: Text(
               dayLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
@@ -449,6 +463,8 @@ class _HoursDayRow extends StatelessWidget {
               ranges.isEmpty
                   ? closedText
                   : ranges.map((range) => range.display).join(', '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
                 color: ranges.isEmpty

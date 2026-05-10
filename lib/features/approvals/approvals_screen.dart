@@ -136,7 +136,14 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
                       children: [
                         const Icon(Icons.local_shipping_outlined, size: 16),
                         const SizedBox(width: 8),
-                        Text(l.drivers),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 120),
+                          child: Text(
+                            l.drivers,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         if (admin.pendingDrivers.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           _Badge(admin.pendingDriversTotal),
@@ -150,7 +157,14 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
                       children: [
                         const Icon(Icons.storefront_outlined, size: 16),
                         const SizedBox(width: 8),
-                        Text(l.restaurants),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 120),
+                          child: Text(
+                            l.restaurants,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         if (admin.pendingRestaurants.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           _Badge(admin.pendingRestaurantsTotal),
@@ -194,6 +208,8 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         '$count',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -336,6 +352,8 @@ class _DriverCardState extends State<_DriverCard> {
                     children: [
                       Text(
                         driver.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -347,6 +365,8 @@ class _DriverCardState extends State<_DriverCard> {
                         driver.submittedAt != null
                             ? _fmtDate(driver.submittedAt!)
                             : l.pending,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
                           color: theme.colorScheme.onSurface.withValues(
@@ -406,7 +426,11 @@ class _DriverCardState extends State<_DriverCard> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        child: Text(l.decline),
+                        child: Text(
+                          l.decline,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ),
@@ -422,7 +446,11 @@ class _DriverCardState extends State<_DriverCard> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        child: Text(l.approve),
+                        child: Text(
+                          l.approve,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ),
@@ -563,6 +591,8 @@ class _RestaurantCardState extends State<_RestaurantCard> {
                     children: [
                       Text(
                         restaurant.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -574,6 +604,8 @@ class _RestaurantCardState extends State<_RestaurantCard> {
                         restaurant.submittedAt != null
                             ? _fmtDate(restaurant.submittedAt!)
                             : l.pending,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
                           color: theme.colorScheme.onSurface.withValues(
@@ -617,7 +649,11 @@ class _RestaurantCardState extends State<_RestaurantCard> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  child: Text(l.activate),
+                  child: Text(
+                    l.activate,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
           ],
@@ -649,11 +685,12 @@ class _InfoTag extends StatelessWidget {
         Flexible(
           child: Text(
             text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
             ),
-            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

@@ -10,8 +10,13 @@ import '../../core/theme/app_spacing.dart';
 
 class RestaurantsScreen extends StatefulWidget {
   final String initialFilter;
+  final bool showHeader;
 
-  const RestaurantsScreen({super.key, this.initialFilter = 'all'});
+  const RestaurantsScreen({
+    super.key,
+    this.initialFilter = 'all',
+    this.showHeader = true,
+  });
 
   @override
   State<RestaurantsScreen> createState() => _RestaurantsScreenState();
@@ -56,149 +61,159 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(28, 28, 28, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l.restaurants,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l.restaurantsScreenSub(
-                          restaurants.length,
-                          activeCount,
-                          openCount,
-                        ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
+        padding: EdgeInsets.fromLTRB(28, widget.showHeader ? 28 : 0, 28, 0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.showHeader) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l.restaurants,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l.restaurantsScreenSub(
+                              restaurants.length,
+                              activeCount,
+                              openCount,
+                            ),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (admin.isLoading)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      IconButton(
+                        onPressed: admin.refreshHome,
+                        icon: const Icon(Icons.refresh_rounded, size: 20),
+                        tooltip: l.refresh,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
+              LayoutBuilder(
+                builder: (context, c) {
+                  const gap = 10.0;
+                  final cols = c.maxWidth >= 820
+                      ? 4
+                      : c.maxWidth >= 260
+                      ? 2
+                      : 1;
+                  final cardWidth = (c.maxWidth - gap * (cols - 1)) / cols;
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      _MiniStat(
+                        width: cardWidth,
+                        label: l.total,
+                        value: '${restaurants.length}',
+                        color: theme.colorScheme.onSurface,
+                        selected: _filter == 'all',
+                        onTap: () => _setFilter('all'),
+                      ),
+                      _MiniStat(
+                        width: cardWidth,
+                        label: l.active,
+                        value: '$activeCount',
+                        color: AppColors.success,
+                        selected: _filter == 'active',
+                        onTap: () => _setFilter('active'),
+                      ),
+                      _MiniStat(
+                        width: cardWidth,
+                        label: l.openNow,
+                        value: '$openCount',
+                        color: AppColors.online,
+                        selected: _filter == 'open',
+                        onTap: () => _setFilter('open'),
+                      ),
+                      _MiniStat(
+                        width: cardWidth,
+                        label: l.inactive,
+                        value: '$inactiveCount',
+                        color: AppColors.offline,
+                        selected: _filter == 'inactive',
+                        onTap: () => _setFilter('inactive'),
                       ),
                     ],
-                  ),
-                ),
-                if (admin.isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  IconButton(
-                    onPressed: admin.refreshHome,
-                    icon: const Icon(Icons.refresh_rounded, size: 20),
-                    tooltip: l.refresh,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 80,
-              child: Row(
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  _MiniStat(
-                    label: l.total,
-                    value: '${restaurants.length}',
-                    color: theme.colorScheme.onSurface,
-                    selected: _filter == 'all',
-                    onTap: () => _setFilter('all'),
+                  SizedBox(
+                    width: 280,
+                    height: 40,
+                    child: TextField(
+                      onChanged: (v) => setState(() => _search = v),
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: l.searchRestaurants,
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 18,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.35,
+                          ),
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  _MiniStat(
-                    label: l.active,
-                    value: '$activeCount',
-                    color: AppColors.success,
-                    selected: _filter == 'active',
-                    onTap: () => _setFilter('active'),
+                  _dropdown(
+                    value: _selectedStatus ?? '_all',
+                    icon: Icons.verified_outlined,
+                    items: _statusItems(restaurants, l),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedStatus = value == '_all' ? null : value;
+                      });
+                    },
                   ),
-                  const SizedBox(width: 10),
-                  _MiniStat(
-                    label: l.openNow,
-                    value: '$openCount',
-                    color: AppColors.online,
-                    selected: _filter == 'open',
-                    onTap: () => _setFilter('open'),
-                  ),
-                  const SizedBox(width: 10),
-                  _MiniStat(
-                    label: l.inactive,
-                    value: '$inactiveCount',
-                    color: AppColors.offline,
-                    selected: _filter == 'inactive',
-                    onTap: () => _setFilter('inactive'),
+                  _dropdown(
+                    value: _selectedCity ?? '_all',
+                    icon: Icons.location_city_outlined,
+                    items: _cityItems(restaurants, l),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCity = value == '_all' ? null : value;
+                      });
+                    },
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizedBox(
-                  width: 280,
-                  height: 40,
-                  child: TextField(
-                    onChanged: (v) => setState(() => _search = v),
-                    style: const TextStyle(fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: l.searchRestaurants,
-                      prefixIcon: Icon(
-                        Icons.search,
-                        size: 18,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.35,
-                        ),
-                      ),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ),
-                _filterChipBtn(l.all, 'all'),
-                _filterChipBtn(l.active, 'active'),
-                _filterChipBtn(l.inactive, 'inactive'),
-                _filterChipBtn(l.openNow, 'open'),
-                _filterChipBtn(l.closedNow, 'closed'),
-                _dropdown(
-                  value: _selectedStatus ?? '_all',
-                  icon: Icons.verified_outlined,
-                  items: _statusItems(restaurants, l),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedStatus = value == '_all' ? null : value;
-                    });
-                  },
-                ),
-                _dropdown(
-                  value: _selectedCity ?? '_all',
-                  icon: Icons.location_city_outlined,
-                  items: _cityItems(restaurants, l),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCity = value == '_all' ? null : value;
-                    });
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(child: _buildContent(admin, filtered, now, theme, l)),
-          ],
+              const SizedBox(height: 16),
+              _buildContent(admin, filtered, now, theme, l),
+            ],
+          ),
         ),
       ),
     );
@@ -228,6 +243,8 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
             const SizedBox(height: 12),
             Text(
               admin.error!,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 14,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -275,21 +292,16 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
           ),
         ),
         Divider(color: theme.dividerColor, height: 1),
-        Expanded(
-          child: filtered.isEmpty
-              ? _emptyState(theme, l)
-              : ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (context, i) {
-                    final restaurant = filtered[i];
-                    return _RestaurantTableRow(
-                      restaurant: restaurant,
-                      now: now,
-                      onTap: () => _openRestaurant(restaurant),
-                    );
-                  },
-                ),
-        ),
+        if (filtered.isEmpty)
+          SizedBox(height: 360, child: _emptyState(theme, l))
+        else
+          ...filtered.map(
+            (restaurant) => _RestaurantTableRow(
+              restaurant: restaurant,
+              now: now,
+              onTap: () => _openRestaurant(restaurant),
+            ),
+          ),
       ],
     );
   }
@@ -302,17 +314,19 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
   ) {
     if (filtered.isEmpty) return _emptyState(theme, l);
 
-    return ListView.separated(
-      itemCount: filtered.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (_, i) {
-        final restaurant = filtered[i];
-        return _RestaurantCard(
-          restaurant: restaurant,
-          now: now,
-          onTap: () => _openRestaurant(restaurant),
-        );
-      },
+    return Column(
+      children: [
+        ...filtered.map(
+          (restaurant) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _RestaurantCard(
+              restaurant: restaurant,
+              now: now,
+              onTap: () => _openRestaurant(restaurant),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -340,7 +354,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
   }
 
   void _openRestaurant(HomeRestaurant restaurant) {
-    context.go('/restaurants/${restaurant.id}');
+    context.go('/management/restaurants/${restaurant.id}');
   }
 
   List<HomeRestaurant> _apply(List<HomeRestaurant> restaurants, DateTime now) {
@@ -481,7 +495,10 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      item.child,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 160),
+                        child: item.child,
+                      ),
                     ],
                   ),
                 ),
@@ -490,28 +507,6 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
           onChanged: onChanged,
         ),
       ),
-    );
-  }
-
-  Widget _filterChipBtn(String label, String value) {
-    final selected = _filter == value;
-    return FilterChip(
-      selected: selected,
-      showCheckmark: false,
-      label: Text(label),
-      labelStyle: TextStyle(
-        fontSize: 12,
-        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-      ),
-      onSelected: (_) => setState(() => _filter = value),
-      selectedColor: AppColors.primary.withValues(alpha: 0.12),
-      side: BorderSide(
-        color: selected
-            ? AppColors.primary.withValues(alpha: 0.3)
-            : Theme.of(context).dividerColor,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      visualDensity: VisualDensity.compact,
     );
   }
 }
@@ -571,12 +566,13 @@ class _RestaurantTableRowState extends State<_RestaurantTableRow> {
                             children: [
                               Text(
                                 restaurant.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w600,
                                   color: theme.colorScheme.onSurface,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                               if (restaurant.displayAddress.isNotEmpty) ...[
                                 const SizedBox(height: 3),
@@ -729,6 +725,8 @@ class _RestaurantCard extends StatelessWidget {
                     children: [
                       Text(
                         restaurant.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -871,6 +869,8 @@ class StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 11.5,
           fontWeight: FontWeight.w600,
@@ -915,6 +915,7 @@ class _InfoLine extends StatelessWidget {
 }
 
 class _MiniStat extends StatelessWidget {
+  final double width;
   final String label;
   final String value;
   final Color color;
@@ -922,6 +923,7 @@ class _MiniStat extends StatelessWidget {
   final VoidCallback onTap;
 
   const _MiniStat({
+    required this.width,
     required this.label,
     required this.value,
     required this.color,
@@ -932,13 +934,15 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Expanded(
+    return SizedBox(
+      width: width,
+      height: 58,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             decoration: BoxDecoration(
               color: selected
                   ? color.withValues(alpha: 0.08)
@@ -950,29 +954,32 @@ class _MiniStat extends StatelessWidget {
                     : theme.dividerColor,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
               children: [
                 Text(
                   value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: color,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                    color: selected
-                        ? color
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      color: selected
+                          ? color
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -996,6 +1003,8 @@ class _Col extends StatelessWidget {
       flex: flex,
       child: Text(
         label.toUpperCase(),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 10.5,
           fontWeight: FontWeight.w600,

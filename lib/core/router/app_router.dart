@@ -7,9 +7,10 @@ import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/approvals/approvals_screen.dart';
 import '../../features/approvals/driver_request_detail_screen.dart';
 import '../../features/approvals/restaurant_request_detail_screen.dart';
-import '../../features/drivers/drivers_screen.dart';
+import '../../features/management/management_screen.dart';
+import '../../features/orders/order_detail_screen.dart';
+import '../../features/orders/orders_screen.dart';
 import '../../features/restaurants/restaurant_detail_screen.dart';
-import '../../features/restaurants/restaurants_screen.dart';
 import '../../features/support/support_screen.dart';
 import '../../features/support/ticket_detail_screen.dart';
 import '../../features/profile/profile_screen.dart';
@@ -39,6 +40,27 @@ class AppRouter {
       GoRoute(
         path: '/verify-otp',
         builder: (context, state) => const OtpVerifyScreen(),
+      ),
+      GoRoute(
+        path: '/drivers',
+        redirect: (context, state) {
+          final filter = state.uri.queryParameters['filter'] ?? 'all';
+          return '/management?tab=drivers&driver_filter=$filter';
+        },
+      ),
+      GoRoute(
+        path: '/restaurants',
+        redirect: (context, state) {
+          final filter = state.uri.queryParameters['filter'] ?? 'all';
+          return '/management?tab=restaurants&restaurant_filter=$filter';
+        },
+        routes: [
+          GoRoute(
+            path: ':id',
+            redirect: (context, state) =>
+                '/management/restaurants/${state.pathParameters['id']}',
+          ),
+        ],
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -89,29 +111,52 @@ class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/drivers',
-                builder: (context, state) => DriversScreen(
-                  initialFilter: state.uri.queryParameters['filter'] ?? 'all',
-                ),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/restaurants',
-                builder: (context, state) => RestaurantsScreen(
-                  initialFilter: state.uri.queryParameters['filter'] ?? 'all',
+                path: '/management',
+                builder: (context, state) => ManagementScreen(
+                  initialTab: state.uri.queryParameters['tab'] ?? 'drivers',
+                  driverFilter:
+                      state.uri.queryParameters['driver_filter'] ??
+                      state.uri.queryParameters['filter'] ??
+                      'all',
+                  restaurantFilter:
+                      state.uri.queryParameters['restaurant_filter'] ??
+                      state.uri.queryParameters['filter'] ??
+                      'all',
                 ),
                 routes: [
                   GoRoute(
-                    path: ':id',
+                    path: 'restaurants/:id',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
                       return RestaurantDetailScreen(restaurantId: id);
                     },
                   ),
                 ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/orders',
+                builder: (context, state) => const OrdersScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return OrderDetailScreen(orderId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),
@@ -129,14 +174,6 @@ class AppRouter {
                     },
                   ),
                 ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),

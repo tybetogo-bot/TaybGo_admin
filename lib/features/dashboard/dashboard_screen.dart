@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final admin = context.watch<AdminProvider>();
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
+    final compactHeader = MediaQuery.of(context).size.width < 520;
 
     return Scaffold(
       body: admin.isLoading && admin.homeData == null
@@ -79,6 +82,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
+                        if (!admin.isLoading) ...[
+                          if (compactHeader)
+                            IconButton(
+                              onPressed: () => _showHomeRawResponse(admin),
+                              icon: const Icon(Icons.data_object, size: 20),
+                              tooltip: 'Raw admin/home',
+                            )
+                          else
+                            OutlinedButton.icon(
+                              onPressed: () => _showHomeRawResponse(admin),
+                              icon: const Icon(Icons.data_object, size: 18),
+                              label: const Text('Raw'),
+                            ),
+                          const SizedBox(width: 8),
+                          if (compactHeader)
+                            IconButton(
+                              onPressed: () => context.go('/support'),
+                              icon: const Icon(Icons.forum_outlined, size: 20),
+                              tooltip: l.support,
+                            )
+                          else
+                            OutlinedButton.icon(
+                              onPressed: () => context.go('/support'),
+                              icon: const Icon(Icons.forum_outlined, size: 18),
+                              label: Text(l.support),
+                            ),
+                          const SizedBox(width: 8),
+                        ],
                         if (!admin.isLoading)
                           IconButton(
                             onPressed: () {
@@ -99,9 +130,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       builder: (context, c) {
                         final cols = c.maxWidth > 1000
                             ? 4
-                            : c.maxWidth > 600
+                            : c.maxWidth > 640
                             ? 2
-                            : 2;
+                            : 1;
                         final gap = 14.0;
                         final cardW = (c.maxWidth - gap * (cols - 1)) / cols;
                         return Wrap(
@@ -117,6 +148,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 l,
                               ),
                               accent: AppColors.primary,
+                              onTap: () => context.go('/orders'),
                             ),
                             _StatCard(
                               width: cardW,
@@ -127,7 +159,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 admin.driversCount.offline,
                               ),
                               accent: AppColors.online,
-                              onTap: () => context.go('/drivers?filter=online'),
+                              onTap: () => context.go(
+                                '/management?tab=drivers&driver_filter=online',
+                              ),
                             ),
                             _StatCard(
                               width: cardW,
@@ -138,7 +172,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 l,
                               ),
                               accent: const Color(0xFF6366F1),
-                              onTap: () => context.go('/restaurants'),
+                              onTap: () =>
+                                  context.go('/management?tab=restaurants'),
                             ),
                             _StatCard(
                               width: cardW,
@@ -185,6 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           );
                         }
+
                         return Column(
                           children: [
                             _OrdersByStatusPanel(
@@ -244,6 +280,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  void _showHomeRawResponse(AdminProvider admin) {
+    final raw = admin.homeRawResponse;
+    final text = raw == null
+        ? 'No /api/admin/home/ response is loaded yet.'
+        : const JsonEncoder.withIndent('  ').convert(raw);
+
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return AlertDialog(
+          title: const Text('Raw admin/home response'),
+          content: SizedBox(
+            width: 720,
+            height: 520,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+                border: Border.all(color: theme.dividerColor),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(14),
+                child: SelectableText(
+                  text,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -357,12 +438,18 @@ class _StatCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.55,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -370,6 +457,8 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w700,
@@ -447,17 +536,23 @@ class _OrdersByStatusPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                l.ordersByStatus,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  l.ordersByStatus,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
               Text(
                 '${_fmt(total)} ${l.total}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -536,6 +631,8 @@ class _OrdersByStatusPanel extends StatelessWidget {
                           Text(
                             label[0].toUpperCase() +
                                 label.substring(1).toLowerCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -545,6 +642,8 @@ class _OrdersByStatusPanel extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             '${_fmt(e.value)} ${l.orders}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 12,
                               color: theme.colorScheme.onSurface.withValues(
@@ -622,6 +721,8 @@ class _FleetPanel extends StatelessWidget {
             children: [
               Text(
                 '$onlinePct%',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -630,11 +731,15 @@ class _FleetPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                l.driversOnlineLabel,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              Expanded(
+                child: Text(
+                  l.driversOnlineLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
             ],
@@ -690,16 +795,22 @@ class _FleetRow extends StatelessWidget {
             ),
             const SizedBox(width: 10),
           ],
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 12),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -729,17 +840,23 @@ class _DriversListPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                l.activeDrivers,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  l.activeDrivers,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
               Text(
                 '${drivers.length} ${l.shown}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
@@ -827,6 +944,8 @@ class _DriverRow extends StatelessWidget {
                 ),
                 Text(
                   driver.phone,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
@@ -855,6 +974,8 @@ class _DriverRow extends StatelessWidget {
                 const SizedBox(width: 5),
                 Text(
                   statusLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -958,6 +1079,8 @@ class _AttentionItem extends StatelessWidget {
           Expanded(
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
@@ -966,6 +1089,8 @@ class _AttentionItem extends StatelessWidget {
           ),
           Text(
             '$count',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,

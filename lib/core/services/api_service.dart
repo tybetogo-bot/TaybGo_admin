@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:http/http.dart' as http;
 import '../auth/auth_error_keys.dart';
 import '../config/env_config.dart';
+import '../models/admin_order.dart';
 import '../models/home_response.dart';
 import '../models/support_ticket.dart';
 
@@ -108,16 +109,48 @@ class ApiService {
   String? _extractApiErrorDetail(http.Response response) {
     try {
       final decoded = jsonDecode(response.body);
-      if (decoded is! Map) {
-        return null;
+      if (decoded is List) {
+        return decoded.map((item) => item.toString()).join(', ');
       }
+
+      if (decoded is! Map) return null;
 
       final body = Map<String, dynamic>.from(decoded);
       final detail = body['detail'] ?? body['message'] ?? body['error'];
-      return detail?.toString();
+      if (detail != null) return _stringifyApiError(detail);
+
+      final fieldErrors = body.entries
+          .where((entry) => entry.value != null)
+          .map((entry) => '${entry.key}: ${_stringifyApiError(entry.value)}')
+          .where((entry) => entry.trim().isNotEmpty)
+          .join(', ');
+      return fieldErrors.isEmpty ? null : fieldErrors;
     } catch (_) {
       return null;
     }
+  }
+
+  String _stringifyApiError(dynamic value) {
+    if (value is List) {
+      return value.map(_stringifyApiError).join(', ');
+    }
+    if (value is Map) {
+      return value.entries
+          .map((entry) => '${entry.key}: ${_stringifyApiError(entry.value)}')
+          .join(', ');
+    }
+    return value.toString();
+  }
+
+  ApiException _apiException(
+    http.Response response, {
+    required String fallbackMessage,
+  }) {
+    final detail = _extractApiErrorDetail(response);
+    final message = detail == null || detail.trim().isEmpty
+        ? '$fallbackMessage (HTTP ${response.statusCode})'
+        : detail;
+    return ApiException(message, response.statusCode);
   }
 
   bool _isOtpConflict(int statusCode, String? detail) {
@@ -383,6 +416,90 @@ class ApiService {
   }
 
   // ─── Support Tickets ──────────────────────────────────────────
+
+  Future<PaginatedResponse<AdminOrder>> getAdminOrders({
+    int? page,
+    String? search,
+    String? status,
+    String? orderType,
+    String? from,
+    String? to,
+    int? customerId,
+    int? driverId,
+    int? restaurantId,
+  }) async {
+    final params = <String, String>{};
+    if (page != null) params['page'] = '$page';
+    if (search != null && search.trim().isNotEmpty) {
+      params['search'] = search.trim();
+    }
+    if (status != null && status.trim().isNotEmpty) {
+      params['status'] = status.trim();
+    }
+    if (orderType != null && orderType.trim().isNotEmpty) {
+      params['order_type'] = orderType.trim();
+    }
+    if (from != null && from.trim().isNotEmpty) params['from_'] = from.trim();
+    if (to != null && to.trim().isNotEmpty) params['to'] = to.trim();
+    if (customerId != null) params['customer_id'] = '$customerId';
+    if (driverId != null) params['driver_id'] = '$driverId';
+    if (restaurantId != null) params['restaurant_id'] = '$restaurantId';
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/orders/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return PaginatedResponse.fromJson(json, AdminOrder.fromJson);
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(response, fallbackMessage: 'Failed to load orders');
+    }
+  }
+
+  Future<AdminOrder> getAdminOrder(int orderId) async {
+    final uri = Uri.parse('$baseUrl/api/admin/orders/$orderId/');
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return AdminOrder.fromJson(json);
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(response, fallbackMessage: 'Failed to load order');
+    }
+  }
+
+  Future<PaginatedResponse<OrderStatusHistory>> getOrderStatusHistory(
+    int orderId, {
+    int? page,
+  }) async {
+    final params = <String, String>{};
+    if (page != null) params['page'] = '$page';
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/orders/$orderId/status-history/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return PaginatedResponse.fromJson(json, OrderStatusHistory.fromJson);
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to load order status history',
+      );
+    }
+  }
 
   Future<Map<String, dynamic>> getTickets({int? page}) async {
     final params = <String, String>{};

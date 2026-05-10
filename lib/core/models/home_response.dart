@@ -381,25 +381,90 @@ class RestaurantWorkHours {
     if (raw is! Map) return RestaurantWorkHours.empty();
 
     final source = Map<String, dynamic>.from(raw);
-    final parsed = <String, List<RestaurantTimeRange>>{};
+    final parsed = {for (final day in dayKeys) day: <RestaurantTimeRange>[]};
+    final localOffsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
+
     for (final day in dayKeys) {
       final rawRanges = source[day] ?? source[_capitalize(day)];
       if (rawRanges is List) {
-        parsed[day] = rawRanges
-            .whereType<Map>()
-            .map((range) {
-              return RestaurantTimeRange.fromJson(
-                Map<String, dynamic>.from(range),
-              );
-            })
-            .where((range) => range.isValid)
-            .toList();
-      } else {
-        parsed[day] = const <RestaurantTimeRange>[];
+        for (final rawRange in rawRanges.whereType<Map>()) {
+          final range = RestaurantTimeRange.fromJson(
+            Map<String, dynamic>.from(rawRange),
+          );
+          if (!range.isValid) continue;
+
+          for (final localRange in _convertUtcRangeToLocal(
+            utcDayIndex: dayKeys.indexOf(day),
+            utcRange: range,
+            localOffsetMinutes: localOffsetMinutes,
+          )) {
+            parsed[localRange.dayKey]!.add(localRange.range);
+          }
+        }
       }
     }
 
+    for (final ranges in parsed.values) {
+      ranges.sort((a, b) => a.openMinutes!.compareTo(b.openMinutes!));
+    }
+
     return RestaurantWorkHours(days: parsed);
+  }
+
+  static List<_LocalRestaurantRange> _convertUtcRangeToLocal({
+    required int utcDayIndex,
+    required RestaurantTimeRange utcRange,
+    required int localOffsetMinutes,
+  }) {
+    const dayMinutes = 24 * 60;
+    const weekMinutes = dayMinutes * 7;
+
+    var start =
+        utcDayIndex * dayMinutes + utcRange.openMinutes! + localOffsetMinutes;
+    var end =
+        utcDayIndex * dayMinutes + utcRange.closeMinutes! + localOffsetMinutes;
+    if (utcRange.closeMinutes! <= utcRange.openMinutes!) {
+      end += dayMinutes;
+    }
+
+    while (start < 0) {
+      start += weekMinutes;
+      end += weekMinutes;
+    }
+    while (start >= weekMinutes) {
+      start -= weekMinutes;
+      end -= weekMinutes;
+    }
+
+    final converted = <_LocalRestaurantRange>[];
+
+    void addInterval(int intervalStart, int intervalEnd) {
+      var cursor = intervalStart;
+      while (cursor < intervalEnd) {
+        final dayIndex = (cursor ~/ dayMinutes) % 7;
+        final dayEnd = (dayIndex + 1) * dayMinutes;
+        final segmentEnd = intervalEnd < dayEnd ? intervalEnd : dayEnd;
+        converted.add(
+          _LocalRestaurantRange(
+            dayKey: dayKeys[dayIndex],
+            range: RestaurantTimeRange(
+              open: _formatClockMinutes(cursor % dayMinutes),
+              close: _formatClockMinutes(segmentEnd % dayMinutes),
+            ),
+          ),
+        );
+        cursor = segmentEnd;
+      }
+    }
+
+    if (end > weekMinutes) {
+      addInterval(start, weekMinutes);
+      addInterval(0, end - weekMinutes);
+    } else {
+      addInterval(start, end);
+    }
+
+    return converted;
   }
 
   List<RestaurantTimeRange> rangesFor(String dayKey) {
@@ -500,6 +565,13 @@ class RestaurantOpeningSnapshot {
     this.nextRange,
     this.nextDaysAhead,
   });
+}
+
+class _LocalRestaurantRange {
+  final String dayKey;
+  final RestaurantTimeRange range;
+
+  const _LocalRestaurantRange({required this.dayKey, required this.range});
 }
 
 class PendingDriver {
@@ -1173,6 +1245,13 @@ int? _parseClockMinutes(String value) {
   if (hour == null || minute == null) return null;
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
   return hour * 60 + minute;
+}
+
+String _formatClockMinutes(int minutes) {
+  final normalized = minutes % (24 * 60);
+  final hour = normalized ~/ 60;
+  final minute = normalized % 60;
+  return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 }
 
 String _capitalize(String value) {

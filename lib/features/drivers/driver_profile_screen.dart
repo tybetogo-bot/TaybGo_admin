@@ -354,6 +354,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               children: [
                 Text(
                   displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -372,6 +374,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   ),
                   child: Text(
                     _statusText(AppLocalizations.of(context), profile),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -469,13 +473,17 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  letterSpacing: 0.3,
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    letterSpacing: 0.3,
+                  ),
                 ),
               ),
             ],
@@ -578,6 +586,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             width: 120,
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
@@ -587,6 +597,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           Expanded(
             child: Text(
               value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -617,6 +629,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             width: 120,
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
@@ -629,6 +643,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 Expanded(
                   child: Text(
                     phone.isNotEmpty ? phone : notProvidedText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -782,6 +798,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               const SizedBox(width: 6),
               Text(
                 s.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -934,15 +952,19 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: theme.colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               if (hasUrl)
                 TextButton.icon(
                   onPressed: () => _openUrl(doc.url!),
@@ -1080,6 +1102,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 children: [
                   Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1089,6 +1113,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.onSurface.withValues(

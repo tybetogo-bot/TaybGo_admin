@@ -14,18 +14,16 @@ class AdminShell extends StatefulWidget {
   static const _icons = [
     _IconDef(Icons.space_dashboard_outlined, Icons.space_dashboard_rounded),
     _IconDef(Icons.how_to_reg_outlined, Icons.how_to_reg_rounded),
-    _IconDef(Icons.local_shipping_outlined, Icons.local_shipping_rounded),
-    _IconDef(Icons.storefront_outlined, Icons.storefront_rounded),
-    _IconDef(Icons.forum_outlined, Icons.forum_rounded),
+    _IconDef(Icons.business_center_outlined, Icons.business_center_rounded),
+    _IconDef(Icons.receipt_long_outlined, Icons.receipt_long_rounded),
     _IconDef(Icons.person_outline, Icons.person_rounded),
   ];
 
   static List<String> _labels(AppLocalizations l) => [
     l.overview,
     l.approvals,
-    l.drivers,
-    l.restaurants,
-    l.support,
+    l.driversAndRestaurantsNav,
+    l.ordersNav,
     l.profile,
   ];
 
@@ -94,6 +92,8 @@ class _AdminShellState extends State<AdminShell> {
                           const SizedBox(height: 4),
                           Text(
                             labels[i],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: selected
@@ -209,11 +209,6 @@ class _Sidebar extends StatelessWidget {
                   admin.pendingDriversTotal + admin.pendingRestaurantsTotal;
               if (count > 0) badge = count;
             }
-            if (i == 4) {
-              final count = admin.openTickets.length;
-              if (count > 0) badge = count;
-            }
-
             return _SidebarItem(
               icon: selected ? item.activeIcon : item.icon,
               label: labels[i],
@@ -299,6 +294,8 @@ class _SidebarItemState extends State<_SidebarItem> {
                   Expanded(
                     child: Text(
                       widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: widget.selected
@@ -320,6 +317,8 @@ class _SidebarItemState extends State<_SidebarItem> {
                       ),
                       child: Text(
                         '${widget.badge}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

@@ -49,6 +49,74 @@ class AppLocalizations {
     };
   }
 
+  String resolvePricingError(String value) {
+    final repaired = _repairMojibake(value).trim();
+    final normalized = repaired.toLowerCase();
+
+    if (normalized.startsWith('non_field_errors:') ||
+        normalized.startsWith('__all__:')) {
+      final separator = repaired.indexOf(':');
+      if (separator >= 0 && separator + 1 < repaired.length) {
+        return resolvePricingError(repaired.substring(separator + 1).trim());
+      }
+    }
+
+    if (normalized.contains('version') &&
+        (normalized.contains('already') ||
+            normalized.contains('duplicate') ||
+            normalized.contains('exist'))) {
+      return pricingDuplicateVersion;
+    }
+    if ((normalized.contains('open-ended') ||
+            normalized.contains('open ended')) &&
+        normalized.contains('active')) {
+      return pricingActiveOpenEndedConflict;
+    }
+    if (normalized.contains('already exists') && normalized.contains('polic')) {
+      return pricingDuplicatePolicy;
+    }
+
+    return switch (repaired) {
+      'pricing_connection_error' => connectionError,
+      'Connection error. Please try again.' => connectionError,
+      'pricing_failed_to_load_countries' => failedToLoadCountries,
+      'Failed to load countries.' => failedToLoadCountries,
+      'pricing_failed_to_load_cities' => failedToLoadCities,
+      'Failed to load cities.' => failedToLoadCities,
+      _ => repaired,
+    };
+  }
+
+  String resolvePricingFieldError(String field, String fallback) {
+    if (field == 'non_field_errors' || field == '__all__') {
+      return resolvePricingError(fallback);
+    }
+    final translatedFallback = resolvePricingError(fallback);
+    if (translatedFallback != fallback) return translatedFallback;
+
+    return switch (field) {
+      'name' => pricingNameRequired,
+      'scope' => pricingInvalidScope,
+      'country' => pricingCountryRequired,
+      'city' => pricingCityRequired,
+      'order_type' => pricingInvalidOrderType,
+      'vehicle_type' => pricingInvalidVehicleType,
+      'base_amount' ||
+      'base_distance' ||
+      'per_km_rate' ||
+      'weight_multiplier' ||
+      'driver_base_amount' ||
+      'driver_base_distance' ||
+      'driver_price_per_km' => pricingNonNegativeNumber,
+      'average_speed_kmh' => pricingPositiveSpeed,
+      'currency' => pricingCurrencyThreeLetters,
+      'version' => pricingVersionNonnegative,
+      'effective_from' => pricingEffectiveFromRequired,
+      'effective_to' => pricingEffectiveToLater,
+      _ => translatedFallback,
+    };
+  }
+
   String get errorAuthPhoneAlreadyRegistered => _t(
     'This number is already registered.',
     'هذا الرقم مسجل بالفعل.',
@@ -171,10 +239,10 @@ class AppLocalizations {
   // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Navigation Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   String get overview => _t(
     'Overview',
-    'Ã™â€ Ã˜Â¸Ã˜Â±Ã˜Â© Ã˜Â¹Ã˜Â§Ã™â€¦Ã˜Â©',
+    'نظرة عامة',
     nl: 'Overzicht',
-    fr: 'AperÃƒÂ§u',
-    de: 'ÃƒÅ“bersicht',
+    fr: 'Aperçu',
+    de: 'Übersicht',
   );
   String get approvals => _t(
     'Approvals',
@@ -204,6 +272,13 @@ class AppLocalizations {
     fr: 'Chauffeurs et restaurants',
     de: 'Fahrer und Restaurants',
   );
+  String get managementTitle => _t(
+    'Management',
+    'الإدارة',
+    nl: 'Beheer',
+    fr: 'Gestion',
+    de: 'Verwaltung',
+  );
   String managementSubtitle(int drivers, int restaurants) => _t(
     '$drivers drivers and $restaurants restaurants',
     '$drivers سائق و $restaurants مطعم',
@@ -211,19 +286,699 @@ class AppLocalizations {
     fr: '$drivers chauffeurs et $restaurants restaurants',
     de: '$drivers Fahrer und $restaurants Restaurants',
   );
-  String get support => _t(
-    'Support',
-    'Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â¹Ã™â€¦',
-    nl: 'Ondersteuning',
-    fr: 'Support',
-    de: 'Support',
+  String get pricingPolicies => _t(
+    'Pricing Policies',
+    'سياسات التسعير',
+    nl: 'Prijsbeleid',
+    fr: 'Politiques tarifaires',
+    de: 'Preisrichtlinien',
   );
-  String get profile => _t(
-    'Profile',
-    'Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å ',
-    nl: 'Profiel',
-    fr: 'Profil',
-    de: 'Profil',
+  String pricingPoliciesSubtitle(int count) => _t(
+    '$count pricing policies',
+    '$count سياسة تسعير',
+    nl: '$count prijsregels',
+    fr: '$count politiques tarifaires',
+    de: '$count Preisrichtlinien',
+  );
+  String get pricingPolicyDetails => _t(
+    'Policy details',
+    'تفاصيل السياسة',
+    nl: 'Details van beleid',
+    fr: 'Détails de la politique',
+    de: 'Richtliniendetails',
+  );
+  String get pricingModel => _t(
+    'Pricing model',
+    'نموذج التسعير',
+    nl: 'Prijsmodel',
+    fr: 'Modèle tarifaire',
+    de: 'Preismodell',
+  );
+  String get driverPayout => _t(
+    'Driver payout',
+    'مستحقات السائق',
+    nl: 'Uitbetaling chauffeur',
+    fr: 'Rémunération du chauffeur',
+    de: 'Fahrerauszahlung',
+  );
+  String get validity => _t(
+    'Validity',
+    'الصلاحية',
+    nl: 'Geldigheid',
+    fr: 'Validité',
+    de: 'Gültigkeit',
+  );
+  String get createdAt => _t(
+    'Created',
+    'تاريخ الإنشاء',
+    nl: 'Aangemaakt',
+    fr: 'Créée',
+    de: 'Erstellt',
+  );
+  String get noEndDate => _t(
+    'Open-ended',
+    'مفتوحة النهاية',
+    nl: 'Zonder einddatum',
+    fr: 'Sans date de fin',
+    de: 'Ohne Enddatum',
+  );
+  String get notConfigured => _t(
+    'Not configured',
+    'غير مُعد',
+    nl: 'Niet ingesteld',
+    fr: 'Non configuré',
+    de: 'Nicht konfiguriert',
+  );
+  String get activeFilters => _t(
+    'active filters',
+    'فلاتر نشطة',
+    nl: 'actieve filters',
+    fr: 'filtres actifs',
+    de: 'aktive Filter',
+  );
+  String get filters =>
+      _t('Filters', 'الفلاتر', nl: 'Filters', fr: 'Filtres', de: 'Filter');
+  String get filterPolicies => _t(
+    'Filter policies by scope, location, and service',
+    'تصفية السياسات حسب النطاق والموقع والخدمة',
+    nl: 'Beleid filteren op scope, locatie en service',
+    fr: 'Filtrer les politiques par périmètre, lieu et service',
+    de: 'Richtlinien nach Bereich, Ort und Service filtern',
+  );
+  String get viewPricingPolicy => _t(
+    'View policy details',
+    'عرض تفاصيل السياسة',
+    nl: 'Beleidsdetails bekijken',
+    fr: 'Voir les détails de la politique',
+    de: 'Richtliniendetails anzeigen',
+  );
+  String get addPricingPolicy => _t(
+    'Add policy',
+    'إضافة سياسة',
+    nl: 'Beleid toevoegen',
+    fr: 'Ajouter une politique',
+    de: 'Richtlinie hinzufügen',
+  );
+  String get editPricingPolicy => _t(
+    'Edit pricing policy',
+    'تعديل سياسة التسعير',
+    nl: 'Prijsbeleid bewerken',
+    fr: 'Modifier la politique tarifaire',
+    de: 'Preisrichtlinie bearbeiten',
+  );
+  String get createPricingPolicy => _t(
+    'Create pricing policy',
+    'إنشاء سياسة تسعير',
+    nl: 'Prijsbeleid aanmaken',
+    fr: 'Créer une politique tarifaire',
+    de: 'Preisrichtlinie erstellen',
+  );
+  String pricingPolicyDeleteConfirm(String name) => _t(
+    'Delete "$name" permanently? This action cannot be undone.',
+    'هل تريد حذف "$name" نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.',
+    nl: '"$name" permanent verwijderen? Dit kan niet ongedaan worden gemaakt.',
+    fr: 'Supprimer définitivement « $name » ? Cette action est irréversible.',
+    de: '"$name" dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+  );
+  String get noPricingPolicies => _t(
+    'No pricing policies found',
+    'لم يتم العثور على سياسات تسعير',
+    nl: 'Geen prijsbeleid gevonden',
+    fr: 'Aucune politique tarifaire trouvée',
+    de: 'Keine Preisrichtlinien gefunden',
+  );
+  String get searchPricingPolicies => _t(
+    'Search pricing policies...',
+    'ابحث في سياسات التسعير...',
+    nl: 'Prijsbeleid zoeken...',
+    fr: 'Rechercher des politiques tarifaires...',
+    de: 'Preisrichtlinien suchen...',
+  );
+  String get allScopes => _t(
+    'All scopes',
+    'كل النطاقات',
+    nl: 'Alle scopes',
+    fr: 'Tous les périmètres',
+    de: 'Alle Geltungsbereiche',
+  );
+  String get allCountries => _t(
+    'All countries',
+    'كل الدول',
+    nl: 'Alle landen',
+    fr: 'Tous les pays',
+    de: 'Alle Länder',
+  );
+  String get countryFilter => _t(
+    'Country filter',
+    'فلتر الدولة',
+    nl: 'Landenfilter',
+    fr: 'Filtre pays',
+    de: 'Länderfilter',
+  );
+  String get countryFilterDescription => _t(
+    'Choose which country to view',
+    'اختر الدولة التي تريد عرض بياناتها',
+    nl: 'Kies het land waarvan u de gegevens wilt bekijken',
+    fr: 'Choisissez le pays dont vous voulez voir les données',
+    de: 'Wählen Sie das Land aus, dessen Daten Sie sehen möchten',
+  );
+  String get loadingCountries => _t(
+    'Loading countries...',
+    'جارٍ تحميل الدول...',
+    nl: 'Landen laden...',
+    fr: 'Chargement des pays...',
+    de: 'Länder werden geladen...',
+  );
+  String get updatingCountryData => _t(
+    'Updating country data...',
+    'جارٍ تحديث بيانات الدولة...',
+    nl: 'Landgegevens worden bijgewerkt...',
+    fr: 'Mise à jour des données du pays...',
+    de: 'Länderdaten werden aktualisiert...',
+  );
+  String get showingAllCountries => _t(
+    'Showing all countries',
+    'عرض بيانات جميع الدول',
+    nl: 'Gegevens van alle landen',
+    fr: 'Données de tous les pays',
+    de: 'Daten aller Länder',
+  );
+  String showingCountry(String country) => _t(
+    'Showing data for $country',
+    'عرض بيانات $country',
+    nl: 'Gegevens voor $country',
+    fr: 'Données pour $country',
+    de: 'Daten für $country',
+  );
+  String get allOrderTypes => _t(
+    'All order types',
+    'كل أنواع الطلبات',
+    nl: 'Alle besteltypen',
+    fr: 'Tous les types de commande',
+    de: 'Alle Bestellarten',
+  );
+  String get selectDate => _t(
+    'Select date',
+    'اختر التاريخ',
+    nl: 'Selecteer datum',
+    fr: 'Sélectionner une date',
+    de: 'Datum auswählen',
+  );
+  String get notSet => _t(
+    'Not set',
+    'غير محدد',
+    nl: 'Niet ingesteld',
+    fr: 'Non défini',
+    de: 'Nicht festgelegt',
+  );
+  String get correctHighlightedFields => _t(
+    'Please correct the highlighted fields.',
+    'يرجى تصحيح الحقول المميزة.',
+    nl: 'Corrigeer de gemarkeerde velden.',
+    fr: 'Veuillez corriger les champs indiqués.',
+    de: 'Bitte korrigieren Sie die markierten Felder.',
+  );
+  String get serverRejectedFields => _t(
+    'The server rejected one or more fields.',
+    'رفض الخادم حقلًا أو أكثر.',
+    nl: 'De server heeft een of meer velden afgewezen.',
+    fr: 'Le serveur a rejeté un ou plusieurs champs.',
+    de: 'Der Server hat ein oder mehrere Felder abgelehnt.',
+  );
+  String get pricingActiveOpenEndedConflict => _t(
+    'An active, open-ended policy already exists for this target. Edit it or choose a different target.',
+    'توجد سياسة نشطة ومفتوحة النهاية لهذا الهدف. عدّلها أو اختر هدفًا مختلفًا.',
+    nl: 'Er bestaat al een actief beleid zonder einddatum voor dit doel. Bewerk het of kies een ander doel.',
+    fr: 'Une politique active sans date de fin existe déjà pour cette cible. Modifiez-la ou choisissez une autre cible.',
+    de: 'Für dieses Ziel gibt es bereits eine aktive Richtlinie ohne Enddatum. Bearbeiten Sie sie oder wählen Sie ein anderes Ziel.',
+  );
+  String get pricingDuplicateVersion => _t(
+    'This version already exists for the selected target. Edit the existing policy or choose a different target.',
+    'هذا الإصدار موجود بالفعل للهدف المحدد. عدّل السياسة الحالية أو اختر هدفًا مختلفًا.',
+    nl: 'Deze versie bestaat al voor het geselecteerde doel. Bewerk het bestaande beleid of kies een ander doel.',
+    fr: 'Cette version existe déjà pour la cible sélectionnée. Modifiez la politique existante ou choisissez une autre cible.',
+    de: 'Diese Version existiert bereits für das ausgewählte Ziel. Bearbeiten Sie die vorhandene Richtlinie oder wählen Sie ein anderes Ziel.',
+  );
+  String get pricingDuplicatePolicy => _t(
+    'A policy with these settings already exists. Edit the existing policy instead.',
+    'توجد سياسة بهذه الإعدادات بالفعل. عدّل السياسة الحالية بدلًا من ذلك.',
+    nl: 'Er bestaat al een beleid met deze instellingen. Bewerk het bestaande beleid.',
+    fr: 'Une politique avec ces paramètres existe déjà. Modifiez plutôt la politique existante.',
+    de: 'Eine Richtlinie mit diesen Einstellungen existiert bereits. Bearbeiten Sie stattdessen die vorhandene Richtlinie.',
+  );
+  String get pricingNameRequired => _t(
+    'Name is required.',
+    'اسم السياسة مطلوب.',
+    nl: 'Naam is verplicht.',
+    fr: 'Le nom est obligatoire.',
+    de: 'Der Name ist erforderlich.',
+  );
+  String get pricingInvalidScope => _t(
+    'Select a valid scope.',
+    'اختر نطاقًا صالحًا.',
+    nl: 'Selecteer een geldige scope.',
+    fr: 'Sélectionnez un périmètre valide.',
+    de: 'Wählen Sie einen gültigen Geltungsbereich.',
+  );
+  String get pricingCountryRequired => _t(
+    'Country is required for country policies.',
+    'الدولة مطلوبة لسياسات الدول.',
+    nl: 'Een land is verplicht voor landbeleid.',
+    fr: 'Le pays est obligatoire pour les politiques par pays.',
+    de: 'Ein Land ist für Länder-Richtlinien erforderlich.',
+  );
+  String get pricingCityRequired => _t(
+    'City is required for city policies.',
+    'المدينة مطلوبة لسياسات المدن.',
+    nl: 'Een stad is verplicht voor stadsbeleid.',
+    fr: 'La ville est obligatoire pour les politiques par ville.',
+    de: 'Eine Stadt ist für Stadt-Richtlinien erforderlich.',
+  );
+  String get pricingCountryMustBeEmpty => _t(
+    'Country must be empty for this scope.',
+    'يجب ترك الدولة فارغة لهذا النطاق.',
+    nl: 'Het land moet leeg zijn voor deze scope.',
+    fr: 'Le pays doit être vide pour ce périmètre.',
+    de: 'Das Land muss für diesen Geltungsbereich leer sein.',
+  );
+  String get pricingCityMustBeEmpty => _t(
+    'City must be empty for this scope.',
+    'يجب ترك المدينة فارغة لهذا النطاق.',
+    nl: 'De stad moet leeg zijn voor deze scope.',
+    fr: 'La ville doit être vide pour ce périmètre.',
+    de: 'Die Stadt muss für diesen Geltungsbereich leer sein.',
+  );
+  String get pricingInvalidOrderType => _t(
+    'Select a valid order type.',
+    'اختر نوع طلب صالحًا.',
+    nl: 'Selecteer een geldig besteltype.',
+    fr: 'Sélectionnez un type de commande valide.',
+    de: 'Wählen Sie eine gültige Bestellart.',
+  );
+  String get pricingInvalidVehicleType => _t(
+    'Select a valid vehicle type.',
+    'اختر نوع مركبة صالحًا.',
+    nl: 'Selecteer een geldig voertuigtype.',
+    fr: 'Sélectionnez un type de véhicule valide.',
+    de: 'Wählen Sie einen gültigen Fahrzeugtyp.',
+  );
+  String get pricingNonNegativeNumber => _t(
+    'Enter a number that is zero or greater.',
+    'أدخل رقمًا يساوي صفرًا أو أكبر.',
+    nl: 'Voer een getal van nul of hoger in.',
+    fr: 'Saisissez un nombre supérieur ou égal à zéro.',
+    de: 'Geben Sie eine Zahl größer oder gleich null ein.',
+  );
+  String get pricingPositiveSpeed => _t(
+    'Speed must be a positive integer.',
+    'يجب أن تكون السرعة عددًا صحيحًا موجبًا.',
+    nl: 'Snelheid moet een positief geheel getal zijn.',
+    fr: 'La vitesse doit être un entier positif.',
+    de: 'Die Geschwindigkeit muss eine positive ganze Zahl sein.',
+  );
+  String get pricingCurrencyThreeLetters => _t(
+    'Currency must be exactly three letters.',
+    'يجب أن تتكون العملة من ثلاثة أحرف بالضبط.',
+    nl: 'Valuta moet precies drie letters bevatten.',
+    fr: 'La devise doit comporter exactement trois lettres.',
+    de: 'Die Währung muss genau drei Buchstaben enthalten.',
+  );
+  String get pricingVersionNonnegative => _t(
+    'Version must be a nonnegative integer.',
+    'يجب أن يكون الإصدار عددًا صحيحًا غير سالب.',
+    nl: 'Versie moet een niet-negatief geheel getal zijn.',
+    fr: 'La version doit être un entier non négatif.',
+    de: 'Die Version muss eine nicht-negative ganze Zahl sein.',
+  );
+  String get pricingEffectiveFromRequired => _t(
+    'Effective from is required.',
+    'تاريخ السريان مطلوب.',
+    nl: 'Geldig vanaf is verplicht.',
+    fr: 'La date de début est obligatoire.',
+    de: 'Gültig ab ist erforderlich.',
+  );
+  String get pricingEffectiveToLater => _t(
+    'Effective to must be later than effective from.',
+    'يجب أن يكون تاريخ الانتهاء لاحقًا لتاريخ السريان.',
+    nl: 'Geldig tot moet na geldig vanaf liggen.',
+    fr: 'La date de fin doit être postérieure à la date de début.',
+    de: 'Gültig bis muss nach Gültig ab liegen.',
+  );
+  String get failedToLoadCountries => _t(
+    'Failed to load countries.',
+    'تعذر تحميل الدول.',
+    nl: 'Landen konden niet worden geladen.',
+    fr: 'Échec du chargement des pays.',
+    de: 'Länder konnten nicht geladen werden.',
+  );
+  String get failedToLoadCities => _t(
+    'Failed to load cities.',
+    'تعذر تحميل المدن.',
+    nl: 'Steden konden niet worden geladen.',
+    fr: 'Échec du chargement des villes.',
+    de: 'Städte konnten nicht geladen werden.',
+  );
+  String pricingCountryNumber(int id) => _t(
+    'Country #$id',
+    'الدولة رقم $id',
+    nl: 'Land #$id',
+    fr: 'Pays n° $id',
+    de: 'Land #$id',
+  );
+  String pricingCityNumber(int id) => _t(
+    'City #$id',
+    'المدينة رقم $id',
+    nl: 'Stad #$id',
+    fr: 'Ville n° $id',
+    de: 'Stadt #$id',
+  );
+  String get scope => _t(
+    'Scope',
+    'النطاق',
+    nl: 'Scope',
+    fr: 'Périmètre',
+    de: 'Geltungsbereich',
+  );
+  String get globalScope =>
+      _t('Global', 'عالمي', nl: 'Globaal', fr: 'Global', de: 'Global');
+  String get countryScope =>
+      _t('Country', 'دولة', nl: 'Land', fr: 'Pays', de: 'Land');
+  String get cityScope =>
+      _t('City', 'مدينة', nl: 'Stad', fr: 'Ville', de: 'Stadt');
+  String get allVehicles => _t(
+    'All vehicles',
+    'كل المركبات',
+    nl: 'Alle voertuigen',
+    fr: 'Tous les véhicules',
+    de: 'Alle Fahrzeuge',
+  );
+  String get allActiveStates => _t(
+    'All states',
+    'كل الحالات',
+    nl: 'Alle statussen',
+    fr: 'Tous les états',
+    de: 'Alle Zustände',
+  );
+  String get activeOnly => _t(
+    'Active only',
+    'النشطة فقط',
+    nl: 'Alleen actief',
+    fr: 'Actives uniquement',
+    de: 'Nur aktive',
+  );
+  String get inactiveOnly => _t(
+    'Inactive only',
+    'غير النشطة فقط',
+    nl: 'Alleen inactief',
+    fr: 'Inactives uniquement',
+    de: 'Nur inaktive',
+  );
+  String get applyFilters => _t(
+    'Apply filters',
+    'تطبيق الفلاتر',
+    nl: 'Filters toepassen',
+    fr: 'Appliquer les filtres',
+    de: 'Filter anwenden',
+  );
+  String get save =>
+      _t('Save', 'حفظ', nl: 'Opslaan', fr: 'Enregistrer', de: 'Speichern');
+  String get create =>
+      _t('Create', 'إنشاء', nl: 'Aanmaken', fr: 'Créer', de: 'Erstellen');
+  String get delete =>
+      _t('Delete', 'حذف', nl: 'Verwijderen', fr: 'Supprimer', de: 'Löschen');
+  String get pricingName => _t(
+    'Policy name',
+    'اسم السياسة',
+    nl: 'Naam van beleid',
+    fr: 'Nom de la politique',
+    de: 'Name der Richtlinie',
+  );
+  String get baseAmount => _t(
+    'Base amount',
+    'المبلغ الأساسي',
+    nl: 'Basisbedrag',
+    fr: 'Montant de base',
+    de: 'Grundbetrag',
+  );
+  String get baseDistance => _t(
+    'Base distance (km)',
+    'المسافة الأساسية (كم)',
+    nl: 'Basisafstand (km)',
+    fr: 'Distance de base (km)',
+    de: 'Basisdistanz (km)',
+  );
+  String get perKmRate => _t(
+    'Per km rate',
+    'السعر لكل كم',
+    nl: 'Tarief per km',
+    fr: 'Tarif au km',
+    de: 'Preis pro km',
+  );
+  String get weightMultiplier => _t(
+    'Weight multiplier',
+    'معامل الوزن',
+    nl: 'Gewichtsmultiplikator',
+    fr: 'Multiplicateur de poids',
+    de: 'Gewichtsmultiplikator',
+  );
+  String get averageSpeed => _t(
+    'Average speed (km/h)',
+    'السرعة المتوسطة (كم/س)',
+    nl: 'Gemiddelde snelheid (km/u)',
+    fr: 'Vitesse moyenne (km/h)',
+    de: 'Durchschnittsgeschwindigkeit (km/h)',
+  );
+  String get currency =>
+      _t('Currency', 'العملة', nl: 'Valuta', fr: 'Devise', de: 'Währung');
+  String get effectiveFrom => _t(
+    'Effective from',
+    'ساري من',
+    nl: 'Geldig vanaf',
+    fr: 'Valable à partir du',
+    de: 'Gültig ab',
+  );
+  String get effectiveTo => _t(
+    'Effective to',
+    'ساري حتى',
+    nl: 'Geldig tot',
+    fr: "Valable jusqu'au",
+    de: 'Gültig bis',
+  );
+  String get driverBaseAmount => _t(
+    'Driver base amount',
+    'المبلغ الأساسي للسائق',
+    nl: 'Basisbedrag chauffeur',
+    fr: 'Montant de base chauffeur',
+    de: 'Grundbetrag Fahrer',
+  );
+  String get driverBaseDistance => _t(
+    'Driver base distance',
+    'المسافة الأساسية للسائق',
+    nl: 'Basisafstand chauffeur',
+    fr: 'Distance de base chauffeur',
+    de: 'Basisdistanz Fahrer',
+  );
+  String get driverPricePerKm => _t(
+    'Driver price per km',
+    'سعر السائق لكل كم',
+    nl: 'Chauffeurprijs per km',
+    fr: 'Prix chauffeur au km',
+    de: 'Fahrerpreis pro km',
+  );
+  String get policyLocation => _t(
+    'Policy location',
+    'موقع السياسة',
+    nl: 'Locatie van beleid',
+    fr: 'Emplacement de la politique',
+    de: 'Standort der Richtlinie',
+  );
+  String get policySaved => _t(
+    'Pricing policy saved',
+    'تم حفظ سياسة التسعير',
+    nl: 'Prijsbeleid opgeslagen',
+    fr: 'Politique tarifaire enregistrée',
+    de: 'Preisrichtlinie gespeichert',
+  );
+  String get policyDeleted => _t(
+    'Pricing policy deleted',
+    'تم حذف سياسة التسعير',
+    nl: 'Prijsbeleid verwijderd',
+    fr: 'Politique tarifaire supprimée',
+    de: 'Preisrichtlinie gelöscht',
+  );
+  String get selectCountry => _t(
+    'Select country',
+    'اختر الدولة',
+    nl: 'Selecteer land',
+    fr: 'Sélectionner un pays',
+    de: 'Land auswählen',
+  );
+  String get selectCity => _t(
+    'Select city',
+    'اختر المدينة',
+    nl: 'Selecteer stad',
+    fr: 'Sélectionner une ville',
+    de: 'Stadt auswählen',
+  );
+  String get support =>
+      _t('Support', 'الدعم', nl: 'Ondersteuning', fr: 'Support', de: 'Support');
+  String get profile =>
+      _t('Profile', 'الملف الشخصي', nl: 'Profiel', fr: 'Profil', de: 'Profil');
+  String get profileActions => _t(
+    'Quick actions',
+    'إجراءات سريعة',
+    nl: 'Snelle acties',
+    fr: 'Actions rapides',
+    de: 'Schnellaktionen',
+  );
+  String get preferences => _t(
+    'Preferences',
+    'التفضيلات',
+    nl: 'Voorkeuren',
+    fr: 'Préférences',
+    de: 'Präferenzen',
+  );
+  String get preferencesSubtitle => _t(
+    'Theme, language, and display preferences',
+    'تفضيلات المظهر واللغة والعرض',
+    nl: 'Voorkeuren voor thema, taal en weergave',
+    fr: 'Préférences de thème, de langue et d’affichage',
+    de: 'Einstellungen für Design, Sprache und Anzeige',
+  );
+  String get versionControl => _t(
+    'Version control',
+    'إدارة الإصدارات',
+    nl: 'Versiebeheer',
+    fr: 'Gestion des versions',
+    de: 'Versionsverwaltung',
+  );
+  String get versionControlSubtitle => _t(
+    'Review the current app version and release history',
+    'راجع إصدار التطبيق الحالي وسجل الإصدارات',
+    nl: 'Bekijk de huidige appversie en releasegeschiedenis',
+    fr: 'Consultez la version actuelle et l’historique des sorties',
+    de: 'Aktuelle App-Version und Versionsverlauf anzeigen',
+  );
+  String get currentVersion => _t(
+    'Current version',
+    'الإصدار الحالي',
+    nl: 'Huidige versie',
+    fr: 'Version actuelle',
+    de: 'Aktuelle Version',
+  );
+  String get latestRelease =>
+      _t('Latest', 'الأحدث', nl: 'Nieuwste', fr: 'Dernière', de: 'Aktuell');
+  String get releaseHistory => _t(
+    'Release history',
+    'سجل الإصدارات',
+    nl: 'Releasegeschiedenis',
+    fr: 'Historique des sorties',
+    de: 'Versionsverlauf',
+  );
+  String releasedOn(String date) => _t(
+    'Released $date',
+    'صدر في $date',
+    nl: 'Uitgebracht op $date',
+    fr: 'Sortie le $date',
+    de: 'Veröffentlicht am $date',
+  );
+  String get release105Change1 => _t(
+    'Added pricing policy management with create, edit, detail, and delete workflows.',
+    'إضافة إدارة سياسات التسعير مع مسارات الإنشاء والتعديل والتفاصيل والحذف.',
+    nl: 'Prijsbeleid toegevoegd met workflows voor aanmaken, bewerken, details en verwijderen.',
+    fr: 'Ajout de la gestion des politiques tarifaires avec création, modification, détails et suppression.',
+    de: 'Preisrichtlinien mit Workflows zum Erstellen, Bearbeiten, Anzeigen und Löschen hinzugefügt.',
+  );
+  String get release105Change2 => _t(
+    'Added a shared country selector with country-aware data refresh across admin views.',
+    'إضافة محدد دول مشترك مع تحديث البيانات حسب الدولة في شاشات الإدارة.',
+    nl: 'Een gedeelde landenkiezer toegevoegd met landafhankelijke gegevensvernieuwing in beheerpagina’s.',
+    fr: 'Ajout d’un sélecteur de pays partagé avec actualisation des données selon le pays dans les vues d’administration.',
+    de: 'Eine gemeinsame Länderauswahl mit länderabhängiger Datenaktualisierung in den Admin-Ansichten hinzugefügt.',
+  );
+  String get release105Change3 => _t(
+    'Expanded dashboard operations and improved localization and profile settings.',
+    'توسيع عمليات لوحة التحكم وتحسين الترجمة وإعدادات الملف الشخصي.',
+    nl: 'Dashboardfuncties uitgebreid en lokalisatie en profielinstellingen verbeterd.',
+    fr: 'Extension des opérations du tableau de bord et amélioration de la localisation et des paramètres du profil.',
+    de: 'Dashboard-Funktionen erweitert und Lokalisierung sowie Profileinstellungen verbessert.',
+  );
+  String get release103Change1 => _t(
+    'Hardened OTP authentication and admin session handling.',
+    'تعزيز مصادقة رمز التحقق وإدارة جلسة المشرف.',
+    nl: 'OTP-authenticatie en beheer van beheerderssessies versterkt.',
+    fr: 'Renforcement de l’authentification OTP et de la gestion des sessions administrateur.',
+    de: 'OTP-Authentifizierung und Verwaltung von Admin-Sitzungen verbessert.',
+  );
+  String get release103Change2 => _t(
+    'Improved authentication error handling and added regression coverage for request and verification flows.',
+    'تحسين معالجة أخطاء المصادقة وإضافة اختبارات لمسارات طلب رمز التحقق والتحقق منه.',
+    nl: 'Foutafhandeling voor authenticatie verbeterd en regressietests voor aanvraag- en verificatiestromen toegevoegd.',
+    fr: 'Amélioration de la gestion des erreurs d’authentification et ajout de tests de régression pour les flux de demande et de vérification.',
+    de: 'Fehlerbehandlung bei der Authentifizierung verbessert und Regressionstests für Anforderungs- und Verifizierungsabläufe hinzugefügt.',
+  );
+  String get release102Change1 => _t(
+    'Scoped OTP request and verification payloads to admin users.',
+    'تقييد حمولات طلب رمز التحقق والتحقق منه على مستخدمي الإدارة.',
+    nl: 'OTP-aanvragen en verificatiepayloads beperkt tot beheerders.',
+    fr: 'Les payloads de demande et de vérification OTP sont désormais réservés aux administrateurs.',
+    de: 'OTP-Anfrage- und Verifizierungspayloads auf Admin-Benutzer beschränkt.',
+  );
+  String get release102Change2 => _t(
+    'Added API/auth regression coverage and release metadata.',
+    'إضافة اختبارات تراجعية للمصادقة وواجهة API وبيانات الإصدار.',
+    nl: 'API- en auth-regressietests en releasegegevens toegevoegd.',
+    fr: 'Ajout de tests de régression pour l’API et l’authentification ainsi que des métadonnées de sortie.',
+    de: 'API- und Authentifizierungs-Regressionstests sowie Release-Metadaten hinzugefügt.',
+  );
+  String get release101Change1 => _t(
+    'Updated the app version and profile release metadata.',
+    'تحديث إصدار التطبيق وبيانات الإصدار في الملف الشخصي.',
+    nl: 'Appversie en releasegegevens in het profiel bijgewerkt.',
+    fr: 'Mise à jour de la version de l’application et des métadonnées de sortie du profil.',
+    de: 'App-Version und Release-Metadaten im Profil aktualisiert.',
+  );
+  String get release100Change1 => _t(
+    'Initial release with authentication, dashboard monitoring, approvals, and support tools.',
+    'الإصدار الأول مع المصادقة ومراقبة لوحة التحكم وأدوات الموافقات والدعم.',
+    nl: 'Eerste release met authenticatie, dashboardmonitoring, goedkeuringen en ondersteuningstools.',
+    fr: 'Version initiale avec authentification, suivi du tableau de bord, approbations et outils de support.',
+    de: 'Erste Version mit Authentifizierung, Dashboard-Überwachung, Freigaben und Support-Werkzeugen.',
+  );
+  String get pricingPoliciesActionSubtitle => _t(
+    'Configure delivery pricing rules',
+    'إعداد قواعد تسعير التوصيل',
+    nl: 'Prijsregels voor bezorging instellen',
+    fr: 'Configurer les règles tarifaires de livraison',
+    de: 'Preisregeln für Lieferungen konfigurieren',
+  );
+  String get preferencesActionSubtitle => _t(
+    'Theme, language, and display',
+    'المظهر واللغة والعرض',
+    nl: 'Thema, taal en weergave',
+    fr: 'Thème, langue et affichage',
+    de: 'Design, Sprache und Anzeige',
+  );
+  String get supportActionSubtitle => _t(
+    'Get help and contact support',
+    'الحصول على المساعدة والتواصل مع الدعم',
+    nl: 'Hulp en contact met ondersteuning',
+    fr: 'Obtenir de l’aide et contacter le support',
+    de: 'Hilfe erhalten und Support kontaktieren',
+  );
+  String get showDetails => _t(
+    'Show details',
+    'إظهار التفاصيل',
+    nl: 'Details tonen',
+    fr: 'Afficher les détails',
+    de: 'Details anzeigen',
+  );
+  String get hideDetails => _t(
+    'Hide details',
+    'إخفاء التفاصيل',
+    nl: 'Details verbergen',
+    fr: 'Masquer les détails',
+    de: 'Details ausblenden',
   );
   String get signOut => _t(
     'Sign out',
@@ -354,63 +1109,58 @@ class AppLocalizations {
   // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Dashboard Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   String get overviewSubtitle => _t(
     "Here's what's happening across your platform today.",
-    'Ã˜Â¥Ã™â€žÃ™Å Ã™Æ’ Ã™â€¦Ã˜Â§ Ã™Å Ã˜Â­Ã˜Â¯Ã˜Â« Ã˜Â¹Ã˜Â¨Ã˜Â± Ã™â€¦Ã™â€ Ã˜ÂµÃ˜ÂªÃ™Æ’ Ã˜Â§Ã™â€žÃ™Å Ã™Ë†Ã™â€¦.',
+    'إليك ما يحدث على منصتك اليوم.',
     nl: 'Dit is wat er vandaag op uw platform gebeurt.',
     fr: "Voici ce qui se passe sur votre plateforme aujourd'hui.",
     de: 'Das passiert heute auf Ihrer Plattform.',
   );
   String get totalOrders => _t(
     'Total Orders',
-    'Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª',
-    nl: 'Totaal bestellingen',
-    fr: 'Total commandes',
-    de: 'Gesamtbestellungen',
+    'إجمالي الطلبات',
+    nl: 'Totaal aantal bestellingen',
+    fr: 'Total des commandes',
+    de: 'Bestellungen insgesamt',
   );
   String get driversOnline => _t(
     'Drivers Online',
-    'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¦Ã™â€šÃ™Ë†Ã™â€  Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜ÂµÃ™â€žÃ™Ë†Ã™â€ ',
+    'السائقون المتصلون',
     nl: 'Chauffeurs online',
     fr: 'Chauffeurs en ligne',
     de: 'Fahrer online',
   );
   String get restaurants => _t(
     'Restaurants',
-    'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã˜Â§Ã˜Â¹Ã™â€¦',
+    'المطاعم',
     nl: 'Restaurants',
     fr: 'Restaurants',
     de: 'Restaurants',
   );
   String get pendingItems => _t(
     'Pending Items',
-    'Ã˜Â¹Ã™â€ Ã˜Â§Ã˜ÂµÃ˜Â± Ã™â€¦Ã˜Â¹Ã™â€žÃ™â€šÃ˜Â©',
+    'عناصر معلّقة',
     nl: 'Openstaande items',
-    fr: 'Ãƒâ€°lÃƒÂ©ments en attente',
+    fr: 'Éléments en attente',
     de: 'Ausstehende Elemente',
   );
   String get ordersByStatus => _t(
     'Orders by Status',
-    'Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã˜Â­Ã˜Â³Ã˜Â¨ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ˜Â©',
+    'الطلبات حسب الحالة',
     nl: 'Bestellingen op status',
     fr: 'Commandes par statut',
     de: 'Bestellungen nach Status',
   );
-  String get total => _t(
-    'total',
-    'Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å ',
-    nl: 'totaal',
-    fr: 'total',
-    de: 'gesamt',
-  );
+  String get total =>
+      _t('total', 'الإجمالي', nl: 'totaal', fr: 'total', de: 'gesamt');
   String get noOrderData => _t(
     'No order data available',
-    'Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª',
+    'لا تتوفر بيانات للطلبات',
     nl: 'Geen bestelgegevens beschikbaar',
-    fr: 'Aucune donnÃƒÂ©e de commande disponible',
-    de: 'Keine Bestelldaten verfÃƒÂ¼gbar',
+    fr: 'Aucune donnée de commande disponible',
+    de: 'Keine Bestelldaten verfügbar',
   );
   String get orders => _t(
     'orders',
-    'Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª',
+    'طلبات',
     nl: 'bestellingen',
     fr: 'commandes',
     de: 'Bestellungen',
@@ -598,6 +1348,62 @@ class AppLocalizations {
     fr: 'Annulée',
     de: 'Storniert',
   );
+  String get preparing => _t(
+    'Preparing',
+    'قيد التحضير',
+    nl: 'In bereiding',
+    fr: 'En préparation',
+    de: 'In Zubereitung',
+  );
+  String get ready =>
+      _t('Ready', 'جاهز', nl: 'Klaar', fr: 'Prête', de: 'Bereit');
+  String get pickedUp => _t(
+    'Picked up',
+    'تم الاستلام',
+    nl: 'Opgehaald',
+    fr: 'Récupérée',
+    de: 'Abgeholt',
+  );
+  String get restaurantDelivered => _t(
+    'Restaurant delivered',
+    'تم التسليم من المطعم',
+    nl: 'Door restaurant bezorgd',
+    fr: 'Livrée par le restaurant',
+    de: 'Vom Restaurant geliefert',
+  );
+  String orderStatusLabel(String status) {
+    final normalized = status.trim().toUpperCase().replaceAll(
+      RegExp(r'[\s-]+'),
+      '_',
+    );
+    return switch (normalized) {
+      'PENDING' => pending,
+      'SEARCHING_FOR_DRIVER' => searchingForDriver,
+      'DRIVER_NOTIFICATION_SENT' => driverNotificationSent,
+      'ACCEPTED' => accepted,
+      'PREPARING' => preparing,
+      'READY' => ready,
+      'PICKED_UP' => pickedUp,
+      'ON_THE_WAY' => onTheWay,
+      'DELIVERED' => delivered,
+      'RESTAURANT_DELIVERED' => restaurantDelivered,
+      'COMPLETED' => completed,
+      'CANCELLED' || 'CANCELED' => cancelled,
+      'REJECTED' => rejected,
+      'EXPIRED' => expired,
+      _ => _titleCaseStatus(normalized),
+    };
+  }
+
+  String _titleCaseStatus(String value) {
+    return value
+        .toLowerCase()
+        .split('_')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
   String get cash =>
       _t('Cash', 'نقدا', nl: 'Contant', fr: 'Espèces', de: 'Bar');
   String get card => _t('Card', 'بطاقة', nl: 'Kaart', fr: 'Carte', de: 'Karte');
@@ -804,114 +1610,99 @@ class AppLocalizations {
   );
   String get fleetStatus => _t(
     'Fleet Status',
-    'Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â³Ã˜Â·Ã™Ë†Ã™â€ž',
+    'حالة الأسطول',
     nl: 'Vlootstatus',
-    fr: 'Ãƒâ€°tat de la flotte',
+    fr: 'État de la flotte',
     de: 'Flottenstatus',
   );
   String get driversOnlineLabel => _t(
     'drivers online',
-    'Ã˜Â³Ã˜Â§Ã˜Â¦Ã™â€šÃ™Ë†Ã™â€  Ã™â€¦Ã˜ÂªÃ˜ÂµÃ™â€žÃ™Ë†Ã™â€ ',
+    'سائقون متصلون',
     nl: 'chauffeurs online',
     fr: 'chauffeurs en ligne',
     de: 'Fahrer online',
   );
   String get totalDrivers => _t(
     'Total drivers',
-    'Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¦Ã™â€šÃ™Å Ã™â€ ',
+    'إجمالي السائقين',
     nl: 'Totaal chauffeurs',
     fr: 'Total chauffeurs',
     de: 'Fahrer gesamt',
   );
-  String get online => _t(
-    'Online',
-    'Ã™â€¦Ã˜ÂªÃ˜ÂµÃ™â€ž',
-    nl: 'Online',
-    fr: 'En ligne',
-    de: 'Online',
-  );
-  String get offline => _t(
-    'Offline',
-    'Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜ÂµÃ™â€ž',
-    nl: 'Offline',
-    fr: 'Hors ligne',
-    de: 'Offline',
-  );
+  String get online =>
+      _t('Online', 'متصل', nl: 'Online', fr: 'En ligne', de: 'Online');
+  String get offline =>
+      _t('Offline', 'غير متصل', nl: 'Offline', fr: 'Hors ligne', de: 'Offline');
   String get activeDrivers => _t(
     'Active Drivers',
-    'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¦Ã™â€šÃ™Ë†Ã™â€  Ã˜Â§Ã™â€žÃ™â€ Ã˜Â´Ã˜Â·Ã™Ë†Ã™â€ ',
+    'السائقون النشطون',
     nl: 'Actieve chauffeurs',
     fr: 'Chauffeurs actifs',
     de: 'Aktive Fahrer',
   );
-  String get shown => _t(
-    'shown',
-    'Ã™â€¦Ã˜Â¹Ã˜Â±Ã™Ë†Ã˜Â¶',
-    nl: 'getoond',
-    fr: 'affichÃƒÂ©',
-    de: 'angezeigt',
-  );
+  String get shown =>
+      _t('shown', 'معروض', nl: 'getoond', fr: 'affichés', de: 'angezeigt');
   String get noDriversAvailable => _t(
     'No drivers available',
-    'Ã™â€žÃ˜Â§ Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â³Ã˜Â§Ã˜Â¦Ã™â€šÃ™Ë†Ã™â€  Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã™Ë†Ã™â€ ',
+    'لا يوجد سائقون متاحون',
     nl: 'Geen chauffeurs beschikbaar',
     fr: 'Aucun chauffeur disponible',
-    de: 'Keine Fahrer verfÃƒÂ¼gbar',
+    de: 'Keine Fahrer verfügbar',
   );
   String get needsAttention => _t(
     'Needs Attention',
-    'Ã™Å Ã˜Â­Ã˜ÂªÃ˜Â§Ã˜Â¬ Ã˜Â§Ã™â€ Ã˜ÂªÃ˜Â¨Ã˜Â§Ã™â€¡',
+    'يحتاج إلى الانتباه',
     nl: 'Aandacht vereist',
-    fr: 'NÃƒÂ©cessite attention',
+    fr: 'Nécessite votre attention',
     de: 'Erfordert Aufmerksamkeit',
   );
   String get pendingDriverApprovals => _t(
     'Pending driver approvals',
-    'Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€šÃ˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¦Ã™â€šÃ™Å Ã™â€  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã™â€žÃ™â€šÃ˜Â©',
+    'طلبات اعتماد السائقين المعلّقة',
     nl: 'Openstaande chauffeursgoedkeuringen',
     fr: 'Approbations de chauffeurs en attente',
     de: 'Ausstehende Fahrergenehmigungen',
   );
   String get pendingRestaurantApprovals => _t(
     'Pending restaurant approvals',
-    'Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€šÃ˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â·Ã˜Â§Ã˜Â¹Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã™â€žÃ™â€šÃ˜Â©',
+    'طلبات اعتماد المطاعم المعلّقة',
     nl: 'Openstaande restaurantgoedkeuringen',
     fr: 'Approbations de restaurants en attente',
     de: 'Ausstehende Restaurantgenehmigungen',
   );
   String get openSupportTickets => _t(
     'Open support tickets',
-    'Ã˜ÂªÃ˜Â°Ã˜Â§Ã™Æ’Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â¹Ã™â€¦ Ã˜Â§Ã™â€žÃ™â€¦Ã™ÂÃ˜ÂªÃ™Ë†Ã˜Â­Ã˜Â©',
+    'تذاكر الدعم المفتوحة',
     nl: 'Open supporttickets',
     fr: 'Tickets de support ouverts',
     de: 'Offene Support-Tickets',
   );
   String get retry => _t(
     'Retry',
-    'Ã˜Â¥Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â§Ã™Ë†Ã™â€žÃ˜Â©',
+    'إعادة المحاولة',
     nl: 'Opnieuw proberen',
-    fr: 'RÃƒÂ©essayer',
+    fr: 'Réessayer',
     de: 'Erneut versuchen',
   );
   String get noOrdersData => _t(
     'No orders data',
-    'Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª',
+    'لا توجد بيانات للطلبات',
     nl: 'Geen bestelgegevens',
-    fr: 'Aucune donnÃƒÂ©e de commande',
+    fr: 'Aucune donnée de commande',
     de: 'Keine Bestelldaten',
   );
   String activeOfShown(int active, int total) => _t(
     '$active active of $total shown',
-    '$active Ã™â€ Ã˜Â´Ã˜Â· Ã™â€¦Ã™â€  $total Ã™â€¦Ã˜Â¹Ã˜Â±Ã™Ë†Ã˜Â¶',
+    '$active نشط من أصل $total معروض',
     nl: '$active actief van $total getoond',
-    fr: '$active actif sur $total affichÃƒÂ©',
+    fr: '$active actifs sur $total affichés',
     de: '$active aktiv von $total angezeigt',
   );
   String get noRestaurantsLoaded => _t(
     'No restaurants loaded',
-    'Ã™â€žÃ™â€¦ Ã™Å Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã™â€¦Ã˜Â·Ã˜Â§Ã˜Â¹Ã™â€¦',
+    'لم يتم تحميل المطاعم',
     nl: 'Geen restaurants geladen',
-    fr: 'Aucun restaurant chargÃƒÂ©',
+    fr: 'Aucun restaurant chargé',
     de: 'Keine Restaurants geladen',
   );
 
@@ -1149,25 +1940,25 @@ class AppLocalizations {
 
   // Dynamic dashboard strings
   String driversCountSummary(int total, int online, int offline) => _t(
-    '$total total Ã‚Â· $online online',
-    '$total Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã‚Â· $online Ã™â€¦Ã˜ÂªÃ˜ÂµÃ™â€ž',
-    nl: '$total totaal Ã‚Â· $online online',
-    fr: '$total total Ã‚Â· $online en ligne',
-    de: '$total gesamt Ã‚Â· $online online',
+    '$total total · $online online',
+    '$total إجمالي · $online متصل',
+    nl: '$total totaal · $online online',
+    fr: '$total au total · $online en ligne',
+    de: '$total gesamt · $online online',
   );
   String driversStat(int total, int offline) => _t(
-    '$total total Ã‚Â· $offline offline',
-    '$total Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã‚Â· $offline Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜ÂµÃ™â€ž',
-    nl: '$total totaal Ã‚Â· $offline offline',
-    fr: '$total total Ã‚Â· $offline hors ligne',
-    de: '$total gesamt Ã‚Â· $offline offline',
+    '$total total · $offline offline',
+    '$total إجمالي · $offline غير متصل',
+    nl: '$total totaal · $offline offline',
+    fr: '$total au total · $offline hors ligne',
+    de: '$total gesamt · $offline offline',
   );
   String pendingItemsSub(int drivers, int restaurants) => _t(
-    '$drivers drivers Ã‚Â· $restaurants restaurants',
-    '$drivers Ã˜Â³Ã˜Â§Ã˜Â¦Ã™â€šÃ™Å Ã™â€  Ã‚Â· $restaurants Ã™â€¦Ã˜Â·Ã˜Â§Ã˜Â¹Ã™â€¦',
-    nl: '$drivers chauffeurs Ã‚Â· $restaurants restaurants',
-    fr: '$drivers chauffeurs Ã‚Â· $restaurants restaurants',
-    de: '$drivers Fahrer Ã‚Â· $restaurants Restaurants',
+    '$drivers drivers · $restaurants restaurants',
+    '$drivers سائقون · $restaurants مطاعم',
+    nl: '$drivers chauffeurs · $restaurants restaurants',
+    fr: '$drivers chauffeurs · $restaurants restaurants',
+    de: '$drivers Fahrer · $restaurants Restaurants',
   );
 
   // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Drivers Screen Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -1303,7 +2094,7 @@ class AppLocalizations {
   );
   String get pending => _t(
     'Pending',
-    'Ã™â€¦Ã˜Â¹Ã™â€žÃ™â€š',
+    'معلّق',
     nl: 'In afwachting',
     fr: 'En attente',
     de: 'Ausstehend',
@@ -1600,7 +2391,7 @@ class AppLocalizations {
   );
   String get refresh => _t(
     'Refresh',
-    'Ã˜ÂªÃ˜Â­Ã˜Â¯Ã™Å Ã˜Â«',
+    'تحديث',
     nl: 'Vernieuwen',
     fr: 'Actualiser',
     de: 'Aktualisieren',
@@ -1856,6 +2647,92 @@ class AppLocalizations {
     fr: 'Date de sortie',
     de: 'VerÃƒÆ’Ã…Â¸entlichungsdatum',
   );
+  String formatReleaseDate(DateTime date) {
+    final month = switch (locale.languageCode) {
+      'ar' => const [
+        '',
+        'يناير',
+        'فبراير',
+        'مارس',
+        'أبريل',
+        'مايو',
+        'يونيو',
+        'يوليو',
+        'أغسطس',
+        'سبتمبر',
+        'أكتوبر',
+        'نوفمبر',
+        'ديسمبر',
+      ][date.month],
+      'nl' => const [
+        '',
+        'januari',
+        'februari',
+        'maart',
+        'april',
+        'mei',
+        'juni',
+        'juli',
+        'augustus',
+        'september',
+        'oktober',
+        'november',
+        'december',
+      ][date.month],
+      'fr' => const [
+        '',
+        'janvier',
+        'février',
+        'mars',
+        'avril',
+        'mai',
+        'juin',
+        'juillet',
+        'août',
+        'septembre',
+        'octobre',
+        'novembre',
+        'décembre',
+      ][date.month],
+      'de' => const [
+        '',
+        'Januar',
+        'Februar',
+        'März',
+        'April',
+        'Mai',
+        'Juni',
+        'Juli',
+        'August',
+        'September',
+        'Oktober',
+        'November',
+        'Dezember',
+      ][date.month],
+      _ => const [
+        '',
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ][date.month],
+    };
+
+    return switch (locale.languageCode) {
+      'en' => '$month ${date.day}, ${date.year}',
+      'de' => '${date.day}. $month ${date.year}',
+      _ => '${date.day} $month ${date.year}',
+    };
+  }
+
   String get settings => _t(
     'Settings',
     'Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª',

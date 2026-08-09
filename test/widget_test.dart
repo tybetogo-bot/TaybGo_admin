@@ -56,5 +56,62 @@ void main() {
         'Diese Nummer ist bereits registriert.',
       );
     });
+
+    test('localizes pricing policy copy and errors', () {
+      final ar = AppLocalizations(const Locale('ar'));
+      final fr = AppLocalizations(const Locale('fr'));
+
+      expect(ar.allCountries, 'كل الدول');
+      expect(ar.countryFilter, 'فلتر الدولة');
+      expect(fr.countryFilter, 'Filtre pays');
+      expect(ar.selectDate, 'اختر التاريخ');
+      expect(
+        ar.pricingPositiveSpeed,
+        'يجب أن تكون السرعة عددًا صحيحًا موجبًا.',
+      );
+      expect(
+        fr.resolvePricingError('pricing_failed_to_load_cities'),
+        'Échec du chargement des villes.',
+      );
+      expect(
+        fr.resolvePricingError(
+          'non_field_errors: Only one active, open-ended policy may exist.',
+        ),
+        fr.pricingActiveOpenEndedConflict,
+      );
+      expect(
+        ar.resolvePricingError('A version already exists for this target.'),
+        ar.pricingDuplicateVersion,
+      );
+    });
+
+    test('localizes country filter and order status copy', () {
+      final ar = AppLocalizations(const Locale('ar'));
+      final fr = AppLocalizations(const Locale('fr'));
+      final de = AppLocalizations(const Locale('de'));
+
+      expect(ar.countryFilterDescription, 'اختر الدولة التي تريد عرض بياناتها');
+      expect(fr.showingAllCountries, 'Données de tous les pays');
+      expect(ar.orderStatusLabel('PENDING'), 'معلّق');
+      expect(fr.orderStatusLabel('CANCELLED'), 'Annulée');
+      expect(
+        fr.orderStatusLabel('RESTAURANT_DELIVERED'),
+        'Livrée par le restaurant',
+      );
+      expect(de.orderStatusLabel('PICKED_UP'), 'Abgeholt');
+    });
+
+    test('localizes version control copy and release dates', () {
+      final en = AppLocalizations(const Locale('en'));
+      final ar = AppLocalizations(const Locale('ar'));
+      final fr = AppLocalizations(const Locale('fr'));
+
+      expect(en.versionControl, 'Version control');
+      expect(ar.versionControl, 'إدارة الإصدارات');
+      expect(fr.releaseHistory, 'Historique des sorties');
+      expect(en.formatReleaseDate(DateTime(2026, 8, 9)), 'August 9, 2026');
+      expect(ar.formatReleaseDate(DateTime(2026, 8, 9)), '9 أغسطس 2026');
+      expect(fr.releasedOn('11 mai 2026'), 'Sortie le 11 mai 2026');
+    });
   });
 }

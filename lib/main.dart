@@ -6,6 +6,8 @@ import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/admin_provider.dart';
+import 'core/providers/country_filter_provider.dart';
+import 'core/providers/pricing_provider.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/l10n/app_localizations.dart';
@@ -21,9 +23,21 @@ void main() async {
   }
 
   final apiService = ApiService();
-  final adminProvider = AdminProvider(apiService: apiService);
+  final countryFilterProvider = CountryFilterProvider(apiService: apiService);
+  final adminProvider = AdminProvider(
+    apiService: apiService,
+    countryFilter: countryFilterProvider,
+  );
+  final pricingProvider = PricingProvider(
+    apiService: apiService,
+    countryFilter: countryFilterProvider,
+  );
   final authProvider = AuthProvider(apiService: apiService);
-  authProvider.onSignedOut = adminProvider.clearAll;
+  authProvider.onSignedOut = () {
+    adminProvider.clearAll();
+    pricingProvider.clearAll();
+    countryFilterProvider.clearAll();
+  };
   apiService.onUnauthorized = () => authProvider.signOut();
   final settingsProvider = SettingsProvider();
   await Future.wait([
@@ -35,6 +49,8 @@ void main() async {
     TaybGoAdminApp(
       apiService: apiService,
       adminProvider: adminProvider,
+      countryFilterProvider: countryFilterProvider,
+      pricingProvider: pricingProvider,
       authProvider: authProvider,
       settingsProvider: settingsProvider,
     ),
@@ -44,6 +60,8 @@ void main() async {
 class TaybGoAdminApp extends StatefulWidget {
   final ApiService apiService;
   final AdminProvider adminProvider;
+  final CountryFilterProvider countryFilterProvider;
+  final PricingProvider pricingProvider;
   final AuthProvider authProvider;
   final SettingsProvider settingsProvider;
 
@@ -51,6 +69,8 @@ class TaybGoAdminApp extends StatefulWidget {
     super.key,
     required this.apiService,
     required this.adminProvider,
+    required this.countryFilterProvider,
+    required this.pricingProvider,
     required this.authProvider,
     required this.settingsProvider,
   });
@@ -89,6 +109,8 @@ class _TaybGoAdminAppState extends State<TaybGoAdminApp>
       providers: [
         ChangeNotifierProvider.value(value: widget.authProvider),
         ChangeNotifierProvider.value(value: widget.adminProvider),
+        ChangeNotifierProvider.value(value: widget.countryFilterProvider),
+        ChangeNotifierProvider.value(value: widget.pricingProvider),
         ChangeNotifierProvider.value(value: widget.settingsProvider),
       ],
       child: Consumer<SettingsProvider>(

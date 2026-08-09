@@ -14,6 +14,11 @@ import '../../features/restaurants/restaurant_detail_screen.dart';
 import '../../features/support/support_screen.dart';
 import '../../features/support/ticket_detail_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/profile/preferences_screen.dart';
+import '../../features/profile/version_control_screen.dart';
+import '../../core/models/pricing_policy.dart';
+import '../../features/pricing/pricing_screen.dart';
+import '../../features/pricing/pricing_policy_detail_screen.dart';
 
 class AppRouter {
   final AuthProvider authProvider;
@@ -157,6 +162,51 @@ class AppRouter {
               GoRoute(
                 path: '/profile',
                 builder: (context, state) => const ProfileScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'pricing-policies',
+                    builder: (context, state) =>
+                        const PricingScreen(showBackButton: true),
+                    routes: [
+                      GoRoute(
+                        path: 'new',
+                        builder: (context, state) =>
+                            const PricingPolicyFormPage(),
+                      ),
+                      GoRoute(
+                        path: ':id/edit',
+                        builder: (context, state) {
+                          final id = int.parse(state.pathParameters['id']!);
+                          final extra = state.extra;
+                          return PricingPolicyFormPage(
+                            policyId: id,
+                            initialPolicy: extra is PricingPolicy
+                                ? extra
+                                : null,
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: ':id',
+                        builder: (context, state) {
+                          final id = int.parse(state.pathParameters['id']!);
+                          return PricingPolicyDetailScreen(policyId: id);
+                        },
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'preferences',
+                    builder: (context, state) => const PreferencesScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'version-control',
+                        builder: (context, state) =>
+                            const VersionControlScreen(),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),

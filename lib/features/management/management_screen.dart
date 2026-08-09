@@ -34,7 +34,7 @@ class _ManagementScreenState extends State<ManagementScreen>
     _tabController = TabController(
       length: 2,
       vsync: this,
-      initialIndex: widget.initialTab == 'restaurants' ? 1 : 0,
+      initialIndex: _tabIndex(widget.initialTab),
     );
   }
 
@@ -42,8 +42,12 @@ class _ManagementScreenState extends State<ManagementScreen>
   void didUpdateWidget(covariant ManagementScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialTab != widget.initialTab) {
-      _tabController.index = widget.initialTab == 'restaurants' ? 1 : 0;
+      _tabController.index = _tabIndex(widget.initialTab);
     }
+  }
+
+  int _tabIndex(String tab) {
+    return tab == 'restaurants' ? 1 : 0;
   }
 
   @override
@@ -77,7 +81,7 @@ class _ManagementScreenState extends State<ManagementScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                l.driversAndRestaurantsTitle,
+                                l.managementTitle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -124,7 +128,7 @@ class _ManagementScreenState extends State<ManagementScreen>
                       alignment: AlignmentDirectional.centerStart,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: compact ? double.infinity : 460,
+                          maxWidth: compact ? double.infinity : 620,
                         ),
                         child: Container(
                           height: 44,

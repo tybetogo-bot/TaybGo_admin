@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/models/home_response.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/widgets/country_filter_dropdown.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -85,19 +84,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         if (!admin.isLoading) ...[
                           if (compactHeader)
                             IconButton(
-                              onPressed: () => _showHomeRawResponse(admin),
-                              icon: const Icon(Icons.data_object, size: 20),
-                              tooltip: 'Raw admin/home',
-                            )
-                          else
-                            OutlinedButton.icon(
-                              onPressed: () => _showHomeRawResponse(admin),
-                              icon: const Icon(Icons.data_object, size: 18),
-                              label: const Text('Raw'),
-                            ),
-                          const SizedBox(width: 8),
-                          if (compactHeader)
-                            IconButton(
                               onPressed: () => context.go('/support'),
                               icon: const Icon(Icons.forum_outlined, size: 20),
                               tooltip: l.support,
@@ -122,6 +108,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             tooltip: l.refresh,
                           ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: compactHeader ? double.infinity : 300,
+                      child: const CountryFilterDropdown(),
                     ),
                     const SizedBox(height: 24),
 
@@ -148,6 +139,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 l,
                               ),
                               accent: AppColors.primary,
+                              icon: Icons.receipt_long_outlined,
                               onTap: () => context.go('/orders'),
                             ),
                             _StatCard(
@@ -159,6 +151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 admin.driversCount.offline,
                               ),
                               accent: AppColors.online,
+                              icon: Icons.local_shipping_outlined,
                               onTap: () => context.go(
                                 '/management?tab=drivers&driver_filter=online',
                               ),
@@ -172,6 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 l,
                               ),
                               accent: const Color(0xFF6366F1),
+                              icon: Icons.restaurant_outlined,
                               onTap: () =>
                                   context.go('/management?tab=restaurants'),
                             ),
@@ -185,6 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 admin.pendingRestaurantsTotal,
                               ),
                               accent: AppColors.warning,
+                              icon: Icons.pending_actions_outlined,
                               onTap: () => context.go('/approvals'),
                             ),
                           ],
@@ -283,55 +278,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showHomeRawResponse(AdminProvider admin) {
-    final raw = admin.homeRawResponse;
-    final text = raw == null
-        ? 'No /api/admin/home/ response is loaded yet.'
-        : const JsonEncoder.withIndent('  ').convert(raw);
-
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        final theme = Theme.of(context);
-        return AlertDialog(
-          title: const Text('Raw admin/home response'),
-          content: SizedBox(
-            width: 720,
-            height: 520,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-                border: Border.all(color: theme.dividerColor),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(14),
-                child: SelectableText(
-                  text,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    height: 1.45,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   String _orderStatusSummary(Map<String, int> counts, AppLocalizations l) {
     if (counts.isEmpty) return l.noOrdersData;
     final entries = counts.entries.take(3).map((e) {
-      final label = e.key.replaceAll('_', ' ').toLowerCase();
+      final label = l.orderStatusLabel(e.key).toLowerCase();
       return '${e.value} $label';
     });
     return entries.join(' · ');
@@ -400,6 +350,7 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final Color accent;
+  final IconData icon;
   final VoidCallback? onTap;
 
   const _StatCard({
@@ -408,85 +359,133 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.subtitle,
     required this.accent,
+    required this.icon,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+      side: BorderSide(color: theme.dividerColor),
+    );
     final card = SizedBox(
       width: width,
-      height: 140,
-      child: Container(
-        padding: const EdgeInsets.all(20),
+      height: 112,
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          color: theme.cardTheme.color,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-          border: Border.all(color: theme.dividerColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.55,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.onSurface,
-                letterSpacing: -1,
-                height: 1,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              subtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              ),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+              blurRadius: 18,
+              offset: const Offset(0, 7),
             ),
           ],
+        ),
+        child: Material(
+          color: theme.cardTheme.color,
+          shape: shape,
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(height: 3, color: accent),
+              ),
+              InkWell(
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 12, 13),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSmall,
+                          ),
+                        ),
+                        child: Icon(icon, size: 17, color: accent),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.64,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Text(
+                              subtitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                height: 1.2,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.46,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: theme.colorScheme.onSurface,
+                          letterSpacing: -0.8,
+                          height: 1,
+                        ),
+                      ),
+                      if (onTap != null) ...[
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.arrow_outward_rounded,
+                          size: 15,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.28,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
 
-    if (onTap == null) return card;
-
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(onTap: onTap, child: card),
+      cursor: onTap == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
+      child: card,
     );
   }
 }
@@ -506,11 +505,15 @@ class _OrdersByStatusPanel extends StatelessWidget {
 
     final statusColors = <String, Color>{
       'PENDING': AppColors.warning,
+      'SEARCHING_FOR_DRIVER': AppColors.warning,
+      'DRIVER_NOTIFICATION_SENT': AppColors.warning,
+      'ACCEPTED': AppColors.info,
       'PREPARING': const Color(0xFF6366F1),
       'READY': const Color(0xFF06B6D4),
       'PICKED_UP': const Color(0xFF8B5CF6),
       'ON_THE_WAY': AppColors.info,
       'DELIVERED': AppColors.success,
+      'RESTAURANT_DELIVERED': AppColors.success,
       'COMPLETED': AppColors.success,
       'CANCELLED': AppColors.error,
       'REJECTED': AppColors.error,
@@ -518,11 +521,15 @@ class _OrdersByStatusPanel extends StatelessWidget {
 
     final statusIcons = <String, IconData>{
       'PENDING': Icons.schedule_rounded,
+      'SEARCHING_FOR_DRIVER': Icons.search_rounded,
+      'DRIVER_NOTIFICATION_SENT': Icons.notifications_none_rounded,
+      'ACCEPTED': Icons.check_circle_outline_rounded,
       'PREPARING': Icons.restaurant_rounded,
       'READY': Icons.check_circle_outline_rounded,
       'PICKED_UP': Icons.inventory_2_rounded,
       'ON_THE_WAY': Icons.local_shipping_rounded,
       'DELIVERED': Icons.done_all_rounded,
+      'RESTAURANT_DELIVERED': Icons.storefront_rounded,
       'COMPLETED': Icons.done_all_rounded,
       'CANCELLED': Icons.cancel_outlined,
       'REJECTED': Icons.block_rounded,
@@ -608,7 +615,7 @@ class _OrdersByStatusPanel extends StatelessWidget {
               final color = statusColors[key] ?? AppColors.offline;
               final icon = statusIcons[key] ?? Icons.circle_outlined;
               final pct = total > 0 ? (e.value / total * 100).round() : 0;
-              final label = e.key.replaceAll('_', ' ');
+              final label = l.orderStatusLabel(e.key);
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 14),
@@ -629,8 +636,7 @@ class _OrdersByStatusPanel extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            label[0].toUpperCase() +
-                                label.substring(1).toLowerCase(),
+                            label,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -1118,8 +1124,15 @@ class _Panel extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
         border: Border.all(color: theme.dividerColor),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: child,
     );

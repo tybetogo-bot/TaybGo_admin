@@ -1,0 +1,31 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:taybgoadmin/core/l10n/app_localizations.dart';
+import 'package:taybgoadmin/features/profile/version_control_screen.dart';
+
+void main() {
+  testWidgets('renders the version history and release dates', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const VersionControlScreen(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Version control'), findsOneWidget);
+    expect(find.textContaining('1.0.5+6'), findsNWidgets(2));
+    expect(find.textContaining('1.0.3+4'), findsOneWidget);
+    expect(find.textContaining('1.0.2+3'), findsOneWidget);
+    expect(find.textContaining('Released August 9, 2026'), findsNWidgets(2));
+    expect(find.text('Release history'), findsOneWidget);
+  });
+}

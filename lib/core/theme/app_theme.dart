@@ -75,7 +75,7 @@ class AppTheme {
         elevation: 0,
         color: surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
           side: BorderSide(color: border, width: 1),
         ),
         margin: EdgeInsets.zero,
@@ -85,21 +85,23 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          minimumSize: const Size(double.infinity, 52),
+          minimumSize: const Size(0, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
           ),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: textColor,
+          foregroundColor: AppColors.primary,
           elevation: 0,
-          minimumSize: const Size(double.infinity, 52),
-          side: BorderSide(color: border),
+          minimumSize: const Size(0, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.32)),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
           ),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),

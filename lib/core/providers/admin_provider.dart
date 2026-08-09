@@ -2,11 +2,17 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/home_response.dart';
 import '../models/support_ticket.dart';
+import 'country_filter_provider.dart';
 import '../services/api_service.dart';
 
 class AdminProvider extends ChangeNotifier {
   final ApiService _apiService;
   ApiService get apiService => _apiService;
+  final CountryFilterProvider? _countryFilter;
+  int? _countryId;
+  int _homeRequestVersion = 0;
+  int _ticketsRequestVersion = 0;
+  int _driverRequestVersion = 0;
 
   HomeResponse? _homeData;
   bool _isLoading = false;
@@ -43,8 +49,13 @@ class AdminProvider extends ChangeNotifier {
   final Set<int> _recentlyRemovedDriverIds = {};
   final Set<int> _recentlyRemovedRestaurantIds = {};
 
-  AdminProvider({ApiService? apiService})
-    : _apiService = apiService ?? ApiService();
+  AdminProvider({ApiService? apiService, CountryFilterProvider? countryFilter})
+    : _apiService = apiService ?? ApiService(),
+      _countryFilter = countryFilter {
+    _countryId = countryFilter?.selectedCountryId;
+    countryFilter?.registerConsumer('admin');
+    countryFilter?.addListener(_handleCountryChanged);
+  }
 
   // ─── State getters ──────────────────────────────────────────────
 
@@ -52,6 +63,23 @@ class AdminProvider extends ChangeNotifier {
   Object? get homeRawResponse => _homeData?.rawResponse;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int? get countryId => _countryId;
+
+  void _handleCountryChanged() {
+    final countryFilter = _countryFilter;
+    if (countryFilter == null) return;
+    final nextCountryId = _countryFilter?.selectedCountryId;
+    if (_countryId == nextCountryId) return;
+    _countryId = nextCountryId;
+    debugPrint('[AdminProvider] Country changed — refreshing home and tickets');
+    final revision = countryFilter.revision;
+    unawaited(
+      Future.wait<void>([
+        fetchHome(),
+        fetchTickets(page: 1),
+      ]).whenComplete(() => countryFilter.completeRefresh('admin', revision)),
+    );
+  }
 
   // ─── Derived getters from home response ─────────────────────────
 
@@ -133,8 +161,11 @@ class AdminProvider extends ChangeNotifier {
 
   /// Refresh home data silently (no loading indicator).
   Future<void> _silentRefreshHome() async {
+    final requestVersion = ++_homeRequestVersion;
+    final countryId = _countryId;
     try {
-      final data = await _apiService.getHome();
+      final data = await _apiService.getHome(countryId: countryId);
+      if (requestVersion != _homeRequestVersion) return;
 
       // Filter out recently approved/removed items so they don't reappear
       // due to backend processing lag.
@@ -202,8 +233,11 @@ class AdminProvider extends ChangeNotifier {
 
   /// Refresh tickets silently (no loading indicator).
   Future<void> _silentRefreshTickets() async {
+    final requestVersion = ++_ticketsRequestVersion;
+    final countryId = _countryId;
     try {
-      final json = await _apiService.getTickets();
+      final json = await _apiService.getTickets(countryId: countryId);
+      if (requestVersion != _ticketsRequestVersion) return;
       _ticketsTotal = json['count'] ?? 0;
       _tickets =
           (json['results'] as List<dynamic>?)
@@ -233,12 +267,15 @@ class AdminProvider extends ChangeNotifier {
     String? orderType,
   }) async {
     debugPrint('[AdminProvider] fetchHome() called');
+    final requestVersion = ++_homeRequestVersion;
+    final countryId = _countryId;
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
       _homeData = await _apiService.getHome(
+        countryId: countryId,
         driverSearch: driverSearch,
         restaurantSearch: restaurantSearch,
         orderType: orderType,
@@ -276,8 +313,10 @@ class AdminProvider extends ChangeNotifier {
       _error = 'Connection error. Please try again.';
       debugPrint('[AdminProvider] fetchHome() ERROR: $e');
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (requestVersion == _homeRequestVersion) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -310,7 +349,7 @@ class AdminProvider extends ChangeNotifier {
         debugPrint(
           '[AdminProvider] fetchDriverProfile() no cached home data — fetching',
         );
-        _homeData = await _apiService.getHome();
+        _homeData = await _apiService.getHome(countryId: _countryId);
         _driverProfile = _buildLiveDriverProfile(
           driverId,
           driverName: driverName,
@@ -356,10 +395,16 @@ class AdminProvider extends ChangeNotifier {
     _driverRequestProfile = fallback;
     notifyListeners();
 
+    final requestVersion = ++_driverRequestVersion;
+    final countryId = _countryId;
     try {
       var page = 1;
       while (true) {
-        final queue = await _apiService.getVerificationQueue(page: page);
+        final queue = await _apiService.getVerificationQueue(
+          page: page,
+          countryId: countryId,
+        );
+        if (requestVersion != _driverRequestVersion) return;
         _driverRequestProfileQueueRawResponse = queue.rawResponse;
         for (final d in queue.results) {
           debugPrint(
@@ -398,8 +443,10 @@ class AdminProvider extends ChangeNotifier {
       debugPrint('[AdminProvider] fetchDriverRequestProfile() queue ERROR: $e');
     }
 
-    _driverRequestProfileLoading = false;
-    notifyListeners();
+    if (requestVersion == _driverRequestVersion) {
+      _driverRequestProfileLoading = false;
+      notifyListeners();
+    }
   }
 
   DriverProfile? _buildPendingDriverProfile(
@@ -697,12 +744,18 @@ class AdminProvider extends ChangeNotifier {
 
   Future<void> fetchTickets({int? page}) async {
     debugPrint('[AdminProvider] fetchTickets() called, page=$page');
+    final requestVersion = ++_ticketsRequestVersion;
+    final countryId = _countryId;
     _ticketsLoading = true;
     _ticketsError = null;
     notifyListeners();
 
     try {
-      final json = await _apiService.getTickets(page: page);
+      final json = await _apiService.getTickets(
+        page: page,
+        countryId: countryId,
+      );
+      if (requestVersion != _ticketsRequestVersion) return;
       _ticketsTotal = json['count'] ?? 0;
       _tickets =
           (json['results'] as List<dynamic>?)
@@ -734,8 +787,10 @@ class AdminProvider extends ChangeNotifier {
       _ticketsError = 'Connection error. Please try again.';
       debugPrint('[AdminProvider] fetchTickets() ERROR: $e');
     } finally {
-      _ticketsLoading = false;
-      notifyListeners();
+      if (requestVersion == _ticketsRequestVersion) {
+        _ticketsLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -782,6 +837,9 @@ class AdminProvider extends ChangeNotifier {
   void clearAll() {
     debugPrint('[AdminProvider] clearAll() — wiping cached data');
     stopPolling();
+    _homeRequestVersion++;
+    _ticketsRequestVersion++;
+    _driverRequestVersion++;
     _homeData = null;
     _isLoading = false;
     _error = null;
@@ -796,6 +854,7 @@ class AdminProvider extends ChangeNotifier {
     _driverRequestProfile = null;
     _driverRequestProfileLoading = false;
     _driverRequestProfileQueueRawResponse = null;
+    _countryId = null;
     _recentlyRemovedDriverIds.clear();
     _recentlyRemovedRestaurantIds.clear();
     notifyListeners();
@@ -860,6 +919,8 @@ class AdminProvider extends ChangeNotifier {
   void dispose() {
     debugPrint('[AdminProvider] dispose() — stopping polling & closing API');
     stopPolling();
+    _countryFilter?.removeListener(_handleCountryChanged);
+    _countryFilter?.unregisterConsumer('admin');
     _apiService.dispose();
     super.dispose();
   }

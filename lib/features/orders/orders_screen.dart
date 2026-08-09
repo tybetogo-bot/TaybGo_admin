@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/models/admin_order.dart';
 import '../../core/providers/admin_provider.dart';
+import '../../core/providers/country_filter_provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -30,17 +33,38 @@ class _OrdersScreenState extends State<OrdersScreen> {
   String _search = '';
   String _status = '';
   String _orderType = '';
+  int _countryRevision = 0;
+  int _requestVersion = 0;
 
   @override
   void initState() {
     super.initState();
+    final countryFilter = context.read<CountryFilterProvider>();
+    _countryRevision = countryFilter.revision;
+    countryFilter.registerConsumer('orders');
+    countryFilter.addListener(_handleCountryChanged);
     Future.microtask(_fetchOrders);
   }
 
   @override
   void dispose() {
+    final countryFilter = context.read<CountryFilterProvider>();
+    countryFilter.removeListener(_handleCountryChanged);
+    countryFilter.unregisterConsumer('orders');
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _handleCountryChanged() {
+    final countryFilter = context.read<CountryFilterProvider>();
+    if (_countryRevision == countryFilter.revision) return;
+    _countryRevision = countryFilter.revision;
+    final revision = countryFilter.revision;
+    unawaited(
+      _fetchOrders(
+        page: 1,
+      ).whenComplete(() => countryFilter.completeRefresh('orders', revision)),
+    );
   }
 
   @override
@@ -287,6 +311,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Future<void> _fetchOrders({int? page}) async {
+    final requestVersion = ++_requestVersion;
+    final countryId = context.read<CountryFilterProvider>().selectedCountryId;
     setState(() {
       _loading = true;
       _error = null;
@@ -299,11 +325,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
           .apiService
           .getAdminOrders(
             page: page ?? _page,
+            countryId: countryId,
             search: _search,
             status: _status,
             orderType: _orderType,
           );
       if (!mounted) return;
+      if (requestVersion != _requestVersion) return;
       setState(() {
         _orders = result.results;
         _total = result.count;
@@ -313,6 +341,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
+      if (requestVersion != _requestVersion) return;
       setState(() {
         _permissionDenied = e.statusCode == 403;
         if (_permissionDenied) {
@@ -327,11 +356,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
         }
       });
     } catch (_) {
-      if (mounted) {
+      if (mounted && requestVersion == _requestVersion) {
         setState(() => _error = AppLocalizations.of(context).connectionError);
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && requestVersion == _requestVersion) {
+        setState(() => _loading = false);
+      }
     }
   }
 

@@ -5,6 +5,7 @@ import '../auth/auth_error_keys.dart';
 import '../config/env_config.dart';
 import '../models/admin_order.dart';
 import '../models/home_response.dart';
+import '../models/pricing_policy.dart';
 import '../models/support_ticket.dart';
 
 class ApiService {
@@ -150,7 +151,34 @@ class ApiService {
     final message = detail == null || detail.trim().isEmpty
         ? '$fallbackMessage (HTTP ${response.statusCode})'
         : detail;
-    return ApiException(message, response.statusCode);
+    return ApiException(
+      message,
+      response.statusCode,
+      fieldErrors: _extractApiFieldErrors(response),
+    );
+  }
+
+  Map<String, String> _extractApiFieldErrors(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map) return const {};
+      final body = Map<String, dynamic>.from(decoded);
+      if (body.containsKey('detail') ||
+          body.containsKey('message') ||
+          body.containsKey('error')) {
+        return const {};
+      }
+
+      return Map.fromEntries(
+        body.entries
+            .where((entry) => entry.value != null)
+            .map(
+              (entry) => MapEntry(entry.key, _stringifyApiError(entry.value)),
+            ),
+      );
+    } catch (_) {
+      return const {};
+    }
   }
 
   bool _isOtpConflict(int statusCode, String? detail) {
@@ -218,9 +246,11 @@ class ApiService {
   /// Fetch the driver verification queue with full profile details.
   Future<PaginatedResponse<DriverProfile>> getVerificationQueue({
     int? page,
+    int? countryId,
   }) async {
     final params = <String, String>{};
     if (page != null) params['page'] = '$page';
+    if (countryId != null) params['country_id'] = '$countryId';
 
     final uri = Uri.parse(
       '$baseUrl/api/admin/drivers/verification-queue/',
@@ -345,6 +375,7 @@ class ApiService {
   }
 
   Future<HomeResponse> getHome({
+    int? countryId,
     bool? driverOnline,
     String? driverSearch,
     String? driverStatus,
@@ -364,6 +395,7 @@ class ApiService {
   }) async {
     final params = <String, String>{};
 
+    if (countryId != null) params['country_id'] = '$countryId';
     if (driverOnline != null) params['driver_online'] = '$driverOnline';
     if (driverSearch != null) params['driver_search'] = driverSearch;
     if (driverStatus != null) params['driver_status'] = driverStatus;
@@ -419,6 +451,7 @@ class ApiService {
 
   Future<PaginatedResponse<AdminOrder>> getAdminOrders({
     int? page,
+    int? countryId,
     String? search,
     String? status,
     String? orderType,
@@ -430,6 +463,7 @@ class ApiService {
   }) async {
     final params = <String, String>{};
     if (page != null) params['page'] = '$page';
+    if (countryId != null) params['country_id'] = '$countryId';
     if (search != null && search.trim().isNotEmpty) {
       params['search'] = search.trim();
     }
@@ -501,9 +535,230 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getTickets({int? page}) async {
+  // ─── Pricing policies ──────────────────────────────────────────
+
+  Future<PaginatedResponse<PricingPolicy>> getPricingPolicies({
+    int? page,
+    String? search,
+    String? scope,
+    int? countryId,
+    int? cityId,
+    String? orderType,
+    String? vehicleType,
+    bool? isActive,
+    String? currency,
+  }) async {
     final params = <String, String>{};
     if (page != null) params['page'] = '$page';
+    if (search != null && search.trim().isNotEmpty) {
+      params['search'] = search.trim();
+    }
+    if (scope != null && scope.trim().isNotEmpty) {
+      params['scope'] = scope.trim().toUpperCase();
+    }
+    if (countryId != null) params['country_id'] = '$countryId';
+    if (cityId != null) params['city_id'] = '$cityId';
+    if (orderType != null && orderType.trim().isNotEmpty) {
+      params['order_type'] = orderType.trim().toUpperCase();
+    }
+    if (vehicleType != null && vehicleType.trim().isNotEmpty) {
+      params['vehicle_type'] = vehicleType.trim().toUpperCase();
+    }
+    if (isActive != null) params['is_active'] = '$isActive';
+    if (currency != null && currency.trim().isNotEmpty) {
+      params['currency'] = currency.trim().toUpperCase();
+    }
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/pricing-policies/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return PaginatedResponse.fromJson(json, PricingPolicy.fromJson);
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to load pricing policies',
+      );
+    }
+  }
+
+  Future<PricingPolicy> getPricingPolicy(int policyId) async {
+    final uri = Uri.parse('$baseUrl/api/admin/pricing-policies/$policyId/');
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      return PricingPolicy.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to load pricing policy',
+      );
+    }
+  }
+
+  Future<PricingPolicy> createPricingPolicy(
+    Map<String, dynamic> payload,
+  ) async {
+    final uri = Uri.parse('$baseUrl/api/admin/pricing-policies/');
+    final response = await _client.post(
+      uri,
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return PricingPolicy.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to create pricing policy',
+      );
+    }
+  }
+
+  Future<PricingPolicy> patchPricingPolicy(
+    int policyId,
+    Map<String, dynamic> payload,
+  ) async {
+    final uri = Uri.parse('$baseUrl/api/admin/pricing-policies/$policyId/');
+    final response = await _client.patch(
+      uri,
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200) {
+      return PricingPolicy.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to update pricing policy',
+      );
+    }
+  }
+
+  Future<PricingPolicy> putPricingPolicy(
+    int policyId,
+    Map<String, dynamic> payload,
+  ) async {
+    final uri = Uri.parse('$baseUrl/api/admin/pricing-policies/$policyId/');
+    final response = await _client.put(
+      uri,
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200) {
+      return PricingPolicy.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to replace pricing policy',
+      );
+    }
+  }
+
+  Future<void> deletePricingPolicy(int policyId) async {
+    final uri = Uri.parse('$baseUrl/api/admin/pricing-policies/$policyId/');
+    final response = await _client.delete(uri, headers: _headers);
+
+    if (response.statusCode == 204 || response.statusCode == 200) return;
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to delete pricing policy',
+    );
+  }
+
+  Future<PaginatedResponse<AdminCountry>> getAdminCountries({
+    int? page,
+    String? search,
+    bool? isActive,
+  }) async {
+    final params = <String, String>{};
+    if (page != null) params['page'] = '$page';
+    if (search != null && search.trim().isNotEmpty) {
+      params['search'] = search.trim();
+    }
+    if (isActive != null) params['is_active'] = '$isActive';
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/countries/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return PaginatedResponse.fromJson(json, AdminCountry.fromJson);
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to load countries',
+      );
+    }
+  }
+
+  Future<PaginatedResponse<AdminCity>> getAdminCities({
+    int? page,
+    int? countryId,
+    String? countryIsoCode,
+    String? search,
+    bool? isActive,
+  }) async {
+    final params = <String, String>{};
+    if (page != null) params['page'] = '$page';
+    if (countryId != null) params['country_id'] = '$countryId';
+    if (countryIsoCode != null && countryIsoCode.trim().isNotEmpty) {
+      params['country_iso_code'] = countryIsoCode.trim();
+    }
+    if (search != null && search.trim().isNotEmpty) {
+      params['search'] = search.trim();
+    }
+    if (isActive != null) params['is_active'] = '$isActive';
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/cities/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return PaginatedResponse.fromJson(json, AdminCity.fromJson);
+    } else if (response.statusCode == 401) {
+      _throwUnauthorized();
+    } else {
+      throw _apiException(response, fallbackMessage: 'Failed to load cities');
+    }
+  }
+
+  Future<Map<String, dynamic>> getTickets({int? page, int? countryId}) async {
+    final params = <String, String>{};
+    if (page != null) params['page'] = '$page';
+    if (countryId != null) params['country_id'] = '$countryId';
 
     final uri = Uri.parse(
       '$baseUrl/api/admin/support/tickets/',
@@ -637,8 +892,13 @@ class _VerificationQueuePage {
 class ApiException implements Exception {
   final String message;
   final int statusCode;
+  final Map<String, String> fieldErrors;
 
-  const ApiException(this.message, this.statusCode);
+  const ApiException(
+    this.message,
+    this.statusCode, {
+    this.fieldErrors = const {},
+  });
 
   @override
   String toString() => 'ApiException($statusCode): $message';

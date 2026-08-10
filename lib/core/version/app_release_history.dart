@@ -14,13 +14,14 @@ class AppReleaseHistory {
   AppReleaseHistory._();
 
   static final current = AppRelease(
-    label: '1.0.5+6',
-    releasedAt: DateTime(2026, 8, 9),
+    label: '1.0.6+7',
+    releasedAt: DateTime(2026, 8, 10),
     isCurrent: true,
   );
 
   static final releases = [
     current,
+    AppRelease(label: '1.0.5+6', releasedAt: DateTime(2026, 8, 9)),
     AppRelease(label: '1.0.3+4', releasedAt: DateTime(2026, 4, 17)),
     AppRelease(label: '1.0.2+3', releasedAt: DateTime(2026, 4, 17)),
     AppRelease(label: '1.0.1+2', releasedAt: DateTime(2026, 4, 16)),

@@ -882,6 +882,27 @@ class AppLocalizations {
     fr: 'Sortie le $date',
     de: 'Veröffentlicht am $date',
   );
+  String get release106Change1 => _t(
+    'Aligned dashboard totals and summaries so paginated data no longer shows conflicting numbers.',
+    'توحيد إجماليات لوحة التحكم وملخصاتها لمنع تعارض الأرقام الناتج عن البيانات المقسّمة إلى صفحات.',
+    nl: 'Dashboardtotalen en samenvattingen op elkaar afgestemd zodat gepagineerde gegevens geen tegenstrijdige aantallen meer tonen.',
+    fr: 'Harmonisation des totaux et des résumés du tableau de bord afin d’éviter les chiffres contradictoires liés à la pagination.',
+    de: 'Dashboard-Gesamtsummen und Zusammenfassungen angeglichen, damit paginierte Daten keine widersprüchlichen Zahlen mehr anzeigen.',
+  );
+  String get release106Change2 => _t(
+    'Loaded all driver pages before calculating management totals and status counts.',
+    'تحميل جميع صفحات السائقين قبل حساب إجماليات الإدارة وأعداد الحالات.',
+    nl: 'Alle chauffeurpagina’s geladen voordat beheertotalen en statusaantallen worden berekend.',
+    fr: 'Chargement de toutes les pages de chauffeurs avant le calcul des totaux et des statuts de gestion.',
+    de: 'Alle Fahrerseiten geladen, bevor Verwaltungs- und Statussummen berechnet werden.',
+  );
+  String get release106Change3 => _t(
+    'Updated release metadata and localized dashboard summaries.',
+    'تحديث بيانات الإصدار وملخصات لوحة التحكم المترجمة.',
+    nl: 'Releasegegevens en gelokaliseerde dashboardsamenvattingen bijgewerkt.',
+    fr: 'Mise à jour des métadonnées de sortie et des résumés localisés du tableau de bord.',
+    de: 'Release-Metadaten und lokalisierte Dashboard-Zusammenfassungen aktualisiert.',
+  );
   String get release105Change1 => _t(
     'Added pricing policy management with create, edit, detail, and delete workflows.',
     'إضافة إدارة سياسات التسعير مع مسارات الإنشاء والتعديل والتفاصيل والحذف.',
@@ -1185,6 +1206,13 @@ class AppLocalizations {
     nl: '$shown weergegeven van $total bestellingen',
     fr: '$shown affichées sur $total commandes',
     de: '$shown von $total Bestellungen angezeigt',
+  );
+  String ordersTotalSummary(int total) => _t(
+    '$total total orders',
+    'إجمالي الطلبات: $total',
+    nl: '$total bestellingen in totaal',
+    fr: '$total commandes au total',
+    de: '$total Bestellungen insgesamt',
   );
   String get searchOrders => _t(
     'Search orders...',
@@ -1691,12 +1719,12 @@ class AppLocalizations {
     fr: 'Aucune donnée de commande',
     de: 'Keine Bestelldaten',
   );
-  String activeOfShown(int active, int total) => _t(
-    '$active active of $total shown',
-    '$active نشط من أصل $total معروض',
-    nl: '$active actief van $total getoond',
-    fr: '$active actifs sur $total affichés',
-    de: '$active aktiv von $total angezeigt',
+  String restaurantsTotalSummary(int total) => _t(
+    '$total total restaurants',
+    'إجمالي المطاعم: $total',
+    nl: '$total restaurants in totaal',
+    fr: '$total restaurants au total',
+    de: '$total Restaurants insgesamt',
   );
   String get noRestaurantsLoaded => _t(
     'No restaurants loaded',

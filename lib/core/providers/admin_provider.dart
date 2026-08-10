@@ -164,7 +164,7 @@ class AdminProvider extends ChangeNotifier {
     final requestVersion = ++_homeRequestVersion;
     final countryId = _countryId;
     try {
-      final data = await _apiService.getHome(countryId: countryId);
+      final data = await _getHomeData(countryId: countryId);
       if (requestVersion != _homeRequestVersion) return;
 
       // Filter out recently approved/removed items so they don't reappear
@@ -261,6 +261,83 @@ class AdminProvider extends ChangeNotifier {
 
   // ─── API calls ──────────────────────────────────────────────────
 
+  static const _driversPageSize = 100;
+
+  /// Load the full driver collection used by the management screen.
+  ///
+  /// The home endpoint paginates each section independently. The driver UI
+  /// does not expose pagination, so loading only the default first page makes
+  /// its status tiles disagree with the API-wide driver count.
+  Future<HomeResponse> _getHomeData({
+    int? countryId,
+    String? driverSearch,
+    String? restaurantSearch,
+    String? orderType,
+  }) async {
+    final base = await _apiService.getHome(
+      countryId: countryId,
+      driverSearch: driverSearch,
+      restaurantSearch: restaurantSearch,
+      orderType: orderType,
+      driversPage: 1,
+      driversPageSize: _driversPageSize,
+    );
+
+    final expectedCount = base.driversWithLocations.count;
+    final allDrivers = <DriverWithLocation>[];
+    final seenDriverIds = <int>{};
+
+    void appendDrivers(List<DriverWithLocation> page) {
+      for (final driver in page) {
+        if (seenDriverIds.add(driver.id)) {
+          allDrivers.add(driver);
+        }
+      }
+    }
+
+    appendDrivers(base.driversWithLocations.results);
+
+    var currentPage = 1;
+    var current = base;
+    while (allDrivers.length < expectedCount &&
+        current.driversWithLocations.next != null &&
+        currentPage < 1000) {
+      currentPage++;
+      current = await _apiService.getHome(
+        countryId: countryId,
+        driverSearch: driverSearch,
+        restaurantSearch: restaurantSearch,
+        orderType: orderType,
+        driversPage: currentPage,
+        driversPageSize: _driversPageSize,
+      );
+
+      final before = allDrivers.length;
+      appendDrivers(current.driversWithLocations.results);
+      if (allDrivers.length == before) break;
+    }
+
+    if (allDrivers.length == base.driversWithLocations.results.length) {
+      return base;
+    }
+
+    return HomeResponse(
+      driversWithLocations: PaginatedResponse(
+        count: expectedCount,
+        next: null,
+        previous: null,
+        results: allDrivers,
+        rawResponse: base.driversWithLocations.rawResponse,
+      ),
+      restaurants: base.restaurants,
+      pendingDrivers: base.pendingDrivers,
+      pendingRestaurants: base.pendingRestaurants,
+      ordersCountByStatus: base.ordersCountByStatus,
+      driversCount: base.driversCount,
+      rawResponse: base.rawResponse,
+    );
+  }
+
   Future<void> fetchHome({
     String? driverSearch,
     String? restaurantSearch,
@@ -274,7 +351,7 @@ class AdminProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _homeData = await _apiService.getHome(
+      _homeData = await _getHomeData(
         countryId: countryId,
         driverSearch: driverSearch,
         restaurantSearch: restaurantSearch,
@@ -349,7 +426,7 @@ class AdminProvider extends ChangeNotifier {
         debugPrint(
           '[AdminProvider] fetchDriverProfile() no cached home data — fetching',
         );
-        _homeData = await _apiService.getHome(countryId: _countryId);
+        _homeData = await _getHomeData(countryId: _countryId);
         _driverProfile = _buildLiveDriverProfile(
           driverId,
           driverName: driverName,

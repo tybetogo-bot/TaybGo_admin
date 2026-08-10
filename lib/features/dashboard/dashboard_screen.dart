@@ -134,10 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               width: cardW,
                               title: l.totalOrders,
                               value: '${admin.totalOrders}',
-                              subtitle: _orderStatusSummary(
-                                admin.ordersCountByStatus,
-                                l,
-                              ),
+                              subtitle: l.ordersTotalSummary(admin.totalOrders),
                               accent: AppColors.primary,
                               icon: Icons.receipt_long_outlined,
                               onTap: () => context.go('/orders'),
@@ -160,9 +157,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               width: cardW,
                               title: l.restaurants,
                               value: '${admin.restaurantsTotal}',
-                              subtitle: _restaurantStatusSummary(
-                                admin.restaurants,
-                                l,
+                              subtitle: l.restaurantsTotalSummary(
+                                admin.restaurantsTotal,
                               ),
                               accent: const Color(0xFF6366F1),
                               icon: Icons.restaurant_outlined,
@@ -276,25 +272,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
     );
-  }
-
-  String _orderStatusSummary(Map<String, int> counts, AppLocalizations l) {
-    if (counts.isEmpty) return l.noOrdersData;
-    final entries = counts.entries.take(3).map((e) {
-      final label = l.orderStatusLabel(e.key).toLowerCase();
-      return '${e.value} $label';
-    });
-    return entries.join(' · ');
-  }
-
-  String _restaurantStatusSummary(
-    List<HomeRestaurant> restaurants,
-    AppLocalizations l,
-  ) {
-    final active = restaurants.where((r) => r.isActive).length;
-    final total = restaurants.length;
-    if (total == 0) return l.noRestaurantsLoaded;
-    return l.activeOfShown(active, total);
   }
 }
 

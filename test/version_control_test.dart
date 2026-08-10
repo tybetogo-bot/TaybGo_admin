@@ -22,10 +22,12 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Version control'), findsOneWidget);
-    expect(find.textContaining('1.0.5+6'), findsNWidgets(2));
+    expect(find.textContaining('1.0.6+7'), findsNWidgets(2));
+    expect(find.textContaining('1.0.5+6'), findsOneWidget);
     expect(find.textContaining('1.0.3+4'), findsOneWidget);
     expect(find.textContaining('1.0.2+3'), findsOneWidget);
-    expect(find.textContaining('Released August 9, 2026'), findsNWidgets(2));
+    expect(find.textContaining('Released August 10, 2026'), findsNWidgets(2));
+    expect(find.textContaining('Released August 9, 2026'), findsOneWidget);
     expect(find.text('Release history'), findsOneWidget);
   });
 }

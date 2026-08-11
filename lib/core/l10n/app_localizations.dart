@@ -882,6 +882,41 @@ class AppLocalizations {
     fr: 'Sortie le $date',
     de: 'Veröffentlicht am $date',
   );
+  String get release107Change1 => _t(
+    'Redesigned the Partners workspace with a compact app bar, shared search toggle, partner switcher, status cards, and smoother list/map browsing.',
+    'إعادة تصميم مساحة الشركاء مع شريط علوي مختصر، ومفتاح بحث مشترك، ومبدّل للشركاء، وبطاقات للحالات، وتصفح أسهل بين القائمة والخريطة.',
+    nl: 'De Partner-werkruimte vernieuwd met een compacte appbalk, gedeelde zoekknop, partnerwisselaar, statuskaarten en soepelere lijst- en kaartweergave.',
+    fr: 'Espace Partenaires repensé avec une barre d’application compacte, une recherche partagée, un sélecteur de partenaires, des cartes d’état et une navigation liste/carte plus fluide.',
+    de: 'Den Partnerbereich mit kompakter App-Leiste, gemeinsamer Suche, Partner-Umschalter, Statuskarten und flüssigerer Listen-/Kartenansicht neu gestaltet.',
+  );
+  String get release107Change2 => _t(
+    'Removed unreliable client-side city inference for drivers and kept driver filtering aligned with API-provided data.',
+    'إزالة استنتاج المدينة غير الموثوق محلياً للسائقين وربط تصفية السائقين بالبيانات القادمة من واجهة API.',
+    nl: 'Onbetrouwbare lokale stadsschatting voor chauffeurs verwijderd en chauffeursfilters afgestemd op API-gegevens.',
+    fr: 'Suppression de l’inférence locale peu fiable de la ville des chauffeurs et alignement des filtres sur les données de l’API.',
+    de: 'Unzuverlässige lokale Stadtableitung für Fahrer entfernt und Fahrerfilter an API-Daten ausgerichtet.',
+  );
+  String get release107Change3 => _t(
+    'Added optional driver address support across models, lists, search, profiles, and detail views without replacing live GPS coordinates.',
+    'إضافة دعم اختياري لعنوان السائق في النماذج والقوائم والبحث والملفات الشخصية والتفاصيل دون استبدال إحداثيات GPS المباشرة.',
+    nl: 'Optionele adressen voor chauffeurs toegevoegd aan modellen, lijsten, zoekopdrachten, profielen en details zonder live GPS-coördinaten te vervangen.',
+    fr: 'Ajout de l’adresse facultative du chauffeur dans les modèles, listes, recherches, profils et détails sans remplacer les coordonnées GPS en direct.',
+    de: 'Optionale Fahreradressen in Modelle, Listen, Suche, Profile und Details aufgenommen, ohne Live-GPS-Koordinaten zu ersetzen.',
+  );
+  String get release107Change4 => _t(
+    'Refined Orders with an app-bar search action, compact four-column stats, and a tighter filtering layout.',
+    'تحسين شاشة الطلبات بإضافة إجراء بحث في الشريط العلوي وإحصاءات مختصرة من أربعة أعمدة وتخطيط تصفية أكثر إحكاماً.',
+    nl: 'Bestellingen verfijnd met zoeken vanuit de appbalk, compacte statistieken in vier kolommen en een strakkere filterindeling.',
+    fr: 'Écran Commandes amélioré avec recherche dans la barre d’application, statistiques compactes sur quatre colonnes et filtres plus resserrés.',
+    de: 'Bestellungen mit Suche in der App-Leiste, kompakten Statistiken in vier Spalten und einer übersichtlicheren Filteranordnung verbessert.',
+  );
+  String get release107Change5 => _t(
+    'Optimized Overview statistics into two-column mobile cards and improved responsive spacing across admin sections.',
+    'تحسين إحصاءات النظرة العامة إلى بطاقات من عمودين على الهاتف وتحسين المسافات المتجاوبة في أقسام الإدارة.',
+    nl: 'Overzichtsstatistieken geoptimaliseerd naar kaarten met twee kolommen op mobiel en responsieve ruimte in beheersecties verbeterd.',
+    fr: 'Statistiques de la vue d’ensemble optimisées en cartes à deux colonnes sur mobile et espacements responsifs améliorés dans les sections d’administration.',
+    de: 'Übersichtsstatistiken auf Mobilgeräten als zweispaltige Karten optimiert und responsive Abstände in den Admin-Bereichen verbessert.',
+  );
   String get release106Change1 => _t(
     'Aligned dashboard totals and summaries so paginated data no longer shows conflicting numbers.',
     'توحيد إجماليات لوحة التحكم وملخصاتها لمنع تعارض الأرقام الناتج عن البيانات المقسّمة إلى صفحات.',

@@ -17,6 +17,7 @@ class AdminProvider extends ChangeNotifier {
   HomeResponse? _homeData;
   bool _isLoading = false;
   String? _error;
+  DateTime? _lastHomeUpdatedAt;
   Object? _driverRequestProfileQueueRawResponse;
 
   // ─── Ticket state ──────────────────────────────────────────────
@@ -63,6 +64,7 @@ class AdminProvider extends ChangeNotifier {
   Object? get homeRawResponse => _homeData?.rawResponse;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  DateTime? get lastHomeUpdatedAt => _lastHomeUpdatedAt;
   int? get countryId => _countryId;
 
   void _handleCountryChanged() {
@@ -216,6 +218,7 @@ class AdminProvider extends ChangeNotifier {
         driversCount: data.driversCount,
         rawResponse: data.rawResponse,
       );
+      _lastHomeUpdatedAt = DateTime.now();
       _error = null;
       debugPrint(
         '[AdminProvider] Silent home refresh OK — '
@@ -357,6 +360,7 @@ class AdminProvider extends ChangeNotifier {
         restaurantSearch: restaurantSearch,
         orderType: orderType,
       );
+      _lastHomeUpdatedAt = DateTime.now();
       _error = null;
       debugPrint(
         '[AdminProvider] fetchHome() SUCCESS — '
@@ -732,6 +736,7 @@ class AdminProvider extends ChangeNotifier {
         latitude: profile.latitude,
         longitude: profile.longitude,
         locationUpdatedAt: profile.locationUpdatedAt,
+        address: profile.address,
         documentItems: profile.documentItems,
         hasExtendedDetails: profile.hasExtendedDetails,
       );
@@ -768,6 +773,7 @@ class AdminProvider extends ChangeNotifier {
                     latitude: driver.latitude,
                     longitude: driver.longitude,
                     locationUpdatedAt: driver.locationUpdatedAt,
+                    address: driver.address,
                     documentItems: driver.documentItems,
                   ),
           )

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
 import '../drivers/drivers_screen.dart';
 import '../restaurants/restaurants_screen.dart';
 
@@ -27,6 +26,9 @@ class ManagementScreen extends StatefulWidget {
 class _ManagementScreenState extends State<ManagementScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _searchOpen = false;
 
   @override
   void initState() {
@@ -53,7 +55,17 @@ class _ManagementScreenState extends State<ManagementScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() => _searchOpen = !_searchOpen);
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() => _searchQuery = '');
   }
 
   @override
@@ -67,25 +79,26 @@ class _ManagementScreenState extends State<ManagementScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 28, 28, 16),
+            padding: const EdgeInsets.fromLTRB(28, 10, 28, 6),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final compact = constraints.maxWidth < 680;
+                final compact = constraints.maxWidth < 760;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                l.managementTitle,
+                                l.driversAndRestaurantsNav,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 24,
+                                  fontSize: compact ? 20 : 23,
                                   fontWeight: FontWeight.w700,
                                   color: theme.colorScheme.onSurface,
                                   letterSpacing: -0.5,
@@ -100,7 +113,7 @@ class _ManagementScreenState extends State<ManagementScreen>
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: compact ? 12 : 14,
                                   color: theme.colorScheme.onSurface.withValues(
                                     alpha: 0.5,
                                   ),
@@ -109,83 +122,134 @@ class _ManagementScreenState extends State<ManagementScreen>
                             ],
                           ),
                         ),
-                        if (admin.isLoading)
-                          const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        else
-                          IconButton(
-                            onPressed: admin.refreshHome,
-                            icon: const Icon(Icons.refresh_rounded, size: 20),
-                            tooltip: l.refresh,
+                        IconButton(
+                          onPressed: _toggleSearch,
+                          icon: Icon(
+                            _searchOpen
+                                ? Icons.close_rounded
+                                : Icons.search_rounded,
+                            size: 20,
                           ),
+                          tooltip: _searchOpen
+                              ? l.clear
+                              : l.searchByNameOrPhone,
+                          style: IconButton.styleFrom(
+                            foregroundColor: _searchOpen
+                                ? AppColors.primary
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: admin.isLoading ? null : admin.refreshHome,
+                          icon: const Icon(Icons.refresh_rounded, size: 19),
+                          tooltip: l.refresh,
+                          style: IconButton.styleFrom(
+                            foregroundColor: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.6),
+                            disabledForegroundColor: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.3),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 18),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: compact ? double.infinity : 620,
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      child: _searchOpen
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: TextField(
+                                controller: _searchController,
+                                autofocus: true,
+                                onChanged: (value) =>
+                                    setState(() => _searchQuery = value),
+                                style: const TextStyle(fontSize: 13),
+                                decoration: InputDecoration(
+                                  hintText: l.searchByNameOrPhone,
+                                  filled: true,
+                                  fillColor: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.035),
+                                  prefixIcon: const Icon(
+                                    Icons.search_rounded,
+                                    size: 18,
+                                  ),
+                                  suffixIcon: _searchQuery.isEmpty
+                                      ? null
+                                      : IconButton(
+                                          onPressed: _clearSearch,
+                                          icon: const Icon(
+                                            Icons.close,
+                                            size: 17,
+                                          ),
+                                        ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                    SizedBox(height: _searchOpen ? 8 : 8),
+                    Container(
+                      height: compact ? 40 : 44,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.035,
                         ),
-                        child: Container(
-                          height: 44,
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.04,
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(
+                          color: theme.dividerColor.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      child: TabBar(
+                        controller: _tabController,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicator: BoxDecoration(
+                          color: theme.cardTheme.color,
+                          borderRadius: BorderRadius.circular(9),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.radiusMedium,
-                            ),
-                            border: Border.all(color: theme.dividerColor),
-                          ),
-                          child: TabBar(
-                            controller: _tabController,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            indicator: BoxDecoration(
-                              color: theme.cardTheme.color,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusSmall,
-                              ),
-                              border: Border.all(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.25,
-                                ),
-                              ),
-                            ),
-                            dividerColor: Colors.transparent,
-                            labelColor: AppColors.primary,
-                            unselectedLabelColor: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.55),
-                            labelStyle: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            unselectedLabelStyle: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            tabs: [
-                              Tab(
-                                child: _ManagementTabLabel(
-                                  icon: Icons.local_shipping_outlined,
-                                  label: l.drivers,
-                                  count: admin.driversTotal,
-                                ),
-                              ),
-                              Tab(
-                                child: _ManagementTabLabel(
-                                  icon: Icons.storefront_outlined,
-                                  label: l.restaurants,
-                                  count: admin.restaurantsTotal,
-                                ),
-                              ),
-                            ],
+                          ],
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.2),
                           ),
                         ),
+                        dividerColor: Colors.transparent,
+                        labelColor: AppColors.primary,
+                        unselectedLabelColor: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.55),
+                        labelStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        tabs: [
+                          Tab(
+                            child: _ManagementTabLabel(
+                              icon: Icons.local_shipping_outlined,
+                              label: l.drivers,
+                              count: admin.driversTotal,
+                            ),
+                          ),
+                          Tab(
+                            child: _ManagementTabLabel(
+                              icon: Icons.storefront_outlined,
+                              label: l.restaurants,
+                              count: admin.restaurantsTotal,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -201,11 +265,15 @@ class _ManagementScreenState extends State<ManagementScreen>
                   key: ValueKey('drivers-${widget.driverFilter}'),
                   initialFilter: widget.driverFilter,
                   showHeader: false,
+                  showSearchToolbar: false,
+                  searchQuery: _searchQuery,
                 ),
                 RestaurantsScreen(
                   key: ValueKey('restaurants-${widget.restaurantFilter}'),
                   initialFilter: widget.restaurantFilter,
                   showHeader: false,
+                  showSearchToolbar: false,
+                  searchQuery: _searchQuery,
                 ),
               ],
             ),
@@ -229,6 +297,7 @@ class _ManagementTabLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -236,10 +305,25 @@ class _ManagementTabLabel extends StatelessWidget {
         Icon(icon, size: 18),
         const SizedBox(width: 8),
         Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        const SizedBox(width: 7),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.14),
+            ),
+          ),
           child: Text(
-            '$label ($count)',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            '$count',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+            ),
           ),
         ),
       ],

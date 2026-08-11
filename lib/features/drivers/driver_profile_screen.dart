@@ -258,6 +258,10 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   ],
                 ),
               ],
+              if (profile.hasAddress) ...[
+                const SizedBox(height: 16),
+                _buildAddressSection(context, profile.address!),
+              ],
               if (profile.hasServiceDetails) ...[
                 const SizedBox(height: 16),
                 _buildSection(
@@ -608,6 +612,36 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAddressSection(BuildContext context, DriverAddress address) {
+    final l = AppLocalizations.of(context);
+    final addressLine = address.displayLine.isNotEmpty
+        ? address.displayLine
+        : l.notProvided;
+
+    return _buildSection(
+      context,
+      title: l.address,
+      icon: Icons.home_outlined,
+      children: [
+        if (address.label.isNotEmpty)
+          _buildDetailRow(context, l.label, address.label),
+        _buildDetailRow(context, l.address, addressLine),
+        if (address.city.isNotEmpty)
+          _buildDetailRow(context, l.city, address.city),
+        if (address.postalCode.isNotEmpty)
+          _buildDetailRow(context, l.postalCode, address.postalCode),
+        if (address.country.isNotEmpty)
+          _buildDetailRow(context, l.country, address.country),
+        if (address.hasCoordinates)
+          _buildDetailRow(
+            context,
+            l.coordinates,
+            '${address.lat}, ${address.lng}',
+          ),
+      ],
     );
   }
 

@@ -11,11 +11,15 @@ import '../../core/theme/app_spacing.dart';
 class RestaurantsScreen extends StatefulWidget {
   final String initialFilter;
   final bool showHeader;
+  final bool showSearchToolbar;
+  final String? searchQuery;
 
   const RestaurantsScreen({
     super.key,
     this.initialFilter = 'all',
     this.showHeader = true,
+    this.showSearchToolbar = true,
+    this.searchQuery,
   });
 
   @override
@@ -27,6 +31,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
   String _search = '';
   String? _selectedStatus;
   String? _selectedCity;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -47,6 +52,12 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final admin = context.watch<AdminProvider>();
     final theme = Theme.of(context);
@@ -58,10 +69,18 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
     final inactiveCount = restaurants.length - activeCount;
     final openCount = restaurants.where((r) => r.isOpenNow(now)).length;
     final filtered = _apply(restaurants, now);
+    final activeSearch = widget.searchQuery ?? _search;
+    final hasActiveFilters =
+        _filter != 'all' ||
+        activeSearch.trim().isNotEmpty ||
+        _selectedStatus != null ||
+        _selectedCity != null;
+    final localFiltersActive =
+        _filter != 'all' || _selectedStatus != null || _selectedCity != null;
 
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.fromLTRB(28, widget.showHeader ? 28 : 0, 28, 0),
+        padding: EdgeInsets.fromLTRB(28, widget.showHeader ? 24 : 0, 28, 0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,101 +135,175 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
               ],
               LayoutBuilder(
                 builder: (context, c) {
-                  const gap = 10.0;
-                  final cols = c.maxWidth >= 820
-                      ? 4
-                      : c.maxWidth >= 260
-                      ? 2
-                      : 1;
-                  final cardWidth = (c.maxWidth - gap * (cols - 1)) / cols;
-                  return Wrap(
-                    spacing: gap,
-                    runSpacing: gap,
+                  const gap = 6.0;
+                  final compact = c.maxWidth < 620;
+                  final cardWidth = (c.maxWidth - gap * 3) / 4;
+                  return Row(
                     children: [
                       _MiniStat(
                         width: cardWidth,
+                        icon: Icons.storefront_outlined,
                         label: l.total,
                         value: '${restaurants.length}',
                         color: theme.colorScheme.onSurface,
                         selected: _filter == 'all',
+                        compact: compact,
                         onTap: () => _setFilter('all'),
                       ),
+                      const SizedBox(width: gap),
                       _MiniStat(
                         width: cardWidth,
+                        icon: Icons.verified_outlined,
                         label: l.active,
                         value: '$activeCount',
                         color: AppColors.success,
                         selected: _filter == 'active',
+                        compact: compact,
                         onTap: () => _setFilter('active'),
                       ),
+                      const SizedBox(width: gap),
                       _MiniStat(
                         width: cardWidth,
+                        icon: Icons.schedule_rounded,
                         label: l.openNow,
                         value: '$openCount',
                         color: AppColors.online,
                         selected: _filter == 'open',
+                        compact: compact,
                         onTap: () => _setFilter('open'),
                       ),
+                      const SizedBox(width: gap),
                       _MiniStat(
                         width: cardWidth,
+                        icon: Icons.storefront_outlined,
                         label: l.inactive,
                         value: '$inactiveCount',
                         color: AppColors.offline,
                         selected: _filter == 'inactive',
+                        compact: compact,
                         onTap: () => _setFilter('inactive'),
                       ),
                     ],
                   );
                 },
               ),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 280,
-                    height: 40,
-                    child: TextField(
-                      onChanged: (v) => setState(() => _search = v),
-                      style: const TextStyle(fontSize: 13),
-                      decoration: InputDecoration(
-                        hintText: l.searchRestaurants,
-                        prefixIcon: Icon(
-                          Icons.search,
-                          size: 18,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.35,
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.cardTheme.color,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 760;
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (widget.showSearchToolbar)
+                          SizedBox(
+                            width: compact ? constraints.maxWidth : 300,
+                            height: 38,
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (v) => setState(() => _search = v),
+                              style: const TextStyle(fontSize: 13),
+                              decoration: InputDecoration(
+                                hintText: l.searchRestaurants,
+                                filled: true,
+                                fillColor: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.035),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: BorderSide(
+                                    color: theme.dividerColor.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primary,
+                                    width: 1.4,
+                                  ),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                                suffixIcon: _search.isEmpty
+                                    ? null
+                                    : IconButton(
+                                        tooltip: l.clear,
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setState(() => _search = '');
+                                        },
+                                        icon: const Icon(Icons.close, size: 17),
+                                      ),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
                           ),
+                        _dropdown(
+                          value: _selectedStatus ?? '_all',
+                          icon: Icons.verified_outlined,
+                          items: _statusItems(restaurants, l),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedStatus = value == '_all' ? null : value;
+                            });
+                          },
                         ),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ),
-                  _dropdown(
-                    value: _selectedStatus ?? '_all',
-                    icon: Icons.verified_outlined,
-                    items: _statusItems(restaurants, l),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedStatus = value == '_all' ? null : value;
-                      });
-                    },
-                  ),
-                  _dropdown(
-                    value: _selectedCity ?? '_all',
-                    icon: Icons.location_city_outlined,
-                    items: _cityItems(restaurants, l),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCity = value == '_all' ? null : value;
-                      });
-                    },
-                  ),
-                ],
+                        _dropdown(
+                          value: _selectedCity ?? '_all',
+                          icon: Icons.location_city_outlined,
+                          items: _cityItems(restaurants, l),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCity = value == '_all' ? null : value;
+                            });
+                          },
+                        ),
+                        if (widget.showSearchToolbar
+                            ? hasActiveFilters
+                            : localFiltersActive)
+                          TextButton.icon(
+                            onPressed: _clearFilters,
+                            icon: const Icon(
+                              Icons.filter_alt_off_outlined,
+                              size: 16,
+                            ),
+                            label: Text(l.clear),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              Text(
+                '${filtered.length} ${l.restaurants}',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 8),
               _buildContent(admin, filtered, now, theme, l),
             ],
           ),
@@ -273,36 +366,46 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
     ThemeData theme,
     AppLocalizations l,
   ) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-          ),
-          child: Row(
-            children: [
-              _Col(l.restaurant, flex: 3),
-              _Col(l.status, flex: 2),
-              _Col(l.openingHours, flex: 3),
-              _Col(l.phone, flex: 2),
-              _Col(l.city, flex: 2),
-            ],
-          ),
-        ),
-        Divider(color: theme.dividerColor, height: 1),
-        if (filtered.isEmpty)
-          SizedBox(height: 360, child: _emptyState(theme, l))
-        else
-          ...filtered.map(
-            (restaurant) => _RestaurantTableRow(
-              restaurant: restaurant,
-              now: now,
-              onTap: () => _openRestaurant(restaurant),
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              children: [
+                _Col(l.restaurant, flex: 3),
+                _Col(l.status, flex: 2),
+                _Col(l.openingHours, flex: 3),
+                _Col(l.phone, flex: 2),
+                _Col(l.city, flex: 2),
+              ],
             ),
           ),
-      ],
+          Divider(color: theme.dividerColor, height: 1),
+          if (filtered.isEmpty)
+            SizedBox(height: 360, child: _emptyState(theme, l))
+          else
+            ...filtered.map(
+              (restaurant) => _RestaurantTableRow(
+                restaurant: restaurant,
+                now: now,
+                onTap: () => _openRestaurant(restaurant),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -379,8 +482,9 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
       result = result.where((r) => r.city == _selectedCity).toList();
     }
 
-    if (_search.trim().isNotEmpty) {
-      final query = _search.trim().toLowerCase();
+    final search = widget.searchQuery ?? _search;
+    if (search.trim().isNotEmpty) {
+      final query = search.trim().toLowerCase();
       result = result.where((r) {
         return r.name.toLowerCase().contains(query) ||
             r.phone.toLowerCase().contains(query) ||
@@ -393,6 +497,16 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
 
   void _setFilter(String filter) {
     setState(() => _filter = _normalizeFilter(filter));
+  }
+
+  void _clearFilters() {
+    _searchController.clear();
+    setState(() {
+      _filter = 'all';
+      _search = '';
+      _selectedStatus = null;
+      _selectedCity = null;
+    });
   }
 
   String _normalizeFilter(String value) {
@@ -451,10 +565,10 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
     final selected = value != '_all';
 
     return Container(
-      height: 34,
+      height: 42,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(11),
         border: Border.all(
           color: selected
               ? AppColors.primary.withValues(alpha: 0.3)
@@ -916,6 +1030,8 @@ class _InfoLine extends StatelessWidget {
 
 class _MiniStat extends StatelessWidget {
   final double width;
+  final IconData icon;
+  final bool compact;
   final String label;
   final String value;
   final Color color;
@@ -924,6 +1040,8 @@ class _MiniStat extends StatelessWidget {
 
   const _MiniStat({
     required this.width,
+    required this.icon,
+    this.compact = false,
     required this.label,
     required this.value,
     required this.color,
@@ -936,13 +1054,13 @@ class _MiniStat extends StatelessWidget {
     final theme = Theme.of(context);
     return SizedBox(
       width: width,
-      height: 58,
+      height: compact ? 50 : 58,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
               color: selected
                   ? color.withValues(alpha: 0.08)
@@ -954,35 +1072,92 @@ class _MiniStat extends StatelessWidget {
                     : theme.dividerColor,
               ),
             ),
-            child: Row(
-              children: [
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: color,
+            child: compact
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                          height: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: selected
+                              ? color
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.45,
+                                ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Container(
+                        width: 27,
+                        height: 27,
+                        decoration: BoxDecoration(
+                          color: color.withValues(
+                            alpha: selected ? 0.14 : 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(icon, size: 14, color: color),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              value,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                color: color,
+                                height: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                color: selected
+                                    ? color
+                                    : theme.colorScheme.onSurface.withValues(
+                                        alpha: 0.45,
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                      color: selected
-                          ? color
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.45),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

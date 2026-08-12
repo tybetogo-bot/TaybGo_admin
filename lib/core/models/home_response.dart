@@ -33,6 +33,101 @@ class PaginatedResponse<T> {
   }
 }
 
+class DriverAddress {
+  final int? id;
+  final String label;
+  final String? lat;
+  final String? lng;
+  final String fullAddress;
+  final String streetName;
+  final String houseNumber;
+  final String city;
+  final String postalCode;
+  final String country;
+  final bool? isDefault;
+
+  const DriverAddress({
+    this.id,
+    required this.label,
+    this.lat,
+    this.lng,
+    required this.fullAddress,
+    required this.streetName,
+    required this.houseNumber,
+    required this.city,
+    required this.postalCode,
+    required this.country,
+    this.isDefault,
+  });
+
+  factory DriverAddress.fromJson(Map<String, dynamic> json) {
+    return DriverAddress(
+      id: json['id'] == null ? null : _intValue(json['id']),
+      label: _stringValue(json['label']),
+      lat: _nullIfEmpty(json['lat']),
+      lng: _nullIfEmpty(json['lng']),
+      fullAddress: _stringValue(json['full_address']),
+      streetName: _stringValue(json['street_name']),
+      houseNumber: _stringValue(json['house_number']),
+      city: _stringValue(json['city']),
+      postalCode: _stringValue(json['postal_code']),
+      country: _stringValue(json['country']),
+      isDefault: _boolValue(json['is_default']),
+    );
+  }
+
+  static DriverAddress? fromDynamic(dynamic value) {
+    if (value is! Map) return null;
+    final address = DriverAddress.fromJson(Map<String, dynamic>.from(value));
+    return address.isEmpty ? null : address;
+  }
+
+  bool get isEmpty =>
+      label.isEmpty &&
+      lat == null &&
+      lng == null &&
+      fullAddress.isEmpty &&
+      streetName.isEmpty &&
+      houseNumber.isEmpty &&
+      city.isEmpty &&
+      postalCode.isEmpty &&
+      country.isEmpty;
+
+  bool get hasCoordinates =>
+      lat != null &&
+      lat!.trim().isNotEmpty &&
+      lng != null &&
+      lng!.trim().isNotEmpty;
+
+  String get displayLine {
+    if (fullAddress.isNotEmpty) return fullAddress;
+
+    final street = [
+      streetName,
+      houseNumber,
+    ].where((part) => part.isNotEmpty).join(' ');
+    final locality = [
+      city,
+      postalCode,
+    ].where((part) => part.isNotEmpty).join(', ');
+    return [
+      street,
+      locality,
+      country,
+    ].where((part) => part.isNotEmpty).join(', ');
+  }
+
+  String get searchText => [
+    label,
+    fullAddress,
+    streetName,
+    houseNumber,
+    city,
+    postalCode,
+    country,
+  ].where((part) => part.isNotEmpty).join(' ');
+}
+
 class DriverWithLocation {
   final int id;
   final String? email;
@@ -57,6 +152,7 @@ class DriverWithLocation {
   final String? latitude;
   final String? longitude;
   final DateTime? locationUpdatedAt;
+  final DriverAddress? address;
   final List<DriverDocument> documentItems;
 
   const DriverWithLocation({
@@ -83,6 +179,7 @@ class DriverWithLocation {
     this.latitude,
     this.longitude,
     this.locationUpdatedAt,
+    this.address,
     this.documentItems = const [],
   });
 
@@ -216,6 +313,7 @@ class DriverWithLocation {
       locationUpdatedAt: json['location_updated_at'] != null
           ? DateTime.tryParse(json['location_updated_at'])
           : null,
+      address: DriverAddress.fromDynamic(json['address']),
       documentItems: _parseDriverDocuments(json, documents),
     );
   }
@@ -580,6 +678,7 @@ class PendingDriver {
   final String phone;
   final String status;
   final DateTime? submittedAt;
+  final DriverAddress? address;
 
   const PendingDriver({
     required this.id,
@@ -587,6 +686,7 @@ class PendingDriver {
     required this.phone,
     required this.status,
     this.submittedAt,
+    this.address,
   });
 
   factory PendingDriver.fromJson(Map<String, dynamic> json) {
@@ -598,6 +698,7 @@ class PendingDriver {
       submittedAt: json['submitted_at'] != null
           ? DateTime.tryParse(json['submitted_at'])
           : null,
+      address: DriverAddress.fromDynamic(json['address']),
     );
   }
 }
@@ -664,6 +765,7 @@ class DriverProfile {
   final String? latitude;
   final String? longitude;
   final DateTime? locationUpdatedAt;
+  final DriverAddress? address;
   final List<DriverDocument> documentItems;
   final bool hasExtendedDetails;
 
@@ -692,6 +794,7 @@ class DriverProfile {
     this.latitude,
     this.longitude,
     this.locationUpdatedAt,
+    this.address,
     this.documentItems = const [],
     this.hasExtendedDetails = false,
   });
@@ -701,6 +804,8 @@ class DriverProfile {
       latitude!.isNotEmpty &&
       longitude != null &&
       longitude!.isNotEmpty;
+
+  bool get hasAddress => address != null && !address!.isEmpty;
 
   bool get hasServiceDetails =>
       acceptsFood != null || acceptsShipping != null || acceptsTaxi != null;
@@ -746,6 +851,7 @@ class DriverProfile {
       latitude: latitude ?? fallback.latitude,
       longitude: longitude ?? fallback.longitude,
       locationUpdatedAt: locationUpdatedAt ?? fallback.locationUpdatedAt,
+      address: address ?? fallback.address,
       documentItems: _mergeDriverDocuments(
         documentItems,
         fallback.documentItems,
@@ -771,6 +877,7 @@ class DriverProfile {
       vehicleModel: null,
       vehicleYear: null,
       submittedAt: driver.submittedAt,
+      address: driver.address,
       documentItems: const [],
     );
   }
@@ -790,6 +897,7 @@ class DriverProfile {
         driver.vehicleMake != null ||
         driver.vehicleModel != null ||
         driver.vehicleYear != null ||
+        driver.address != null ||
         driver.documentItems.isNotEmpty;
 
     return DriverProfile(
@@ -818,6 +926,7 @@ class DriverProfile {
       latitude: driver.latitude,
       longitude: driver.longitude,
       locationUpdatedAt: driver.locationUpdatedAt,
+      address: driver.address,
       documentItems: driver.documentItems,
       hasExtendedDetails: hasExtendedDetails,
     );
@@ -874,6 +983,9 @@ class DriverProfile {
       json,
       documents,
       driverDocuments: driverDocuments,
+    );
+    final address = DriverAddress.fromDynamic(
+      json['address'] ?? driver['address'],
     );
 
     final firstName =
@@ -1001,6 +1113,7 @@ class DriverProfile {
       locationUpdatedAt: parseDate(
         json['location_updated_at'] ?? driver['location_updated_at'],
       ),
+      address: address,
       documentItems: documentItems,
       hasExtendedDetails: true,
     );

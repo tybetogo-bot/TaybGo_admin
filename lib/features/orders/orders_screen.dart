@@ -33,6 +33,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   String _search = '';
   String _status = '';
   String _orderType = '';
+  bool _searchOpen = false;
   int _countryRevision = 0;
   int _requestVersion = 0;
 
@@ -75,12 +76,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(28, 28, 28, 0),
+        padding: const EdgeInsets.fromLTRB(28, 10, 28, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(theme, l),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
             if (restricted)
               Expanded(
                 child: _OrdersPermissionState(
@@ -89,9 +90,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
               )
             else ...[
               _buildFilters(theme, l),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _OrderSummary(orders: _orders, total: _total, loading: _loading),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Expanded(child: _buildContent(theme, l)),
             ],
           ],
@@ -101,51 +102,120 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Widget _buildHeader(ThemeData theme, AppLocalizations l) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l.ordersTitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                  letterSpacing: -0.5,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 760;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.ordersTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: compact ? 20 : 24,
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _permissionDenied && _orders.isEmpty
+                            ? l.ordersPermissionDeniedSubtitle
+                            : l.ordersSubtitle(_orders.length, _total),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: compact ? 12 : 14,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _permissionDenied && _orders.isEmpty
-                    ? l.ordersPermissionDeniedSubtitle
-                    : l.ordersSubtitle(_orders.length, _total),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                IconButton(
+                  onPressed: () => setState(() => _searchOpen = !_searchOpen),
+                  icon: Icon(
+                    _searchOpen ? Icons.close_rounded : Icons.search_rounded,
+                    size: 20,
+                  ),
+                  tooltip: _searchOpen ? l.clear : l.searchOrders,
+                  style: IconButton.styleFrom(
+                    foregroundColor: _searchOpen || _search.isNotEmpty
+                        ? AppColors.primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        if (_loading && _orders.isNotEmpty)
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        else
-          IconButton(
-            onPressed: _loading ? null : () => _fetchOrders(page: _page),
-            icon: const Icon(Icons.refresh_rounded, size: 20),
-            tooltip: l.refresh,
-          ),
-      ],
+                IconButton(
+                  onPressed: _loading ? null : () => _fetchOrders(page: _page),
+                  icon: _loading && _orders.isNotEmpty
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh_rounded, size: 19),
+                  tooltip: l.refresh,
+                  style: IconButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onSurface.withValues(
+                      alpha: 0.6,
+                    ),
+                    disabledForegroundColor: theme.colorScheme.onSurface
+                        .withValues(alpha: 0.3),
+                  ),
+                ),
+              ],
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              child: _searchOpen
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        textInputAction: TextInputAction.search,
+                        onChanged: (_) => setState(() {}),
+                        onSubmitted: (_) => _applySearch(),
+                        style: const TextStyle(fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: l.searchOrders,
+                          filled: true,
+                          fillColor: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.035,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search_rounded,
+                            size: 18,
+                          ),
+                          suffixIcon: _searchController.text.trim().isEmpty
+                              ? null
+                              : IconButton(
+                                  onPressed: _clearSearch,
+                                  icon: const Icon(Icons.close, size: 17),
+                                  tooltip: l.clear,
+                                ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -153,22 +223,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 760;
-        final search = TextField(
-          controller: _searchController,
-          textInputAction: TextInputAction.search,
-          onSubmitted: (_) => _applySearch(),
-          decoration: InputDecoration(
-            hintText: l.searchOrders,
-            prefixIcon: const Icon(Icons.search_rounded, size: 20),
-            suffixIcon: _searchController.text.trim().isEmpty
-                ? null
-                : IconButton(
-                    onPressed: _clearSearch,
-                    icon: const Icon(Icons.close_rounded, size: 18),
-                    tooltip: l.clear,
-                  ),
-          ),
-        );
         final type = _filterDropdown(
           label: l.orderType,
           icon: Icons.category_outlined,
@@ -207,25 +261,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
         );
 
         if (compact) {
-          return Column(
+          return Row(
             children: [
-              search,
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(child: type),
-                  const SizedBox(width: 10),
-                  Expanded(child: status),
-                ],
-              ),
+              Expanded(child: type),
+              const SizedBox(width: 10),
+              Expanded(child: status),
             ],
           );
         }
 
         return Row(
           children: [
-            Expanded(child: search),
-            const SizedBox(width: 12),
             SizedBox(width: 210, child: type),
             const SizedBox(width: 12),
             SizedBox(width: 240, child: status),
@@ -483,40 +529,41 @@ class _OrderSummary extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cols = constraints.maxWidth > 900
-            ? 4
-            : constraints.maxWidth > 560
-            ? 2
-            : 1;
-        final gap = 12.0;
-        final width = (constraints.maxWidth - gap * (cols - 1)) / cols;
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
+        const gap = 6.0;
+        final compact = constraints.maxWidth < 620;
+        final width = (constraints.maxWidth - gap * 3) / 4;
+        return Row(
           children: [
             _MetricTile(
               width: width,
+              compact: compact,
               label: l.totalOrders,
               value: '$total',
               icon: Icons.receipt_long_outlined,
               color: AppColors.primary,
             ),
+            const SizedBox(width: gap),
             _MetricTile(
               width: width,
+              compact: compact,
               label: l.activeOrders,
               value: '$active',
               icon: Icons.local_shipping_outlined,
               color: AppColors.info,
             ),
+            const SizedBox(width: gap),
             _MetricTile(
               width: width,
+              compact: compact,
               label: l.completed,
               value: '$completed',
               icon: Icons.check_circle_outline_rounded,
               color: AppColors.success,
             ),
+            const SizedBox(width: gap),
             _MetricTile(
               width: width,
+              compact: compact,
               label: l.visibleAmount,
               value: _formatAmount(revenue.toStringAsFixed(2)),
               icon: Icons.payments_outlined,
@@ -531,6 +578,7 @@ class _OrderSummary extends StatelessWidget {
 
 class _MetricTile extends StatelessWidget {
   final double width;
+  final bool compact;
   final String label;
   final String value;
   final IconData icon;
@@ -538,6 +586,7 @@ class _MetricTile extends StatelessWidget {
 
   const _MetricTile({
     required this.width,
+    this.compact = false,
     required this.label,
     required this.value,
     required this.icon,
@@ -550,56 +599,98 @@ class _MetricTile extends StatelessWidget {
     return SizedBox(
       width: width,
       child: Container(
-        height: 86,
-        padding: const EdgeInsets.all(16),
+        height: compact ? 50 : 58,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: theme.cardTheme.color,
           borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
           border: Border.all(color: theme.dividerColor),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: compact
+            ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        value,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                          height: 1,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurface,
-                      letterSpacing: -0.4,
+                  const SizedBox(height: 2),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.45,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Container(
+                    width: 27,
+                    height: 27,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, color: color, size: 15),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: color,
+                            height: 1,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.45,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

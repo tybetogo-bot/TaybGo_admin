@@ -121,7 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       builder: (context, c) {
                         final cols = c.maxWidth > 1000
                             ? 4
-                            : c.maxWidth > 640
+                            : c.maxWidth >= 250
                             ? 2
                             : 1;
                         final gap = 14.0;
@@ -343,13 +343,42 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final compact = width < 250;
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
       side: BorderSide(color: theme.dividerColor),
     );
+    final iconBox = Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+      ),
+      child: Icon(icon, size: 17, color: accent),
+    );
+    final valueText = Text(
+      value,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: compact ? 24 : 26,
+        fontWeight: FontWeight.w800,
+        color: theme.colorScheme.onSurface,
+        letterSpacing: -0.8,
+        height: 1,
+      ),
+    );
+    final arrow = onTap == null
+        ? null
+        : Icon(
+            Icons.arrow_outward_rounded,
+            size: 15,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.28),
+          );
     final card = SizedBox(
       width: width,
-      height: 112,
+      height: compact ? 104 : 112,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
@@ -376,27 +405,36 @@ class _StatCard extends StatelessWidget {
               InkWell(
                 onTap: onTap,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 12, 13),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusSmall,
-                          ),
-                        ),
-                        child: Icon(icon, size: 17, color: accent),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                  padding: compact
+                      ? const EdgeInsets.fromLTRB(12, 13, 10, 11)
+                      : const EdgeInsets.fromLTRB(14, 14, 12, 13),
+                  child: compact
+                      ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              children: [
+                                iconBox,
+                                const Spacer(),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        valueText,
+                                        if (arrow != null) ...[
+                                          const SizedBox(width: 5),
+                                          arrow,
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
                             Text(
                               title,
                               maxLines: 1,
@@ -409,13 +447,13 @@ class _StatCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 7),
+                            const SizedBox(height: 3),
                             Text(
                               subtitle,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 height: 1.2,
                                 color: theme.colorScheme.onSurface.withValues(
                                   alpha: 0.46,
@@ -423,33 +461,51 @@ class _StatCard extends StatelessWidget {
                               ),
                             ),
                           ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            iconBox,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.64),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 7),
+                                  Text(
+                                    subtitle,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      height: 1.2,
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.46),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            valueText,
+                            if (arrow != null) ...[
+                              const SizedBox(width: 6),
+                              arrow,
+                            ],
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        value,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: theme.colorScheme.onSurface,
-                          letterSpacing: -0.8,
-                          height: 1,
-                        ),
-                      ),
-                      if (onTap != null) ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.arrow_outward_rounded,
-                          size: 15,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.28,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
                 ),
               ),
             ],

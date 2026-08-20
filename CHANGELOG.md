@@ -2,6 +2,13 @@
 
 All notable TaybGo Admin changes are documented here.
 
+## 1.0.8+9 — 2026-08-20
+
+### Authentication
+
+- Added a visible back button to the OTP verification screen.
+- Fixed the Change phone number action so it reliably returns administrators to sign-in.
+
 ## 1.0.7+8 — 2026-08-11
 
 ### Overview

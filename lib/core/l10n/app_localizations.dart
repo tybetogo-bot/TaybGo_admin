@@ -882,6 +882,20 @@ class AppLocalizations {
     fr: 'Sortie le $date',
     de: 'Veröffentlicht am $date',
   );
+  String get release108Change1 => _t(
+    'Added a visible back button to the OTP verification screen.',
+    'إضافة زر رجوع واضح إلى شاشة التحقق من رمز OTP.',
+    nl: 'Een zichtbare terugknop toegevoegd aan het OTP-verificatiescherm.',
+    fr: 'Ajout d’un bouton Retour visible sur l’écran de vérification OTP.',
+    de: 'Eine sichtbare Zurück-Schaltfläche zum OTP-Bestätigungsbildschirm hinzugefügt.',
+  );
+  String get release108Change2 => _t(
+    'Fixed Change phone number so it reliably returns administrators to sign-in.',
+    'إصلاح خيار تغيير رقم الهاتف للعودة بموثوقية إلى شاشة تسجيل الدخول.',
+    nl: 'Telefoonnummer wijzigen hersteld zodat beheerders betrouwbaar terugkeren naar aanmelden.',
+    fr: 'Correction de Changer le numéro de téléphone afin de revenir fiablement à la connexion.',
+    de: '„Telefonnummer ändern“ korrigiert, sodass Administratoren zuverlässig zur Anmeldung zurückkehren.',
+  );
   String get release107Change1 => _t(
     'Redesigned the Partners workspace with a compact app bar, shared search toggle, partner switcher, status cards, and smoother list/map browsing.',
     'إعادة تصميم مساحة الشركاء مع شريط علوي مختصر، ومفتاح بحث مشترك، ومبدّل للشركاء، وبطاقات للحالات، وتصفح أسهل بين القائمة والخريطة.',

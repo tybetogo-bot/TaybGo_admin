@@ -8,6 +8,8 @@ import '../../features/approvals/approvals_screen.dart';
 import '../../features/approvals/driver_request_detail_screen.dart';
 import '../../features/approvals/restaurant_request_detail_screen.dart';
 import '../../features/management/management_screen.dart';
+import '../../features/management/create_driver_screen.dart';
+import '../../features/management/create_restaurant_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
 import '../../features/orders/orders_screen.dart';
 import '../../features/restaurants/restaurant_detail_screen.dart';
@@ -129,6 +131,14 @@ class AppRouter {
                       'all',
                 ),
                 routes: [
+                  GoRoute(
+                    path: 'drivers/new',
+                    builder: (context, state) => const CreateDriverScreen(),
+                  ),
+                  GoRoute(
+                    path: 'restaurants/new',
+                    builder: (context, state) => const CreateRestaurantScreen(),
+                  ),
                   GoRoute(
                     path: 'restaurants/:id',
                     builder: (context, state) {

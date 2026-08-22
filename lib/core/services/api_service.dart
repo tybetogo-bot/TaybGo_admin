@@ -169,13 +169,23 @@ class ApiService {
         return const {};
       }
 
-      return Map.fromEntries(
-        body.entries
-            .where((entry) => entry.value != null)
-            .map(
-              (entry) => MapEntry(entry.key, _stringifyApiError(entry.value)),
-            ),
-      );
+      final errors = <String, String>{};
+
+      void flatten(String key, dynamic value) {
+        if (value == null) return;
+        if (value is Map) {
+          for (final entry in value.entries) {
+            flatten('$key.${entry.key}', entry.value);
+          }
+          return;
+        }
+        errors[key] = _stringifyApiError(value);
+      }
+
+      for (final entry in body.entries) {
+        flatten(entry.key, entry.value);
+      }
+      return errors;
     } catch (_) {
       return const {};
     }
@@ -200,6 +210,45 @@ class ApiService {
             (normalized.contains('conflict') ||
                 normalized.contains('mismatch') ||
                 normalized.contains('registered')));
+  }
+
+  /// Create an approved driver account from the admin dashboard.
+  Future<Map<String, dynamic>> createDriver(
+    Map<String, dynamic> payload,
+  ) async {
+    final uri = Uri.parse('$baseUrl/api/admin/drivers/');
+    final response = await _client.post(
+      uri,
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(response, fallbackMessage: 'Failed to create driver');
+  }
+
+  /// Create a seller account and active restaurant from the admin dashboard.
+  Future<Map<String, dynamic>> createRestaurant(
+    Map<String, dynamic> payload,
+  ) async {
+    final uri = Uri.parse('$baseUrl/api/admin/restaurants/');
+    final response = await _client.post(
+      uri,
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to create restaurant',
+    );
   }
 
   /// Update a driver's admin status.

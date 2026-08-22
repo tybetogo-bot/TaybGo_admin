@@ -286,6 +286,477 @@ class AppLocalizations {
     fr: '$drivers chauffeurs et $restaurants restaurants',
     de: '$drivers Fahrer und $restaurants Restaurants',
   );
+  String get createDriverTitle => _t(
+    'Create driver',
+    'إنشاء سائق',
+    nl: 'Chauffeur aanmaken',
+    fr: 'Créer un chauffeur',
+    de: 'Fahrer erstellen',
+  );
+  String get createDriverAction => _t(
+    'Create driver',
+    'إنشاء السائق',
+    nl: 'Chauffeur aanmaken',
+    fr: 'Créer le chauffeur',
+    de: 'Fahrer erstellen',
+  );
+  String get createDriverSubtitle => _t(
+    'Add an approved driver account, service preferences, vehicle, and address.',
+    'أضف حساب سائق معتمد وخدماته ومركبته وعنوانه.',
+    nl: 'Voeg een goedgekeurde chauffeur toe met diensten, voertuig en adres.',
+    fr: 'Ajoutez un chauffeur approuvé avec ses services, son véhicule et son adresse.',
+    de: 'Erstellen Sie einen genehmigten Fahrer mit Diensten, Fahrzeug und Adresse.',
+  );
+  String get createRestaurantTitle => _t(
+    'Create restaurant',
+    'إنشاء مطعم',
+    nl: 'Restaurant aanmaken',
+    fr: 'Créer un restaurant',
+    de: 'Restaurant erstellen',
+  );
+  String get createRestaurantAction => _t(
+    'Create restaurant',
+    'إنشاء المطعم',
+    nl: 'Restaurant aanmaken',
+    fr: 'Créer le restaurant',
+    de: 'Restaurant erstellen',
+  );
+  String get createRestaurantSubtitle => _t(
+    'Create the owner account and activate a restaurant in one step.',
+    'أنشئ حساب المالك وفعّل المطعم في خطوة واحدة.',
+    nl: 'Maak het eigenaarsaccount en activeer het restaurant in één stap.',
+    fr: 'Créez le compte propriétaire et activez le restaurant en une étape.',
+    de: 'Erstellen Sie das Inhaberkonto und aktivieren Sie das Restaurant in einem Schritt.',
+  );
+  String get accountDetails => _t(
+    'Account details',
+    'بيانات الحساب',
+    nl: 'Accountgegevens',
+    fr: 'Informations du compte',
+    de: 'Kontodaten',
+  );
+  String get accountDetailsDescription => _t(
+    'The contact information used for the driver account.',
+    'معلومات الاتصال المستخدمة لحساب السائق.',
+    nl: 'De contactgegevens voor het chauffeursaccount.',
+    fr: 'Les coordonnées utilisées pour le compte chauffeur.',
+    de: 'Die Kontaktdaten für das Fahrerkonto.',
+  );
+  String get ownerAccount => _t(
+    'Owner account',
+    'حساب المالك',
+    nl: 'Eigenaarsaccount',
+    fr: 'Compte propriétaire',
+    de: 'Inhaberkonto',
+  );
+  String get ownerAccountDescription => _t(
+    'This person will own and manage the restaurant.',
+    'سيملك هذا الشخص المطعم ويديره.',
+    nl: 'Deze persoon wordt eigenaar en beheerder van het restaurant.',
+    fr: 'Cette personne possédera et gérera le restaurant.',
+    de: 'Diese Person wird das Restaurant besitzen und verwalten.',
+  );
+  String get optional => _t(
+    'optional',
+    'اختياري',
+    nl: 'optioneel',
+    fr: 'facultatif',
+    de: 'optional',
+  );
+  String get birthdate => _t(
+    'Birthdate',
+    'تاريخ الميلاد',
+    nl: 'Geboortedatum',
+    fr: 'Date de naissance',
+    de: 'Geburtsdatum',
+  );
+  String get selectBirthdate => _t(
+    'Select a date',
+    'اختر تاريخاً',
+    nl: 'Selecteer een datum',
+    fr: 'Sélectionner une date',
+    de: 'Datum auswählen',
+  );
+  String get addressDetailsDescription => _t(
+    'Search Google Places and select the exact address for accurate assignment.',
+    'ابحث في أماكن Google واختر العنوان الدقيق لربط الحساب بشكل صحيح.',
+    nl: 'Zoek in Google Places en selecteer het exacte adres voor de juiste toewijzing.',
+    fr: "Recherchez dans Google Places et sélectionnez l’adresse exacte pour une attribution correcte.",
+    de: 'Suchen Sie in Google Places und wählen Sie die genaue Adresse für die richtige Zuordnung.',
+  );
+  String get searchAddress => _t(
+    'Search for an address',
+    'ابحث عن عنوان',
+    nl: 'Adres zoeken',
+    fr: 'Rechercher une adresse',
+    de: 'Adresse suchen',
+  );
+  String get searchAddressHint => _t(
+    'Start typing a street, business, or place',
+    'ابدأ بكتابة شارع أو نشاط تجاري أو مكان',
+    nl: 'Typ een straat, bedrijf of plaats',
+    fr: 'Saisissez une rue, un commerce ou un lieu',
+    de: 'Straße, Unternehmen oder Ort eingeben',
+  );
+  String get googlePlacesSearchHelp => _t(
+    'Type at least 3 characters, then select a Google suggestion.',
+    'اكتب 3 أحرف على الأقل، ثم اختر أحد اقتراحات Google.',
+    nl: 'Typ minimaal 3 tekens en selecteer daarna een Google-suggestie.',
+    fr: 'Saisissez au moins 3 caractères, puis choisissez une suggestion Google.',
+    de: 'Geben Sie mindestens 3 Zeichen ein und wählen Sie dann einen Google-Vorschlag.',
+  );
+  String get googlePlacesUnavailable => _t(
+    'Address search is unavailable. Configure the Google Places API key.',
+    'البحث عن العنوان غير متاح. قم بإعداد مفتاح Google Places API.',
+    nl: 'Adres zoeken is niet beschikbaar. Configureer de Google Places API-sleutel.',
+    fr: 'La recherche d’adresse est indisponible. Configurez la clé API Google Places.',
+    de: 'Die Adresssuche ist nicht verfügbar. Konfigurieren Sie den Google Places API-Schlüssel.',
+  );
+  String get noAddressResults => _t(
+    'No matching addresses found.',
+    'لم يتم العثور على عناوين مطابقة.',
+    nl: 'Geen overeenkomende adressen gevonden.',
+    fr: 'Aucune adresse correspondante trouvée.',
+    de: 'Keine passende Adresse gefunden.',
+  );
+  String get addressSelected => _t(
+    'Address selected',
+    'تم اختيار العنوان',
+    nl: 'Adres geselecteerd',
+    fr: 'Adresse sélectionnée',
+    de: 'Adresse ausgewählt',
+  );
+  String get selectAddressSuggestion => _t(
+    'Select an address from the Google suggestions.',
+    'اختر عنواناً من اقتراحات Google.',
+    nl: 'Selecteer een adres uit de Google-suggesties.',
+    fr: 'Sélectionnez une adresse parmi les suggestions Google.',
+    de: 'Wählen Sie eine Adresse aus den Google-Vorschlägen.',
+  );
+  String get completeAddressRequired => _t(
+    'Select a complete address that includes a city and country.',
+    'اختر عنواناً كاملاً يتضمن المدينة والدولة.',
+    nl: 'Selecteer een volledig adres met plaats en land.',
+    fr: 'Sélectionnez une adresse complète comprenant une ville et un pays.',
+    de: 'Wählen Sie eine vollständige Adresse mit Stadt und Land.',
+  );
+  String get googlePlacesSearchError => _t(
+    'Could not search Google Places. Check the API access and connection.',
+    'تعذر البحث في أماكن Google. تحقق من صلاحية الواجهة والاتصال.',
+    nl: 'Google Places kon niet worden doorzocht. Controleer de API-toegang en verbinding.',
+    fr: 'Impossible de rechercher dans Google Places. Vérifiez l’accès à l’API et la connexion.',
+    de: 'Google Places konnte nicht durchsucht werden. Prüfen Sie API-Zugriff und Verbindung.',
+  );
+  String get addressLabelHint => _t(
+    'e.g. home or office',
+    'مثلاً المنزل أو المكتب',
+    nl: 'bijv. thuis of kantoor',
+    fr: 'p. ex. domicile ou bureau',
+    de: 'z. B. Zuhause oder Büro',
+  );
+  String get restaurantAddressLabelHint => _t(
+    'e.g. main branch',
+    'مثلاً الفرع الرئيسي',
+    nl: 'bijv. hoofdvestiging',
+    fr: 'p. ex. établissement principal',
+    de: 'z. B. Hauptfiliale',
+  );
+  String get latitude => _t(
+    'Latitude',
+    'خط العرض',
+    nl: 'Breedtegraad',
+    fr: 'Latitude',
+    de: 'Breitengrad',
+  );
+  String get longitude => _t(
+    'Longitude',
+    'خط الطول',
+    nl: 'Lengtegraad',
+    fr: 'Longitude',
+    de: 'Längengrad',
+  );
+  String get coordinateHelp => _t(
+    'Decimal degrees, up to 6 decimal places.',
+    'درجات عشرية، حتى 6 منازل عشرية.',
+    nl: 'Decimale graden, maximaal 6 decimalen.',
+    fr: 'Degrés décimaux, jusqu’à 6 décimales.',
+    de: 'Dezimalgrad mit bis zu 6 Nachkommastellen.',
+  );
+  String get vehicleDetails => _t(
+    'Vehicle details',
+    'بيانات المركبة',
+    nl: 'Voertuiggegevens',
+    fr: 'Informations du véhicule',
+    de: 'Fahrzeugdaten',
+  );
+  String get vehicleDetailsDescription => _t(
+    'Choose car or bike. All identifying details are required for cars.',
+    'اختر سيارة أو دراجة. جميع بيانات التعريف مطلوبة للسيارات.',
+    nl: 'Kies auto of fiets. Alle identificatiegegevens zijn verplicht voor auto’s.',
+    fr: 'Choisissez voiture ou vélo. Tous les renseignements sont obligatoires pour les voitures.',
+    de: 'Wählen Sie Auto oder Fahrrad. Für Autos sind alle Fahrzeugdaten erforderlich.',
+  );
+  String get vehiclePlateNumber => _t(
+    'Plate number',
+    'رقم اللوحة',
+    nl: 'Kenteken',
+    fr: 'Plaque d’immatriculation',
+    de: 'Kennzeichen',
+  );
+  String get vehicleColor => _t(
+    'Vehicle color',
+    'لون المركبة',
+    nl: 'Voertuigkleur',
+    fr: 'Couleur du véhicule',
+    de: 'Fahrzeugfarbe',
+  );
+  String get vehicleMake => _t(
+    'Vehicle make',
+    'الشركة المصنعة',
+    nl: 'Merk',
+    fr: 'Marque du véhicule',
+    de: 'Fahrzeugmarke',
+  );
+  String get vehicleModel => _t(
+    'Vehicle model',
+    'طراز المركبة',
+    nl: 'Model',
+    fr: 'Modèle du véhicule',
+    de: 'Fahrzeugmodell',
+  );
+  String get vehicleYear => _t(
+    'Vehicle year',
+    'سنة الصنع',
+    nl: 'Bouwjaar',
+    fr: 'Année du véhicule',
+    de: 'Baujahr',
+  );
+  String get serviceTypesDescription => _t(
+    'Choose at least one type of job this driver can accept.',
+    'اختر نوعاً واحداً على الأقل من الطلبات التي يمكن للسائق قبولها.',
+    nl: 'Kies minimaal één opdrachttype dat de chauffeur kan aannemen.',
+    fr: 'Choisissez au moins un type de course que le chauffeur peut accepter.',
+    de: 'Wählen Sie mindestens einen Auftragstyp für den Fahrer.',
+  );
+  String get optionalDocuments => _t(
+    'Driver documents',
+    'مستندات السائق',
+    nl: 'Chauffeursdocumenten',
+    fr: 'Documents du chauffeur',
+    de: 'Fahrerdokumente',
+  );
+  String get optionalDocumentsDescription => _t(
+    'Upload each required document to Cloudinary. Only other documents are optional.',
+    'ارفع كل مستند مطلوب إلى Cloudinary. المستندات الأخرى فقط اختيارية.',
+    nl: 'Upload elk verplicht document naar Cloudinary. Alleen overige documenten zijn optioneel.',
+    fr: 'Importez chaque document obligatoire dans Cloudinary. Seuls les autres documents sont facultatifs.',
+    de: 'Laden Sie jedes Pflichtdokument zu Cloudinary hoch. Nur weitere Dokumente sind optional.',
+  );
+  String get uploadFile =>
+      _t('Upload', 'رفع', nl: 'Uploaden', fr: 'Importer', de: 'Hochladen');
+  String get replaceFile => _t(
+    'Replace',
+    'استبدال',
+    nl: 'Vervangen',
+    fr: 'Remplacer',
+    de: 'Ersetzen',
+  );
+  String get uploadingFile => _t(
+    'Uploading to Cloudinary…',
+    'جارٍ الرفع إلى Cloudinary…',
+    nl: 'Uploaden naar Cloudinary…',
+    fr: 'Importation vers Cloudinary…',
+    de: 'Upload zu Cloudinary…',
+  );
+  String get uploadFailed => _t(
+    'Upload failed. Check the file and try again.',
+    'فشل الرفع. تحقق من الملف وحاول مرة أخرى.',
+    nl: 'Upload mislukt. Controleer het bestand en probeer opnieuw.',
+    fr: 'Échec de l’importation. Vérifiez le fichier et réessayez.',
+    de: 'Upload fehlgeschlagen. Prüfen Sie die Datei und versuchen Sie es erneut.',
+  );
+  String get fileTooLarge => _t(
+    'The file must be 10 MB or smaller.',
+    'يجب ألا يزيد حجم الملف عن 10 ميغابايت.',
+    nl: 'Het bestand mag maximaal 10 MB zijn.',
+    fr: 'Le fichier doit faire 10 Mo maximum.',
+    de: 'Die Datei darf höchstens 10 MB groß sein.',
+  );
+  String get documentFileTypesHelp => _t(
+    'PDF, JPG, PNG or WEBP · max 10 MB',
+    'PDF أو JPG أو PNG أو WEBP · بحد أقصى 10 ميغابايت',
+    nl: 'PDF, JPG, PNG of WEBP · max. 10 MB',
+    fr: 'PDF, JPG, PNG ou WEBP · 10 Mo max.',
+    de: 'PDF, JPG, PNG oder WEBP · max. 10 MB',
+  );
+  String get imageFileTypesHelp => _t(
+    'JPG, PNG or WEBP · max 10 MB',
+    'JPG أو PNG أو WEBP · بحد أقصى 10 ميغابايت',
+    nl: 'JPG, PNG of WEBP · max. 10 MB',
+    fr: 'JPG, PNG ou WEBP · 10 Mo max.',
+    de: 'JPG, PNG oder WEBP · max. 10 MB',
+  );
+  String get documentUrlHelp => _t(
+    'Must start with http:// or https://',
+    'يجب أن يبدأ بـ http:// أو https://',
+    nl: 'Moet beginnen met http:// of https://',
+    fr: 'Doit commencer par http:// ou https://',
+    de: 'Muss mit http:// oder https:// beginnen',
+  );
+  String get adminNotes => _t(
+    'Admin notes',
+    'ملاحظات الإدارة',
+    nl: 'Beheerdersnotities',
+    fr: 'Notes administrateur',
+    de: 'Admin-Notizen',
+  );
+  String get adminNotesDescription => _t(
+    'Internal context about this driver. It is not shown to the driver.',
+    'معلومات داخلية عن السائق لا تظهر له.',
+    nl: 'Interne context over deze chauffeur; niet zichtbaar voor de chauffeur.',
+    fr: 'Contexte interne sur ce chauffeur, non visible par celui-ci.',
+    de: 'Interne Hinweise, die dem Fahrer nicht angezeigt werden.',
+  );
+  String get restaurantProfileDescription => _t(
+    'Public restaurant details, contact number, license, and delivery preference.',
+    'بيانات المطعم العامة ورقم الاتصال والترخيص وخيار التوصيل.',
+    nl: 'Openbare restaurantgegevens, telefoonnummer, vergunning en bezorgvoorkeur.',
+    fr: 'Informations publiques, téléphone, licence et préférence de livraison.',
+    de: 'Öffentliche Restaurantdaten, Telefonnummer, Lizenz und Lieferoption.',
+  );
+  String get restaurantName => _t(
+    'Restaurant name',
+    'اسم المطعم',
+    nl: 'Restaurantnaam',
+    fr: 'Nom du restaurant',
+    de: 'Restaurantname',
+  );
+  String get restaurantPhone => _t(
+    'Restaurant phone',
+    'هاتف المطعم',
+    nl: 'Telefoon restaurant',
+    fr: 'Téléphone du restaurant',
+    de: 'Restauranttelefon',
+  );
+  String get useOwnerPhone => _t(
+    'Use owner phone',
+    'استخدم هاتف المالك',
+    nl: 'Telefoon eigenaar gebruiken',
+    fr: 'Utiliser le téléphone du propriétaire',
+    de: 'Telefon des Inhabers verwenden',
+  );
+  String get logoUrl => _t(
+    'Restaurant logo',
+    'شعار المطعم',
+    nl: 'Restaurantlogo',
+    fr: 'Logo du restaurant',
+    de: 'Restaurantlogo',
+  );
+  String get registrationLicenseUrl => _t(
+    'Registration license',
+    'رخصة تسجيل المطعم',
+    nl: 'Registratievergunning',
+    fr: 'Licence d’enregistrement',
+    de: 'Registrierungslizenz',
+  );
+  String get deliveryEnabled => _t(
+    'Platform delivery enabled',
+    'تفعيل توصيل المنصة',
+    nl: 'Platformbezorging ingeschakeld',
+    fr: 'Livraison de la plateforme activée',
+    de: 'Plattformlieferung aktiviert',
+  );
+  String get deliveryEnabledDescription => _t(
+    'The restaurant can request TaybGo drivers for its orders.',
+    'يمكن للمطعم طلب سائقي TaybGo لتوصيل طلباته.',
+    nl: 'Het restaurant kan TaybGo-chauffeurs aanvragen voor bestellingen.',
+    fr: 'Le restaurant peut demander des chauffeurs TaybGo pour ses commandes.',
+    de: 'Das Restaurant kann TaybGo-Fahrer für Bestellungen anfordern.',
+  );
+  String get openingHoursDescription => _t(
+    'Set local opening hours. Overnight ranges are supported.',
+    'حدد ساعات العمل المحلية. يمكن تحديد دوام يمتد بعد منتصف الليل.',
+    nl: 'Stel lokale openingstijden in. Nachtelijke tijden worden ondersteund.',
+    fr: 'Définissez les horaires locaux. Les plages de nuit sont prises en charge.',
+    de: 'Legen Sie lokale Öffnungszeiten fest. Zeiten über Mitternacht werden unterstützt.',
+  );
+  String get requiredField => _t(
+    'This field is required.',
+    'هذا الحقل مطلوب.',
+    nl: 'Dit veld is verplicht.',
+    fr: 'Ce champ est obligatoire.',
+    de: 'Dieses Feld ist erforderlich.',
+  );
+  String get invalidPhone => _t(
+    'Enter a valid phone number.',
+    'أدخل رقم هاتف صالحاً.',
+    nl: 'Voer een geldig telefoonnummer in.',
+    fr: 'Saisissez un numéro de téléphone valide.',
+    de: 'Geben Sie eine gültige Telefonnummer ein.',
+  );
+  String get invalidEmail => _t(
+    'Enter a valid email address.',
+    'أدخل بريداً إلكترونياً صالحاً.',
+    nl: 'Voer een geldig e-mailadres in.',
+    fr: 'Saisissez une adresse e-mail valide.',
+    de: 'Geben Sie eine gültige E-Mail-Adresse ein.',
+  );
+  String get invalidLatitude => _t(
+    'Latitude must be between -90 and 90.',
+    'يجب أن يكون خط العرض بين -90 و90.',
+    nl: 'Breedtegraad moet tussen -90 en 90 liggen.',
+    fr: 'La latitude doit être comprise entre -90 et 90.',
+    de: 'Der Breitengrad muss zwischen -90 und 90 liegen.',
+  );
+  String get invalidLongitude => _t(
+    'Longitude must be between -180 and 180.',
+    'يجب أن يكون خط الطول بين -180 و180.',
+    nl: 'Lengtegraad moet tussen -180 en 180 liggen.',
+    fr: 'La longitude doit être comprise entre -180 et 180.',
+    de: 'Der Längengrad muss zwischen -180 und 180 liegen.',
+  );
+  String get invalidVehicleYear => _t(
+    'Enter a valid vehicle year.',
+    'أدخل سنة صنع صالحة.',
+    nl: 'Voer een geldig bouwjaar in.',
+    fr: 'Saisissez une année de véhicule valide.',
+    de: 'Geben Sie ein gültiges Baujahr ein.',
+  );
+  String get invalidUrl => _t(
+    'Enter a valid HTTP or HTTPS URL.',
+    'أدخل رابط HTTP أو HTTPS صالحاً.',
+    nl: 'Voer een geldige HTTP- of HTTPS-URL in.',
+    fr: 'Saisissez une URL HTTP ou HTTPS valide.',
+    de: 'Geben Sie eine gültige HTTP- oder HTTPS-URL ein.',
+  );
+  String get atLeastOneService => _t(
+    'Select at least one service type.',
+    'اختر نوع خدمة واحداً على الأقل.',
+    nl: 'Selecteer minimaal één servicetype.',
+    fr: 'Sélectionnez au moins un type de service.',
+    de: 'Wählen Sie mindestens einen Diensttyp.',
+  );
+  String get openCloseTimesMustDiffer => _t(
+    'Opening and closing times must be different.',
+    'يجب أن يختلف وقت الفتح عن وقت الإغلاق.',
+    nl: 'Openings- en sluitingstijd moeten verschillen.',
+    fr: 'Les heures d’ouverture et de fermeture doivent être différentes.',
+    de: 'Öffnungs- und Schließzeit müssen unterschiedlich sein.',
+  );
+  String get driverCreatedSuccessfully => _t(
+    'Driver created successfully.',
+    'تم إنشاء السائق بنجاح.',
+    nl: 'Chauffeur succesvol aangemaakt.',
+    fr: 'Chauffeur créé avec succès.',
+    de: 'Fahrer erfolgreich erstellt.',
+  );
+  String get restaurantCreatedSuccessfully => _t(
+    'Restaurant created successfully.',
+    'تم إنشاء المطعم بنجاح.',
+    nl: 'Restaurant succesvol aangemaakt.',
+    fr: 'Restaurant créé avec succès.',
+    de: 'Restaurant erfolgreich erstellt.',
+  );
   String get pricingPolicies => _t(
     'Pricing Policies',
     'سياسات التسعير',
@@ -881,6 +1352,41 @@ class AppLocalizations {
     nl: 'Uitgebracht op $date',
     fr: 'Sortie le $date',
     de: 'Veröffentlicht am $date',
+  );
+  String get release109Change1 => _t(
+    'Added complete admin workflows for creating approved drivers and active restaurants.',
+    'إضافة مسارات إدارية متكاملة لإنشاء سائقين معتمدين ومطاعم نشطة.',
+    nl: 'Volledige beheerworkflows toegevoegd voor goedgekeurde chauffeurs en actieve restaurants.',
+    fr: 'Ajout de parcours administrateur complets pour créer des chauffeurs approuvés et des restaurants actifs.',
+    de: 'Vollständige Admin-Abläufe zum Erstellen genehmigter Fahrer und aktiver Restaurants hinzugefügt.',
+  );
+  String get release109Change2 => _t(
+    'Added Google Places address search with structured location details and coordinates.',
+    'إضافة البحث عن العناوين عبر Google Places مع تفاصيل الموقع والإحداثيات المنظمة.',
+    nl: 'Google Places-adreszoekfunctie toegevoegd met gestructureerde locatiegegevens en coördinaten.',
+    fr: 'Ajout de la recherche d’adresses Google Places avec détails structurés et coordonnées.',
+    de: 'Google-Places-Adresssuche mit strukturierten Standortdaten und Koordinaten hinzugefügt.',
+  );
+  String get release109Change3 => _t(
+    'Added international phone country pickers for driver, owner, and restaurant contacts.',
+    'إضافة محددات الدولة الدولية لهواتف السائق والمالك والمطعم.',
+    nl: 'Internationale landenkiezers toegevoegd voor telefoonnummers van chauffeur, eigenaar en restaurant.',
+    fr: 'Ajout de sélecteurs de pays pour les téléphones du chauffeur, du propriétaire et du restaurant.',
+    de: 'Internationale Länderauswahl für Fahrer-, Inhaber- und Restauranttelefonnummern hinzugefügt.',
+  );
+  String get release109Change4 => _t(
+    'Limited vehicles to car and bike, required complete car details, and made taxi car-only.',
+    'حصر المركبات في السيارة والدراجة، وإلزام بيانات السيارة الكاملة، وقصر خدمة التاكسي على السيارات.',
+    nl: 'Voertuigen beperkt tot auto en fiets, volledige autogegevens verplicht en taxi alleen voor auto’s gemaakt.',
+    fr: 'Véhicules limités à voiture et vélo, informations voiture obligatoires et taxi réservé aux voitures.',
+    de: 'Fahrzeuge auf Auto und Fahrrad beschränkt, vollständige Autodaten vorgeschrieben und Taxi nur für Autos aktiviert.',
+  );
+  String get release109Change5 => _t(
+    'Added Cloudinary uploads for required driver documents and restaurant assets with robust validation.',
+    'إضافة رفع الملفات إلى Cloudinary لمستندات السائق المطلوبة وملفات المطعم مع تحقق شامل.',
+    nl: 'Cloudinary-uploads toegevoegd voor verplichte chauffeursdocumenten en restaurantbestanden met grondige validatie.',
+    fr: 'Ajout des importations Cloudinary pour les documents chauffeur obligatoires et les fichiers restaurant avec validation complète.',
+    de: 'Cloudinary-Uploads für erforderliche Fahrerdokumente und Restaurantdateien mit robuster Validierung hinzugefügt.',
   );
   String get release108Change1 => _t(
     'Added a visible back button to the OTP verification screen.',

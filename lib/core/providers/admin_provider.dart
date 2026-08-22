@@ -653,6 +653,26 @@ class AdminProvider extends ChangeNotifier {
 
   // ─── Approval actions ────────────────────────────────────────────
 
+  Future<Map<String, dynamic>> createDriver(
+    Map<String, dynamic> payload,
+  ) async {
+    debugPrint('[AdminProvider] createDriver()');
+    final created = await _apiService.createDriver(payload);
+    await refreshHome();
+    debugPrint('[AdminProvider] createDriver() SUCCESS');
+    return created;
+  }
+
+  Future<Map<String, dynamic>> createRestaurant(
+    Map<String, dynamic> payload,
+  ) async {
+    debugPrint('[AdminProvider] createRestaurant()');
+    final created = await _apiService.createRestaurant(payload);
+    await refreshHome();
+    debugPrint('[AdminProvider] createRestaurant() SUCCESS');
+    return created;
+  }
+
   Future<void> updateDriverStatus(
     int driverId, {
     required String status,

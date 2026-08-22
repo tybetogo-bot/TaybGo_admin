@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/l10n/app_localizations.dart';
@@ -29,15 +30,18 @@ class _ManagementScreenState extends State<ManagementScreen>
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _searchOpen = false;
+  late int _selectedTabIndex;
 
   @override
   void initState() {
     super.initState();
+    _selectedTabIndex = _tabIndex(widget.initialTab);
     _tabController = TabController(
       length: 2,
       vsync: this,
-      initialIndex: _tabIndex(widget.initialTab),
+      initialIndex: _selectedTabIndex,
     );
+    _tabController.addListener(_handleTabChanged);
   }
 
   @override
@@ -48,12 +52,18 @@ class _ManagementScreenState extends State<ManagementScreen>
     }
   }
 
+  void _handleTabChanged() {
+    if (_selectedTabIndex == _tabController.index) return;
+    setState(() => _selectedTabIndex = _tabController.index);
+  }
+
   int _tabIndex(String tab) {
     return tab == 'restaurants' ? 1 : 0;
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -66,6 +76,13 @@ class _ManagementScreenState extends State<ManagementScreen>
   void _clearSearch() {
     _searchController.clear();
     setState(() => _searchQuery = '');
+  }
+
+  Future<void> _openCreateForm() async {
+    final path = _selectedTabIndex == 0
+        ? '/management/drivers/new'
+        : '/management/restaurants/new';
+    await context.push<bool>(path);
   }
 
   @override
@@ -152,6 +169,25 @@ class _ManagementScreenState extends State<ManagementScreen>
                                 .withValues(alpha: 0.3),
                           ),
                         ),
+                        const SizedBox(width: 4),
+                        if (compact)
+                          IconButton.filled(
+                            onPressed: _openCreateForm,
+                            icon: const Icon(Icons.add_rounded, size: 20),
+                            tooltip: _selectedTabIndex == 0
+                                ? l.createDriverAction
+                                : l.createRestaurantAction,
+                          )
+                        else
+                          FilledButton.icon(
+                            onPressed: _openCreateForm,
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: Text(
+                              _selectedTabIndex == 0
+                                  ? l.createDriverAction
+                                  : l.createRestaurantAction,
+                            ),
+                          ),
                       ],
                     ),
                     AnimatedSize(

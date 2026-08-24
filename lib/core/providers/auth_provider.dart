@@ -16,8 +16,8 @@ class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
   bool _isLoading = false;
   String? _error;
+  String? _errorCode;
   String? _phone;
-  String? _testOtp;
   String? _pendingOtpTargetRole;
   String? _accessToken;
   String? _refreshToken;
@@ -39,8 +39,8 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  String? get errorCode => _errorCode;
   String? get phone => _phone;
-  String? get testOtp => _testOtp;
   String? get pendingOtpTargetRole => _pendingOtpTargetRole;
   String? get accessToken => _accessToken;
 
@@ -108,21 +108,19 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _error = null;
+    _errorCode = null;
     _phone = phone;
     _pendingOtpTargetRole = targetRole;
     notifyListeners();
 
     try {
-      final response = await _apiService.requestOtp(
-        phone,
-        targetRole: targetRole,
-      );
-      _testOtp = response['otp'] as String?;
+      await _apiService.requestOtp(phone, targetRole: targetRole);
       _isLoading = false;
       notifyListeners();
       return true;
     } on ApiException catch (e) {
       _error = e.message;
+      _errorCode = e.code;
       _isLoading = false;
       notifyListeners();
       return false;
@@ -132,6 +130,46 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  Future<bool> loginWithPassword({
+    required String phone,
+    required String password,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    _errorCode = null;
+    _phone = phone;
+    notifyListeners();
+    try {
+      final tokens = await _apiService.loginWithPassword(
+        phone: phone,
+        password: password,
+      );
+      await _completeAuthentication(tokens);
+      return true;
+    } on ApiException catch (error) {
+      _error = error.message;
+      _errorCode = error.code;
+    } catch (_) {
+      _error = 'Connection error. Please try again.';
+    }
+    _isLoading = false;
+    notifyListeners();
+    return false;
+  }
+
+  Future<void> _completeAuthentication(Map<String, String> tokens) async {
+    _accessToken = tokens['access'];
+    _refreshToken = tokens['refresh'];
+    _apiService.setAuthToken(_accessToken!);
+    await _saveTokens();
+    _isAuthenticated = true;
+    _lastRemoteValidationAt = DateTime.now();
+    _startSessionMonitoring();
+    _pendingOtpTargetRole = null;
+    _isLoading = false;
+    notifyListeners();
   }
 
   /// Verify the OTP code and obtain JWT tokens.
@@ -155,17 +193,7 @@ class AuthProvider extends ChangeNotifier {
         code,
         targetRole: targetRole,
       );
-      _accessToken = tokens['access'];
-      _refreshToken = tokens['refresh'];
-      _apiService.setAuthToken(_accessToken!);
-      await _saveTokens();
-      _isAuthenticated = true;
-      _lastRemoteValidationAt = DateTime.now();
-      _startSessionMonitoring();
-      _pendingOtpTargetRole = null;
-      _testOtp = null;
-      _isLoading = false;
-      notifyListeners();
+      await _completeAuthentication(tokens);
       return true;
     } on ApiException catch (e) {
       _error = e.message;
@@ -296,7 +324,6 @@ class AuthProvider extends ChangeNotifier {
     _accessToken = null;
     _refreshToken = null;
     _phone = null;
-    _testOtp = null;
     _pendingOtpTargetRole = null;
     _userProfile = null;
     _profileError = null;
@@ -311,6 +338,7 @@ class AuthProvider extends ChangeNotifier {
 
   void clearError() {
     _error = null;
+    _errorCode = null;
     notifyListeners();
   }
 

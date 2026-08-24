@@ -79,10 +79,7 @@ class _ManagementScreenState extends State<ManagementScreen>
   }
 
   Future<void> _openCreateForm() async {
-    final path = _selectedTabIndex == 0
-        ? '/management/drivers/new'
-        : '/management/restaurants/new';
-    await context.push<bool>(path);
+    await context.push<bool>('/management/users/new');
   }
 
   @override
@@ -174,19 +171,13 @@ class _ManagementScreenState extends State<ManagementScreen>
                           IconButton.filled(
                             onPressed: _openCreateForm,
                             icon: const Icon(Icons.add_rounded, size: 20),
-                            tooltip: _selectedTabIndex == 0
-                                ? l.createDriverAction
-                                : l.createRestaurantAction,
+                            tooltip: l.addUserAction,
                           )
                         else
                           FilledButton.icon(
                             onPressed: _openCreateForm,
                             icon: const Icon(Icons.add_rounded, size: 18),
-                            label: Text(
-                              _selectedTabIndex == 0
-                                  ? l.createDriverAction
-                                  : l.createRestaurantAction,
-                            ),
+                            label: Text(l.addUserAction),
                           ),
                       ],
                     ),

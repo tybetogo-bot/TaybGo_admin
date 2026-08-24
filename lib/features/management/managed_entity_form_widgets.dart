@@ -14,6 +14,7 @@ class ManagedFormScaffold extends StatelessWidget {
   final String? formError;
   final VoidCallback onSubmit;
   final Widget child;
+  final bool showHero;
 
   const ManagedFormScaffold({
     super.key,
@@ -26,6 +27,7 @@ class ManagedFormScaffold extends StatelessWidget {
     required this.onSubmit,
     required this.child,
     this.formError,
+    this.showHero = true,
   });
 
   @override
@@ -52,77 +54,78 @@ class ManagedFormScaffold extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.primary.withValues(alpha: 0.14),
-                                AppColors.primary.withValues(alpha: 0.035),
+                        if (showHero)
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.primary.withValues(alpha: 0.14),
+                                  AppColors.primary.withValues(alpha: 0.035),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusLarge,
+                              ),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(15),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.22,
+                                        ),
+                                        blurRadius: 18,
+                                        offset: const Offset(0, 7),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(icon, color: Colors.white),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        title,
+                                        style: theme.textTheme.titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: -0.35,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        subtitle,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: scheme.onSurface
+                                                  .withValues(alpha: 0.62),
+                                              height: 1.35,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.radiusLarge,
-                            ),
-                            border: Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.2),
-                            ),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(15),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.primary.withValues(
-                                        alpha: 0.22,
-                                      ),
-                                      blurRadius: 18,
-                                      offset: const Offset(0, 7),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(icon, color: Colors.white),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      title,
-                                      style: theme.textTheme.titleLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: -0.35,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      subtitle,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: scheme.onSurface.withValues(
-                                              alpha: 0.62,
-                                            ),
-                                            height: 1.35,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                         if (formError != null) ...[
                           const SizedBox(height: 14),
                           ManagedFormError(message: formError!),
                         ],
-                        const SizedBox(height: 16),
+                        SizedBox(height: showHero ? 16 : 0),
                         child,
                       ],
                     ),
@@ -155,6 +158,13 @@ class ManagedFormScaffold extends StatelessWidget {
                     children: [
                       TextButton(
                         onPressed: isSubmitting ? null : () => context.pop(),
+                        style: showHero
+                            ? null
+                            : TextButton.styleFrom(
+                                foregroundColor: scheme.onSurface.withValues(
+                                  alpha: 0.62,
+                                ),
+                              ),
                         child: Text(cancelLabel),
                       ),
                       const SizedBox(width: 10),

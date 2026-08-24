@@ -673,6 +673,26 @@ class AdminProvider extends ChangeNotifier {
     return created;
   }
 
+  Future<Map<String, dynamic>> createUser(Map<String, dynamic> payload) async {
+    debugPrint('[AdminProvider] createUser() role=${payload['role']}');
+    final created = await _apiService.createUser(payload);
+    debugPrint('[AdminProvider] createUser() SUCCESS');
+    return created;
+  }
+
+  Future<Map<String, dynamic>> resetUserPassword({
+    required int userId,
+    required String password,
+  }) async {
+    debugPrint('[AdminProvider] resetUserPassword() userId=$userId');
+    final updated = await _apiService.resetUserPassword(
+      userId: userId,
+      password: password,
+    );
+    debugPrint('[AdminProvider] resetUserPassword() SUCCESS');
+    return updated;
+  }
+
   Future<void> updateDriverStatus(
     int driverId, {
     required String status,

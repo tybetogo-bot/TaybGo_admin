@@ -2,6 +2,29 @@
 
 All notable TaybGo Admin changes are documented here.
 
+## 1.0.10+11 — 2026-08-24
+
+### Account management
+
+- Replaced the separate driver and restaurant creation entry points with a unified Add User flow for customer and restaurant accounts.
+- Made the account name mandatory and added international phone validation, clear role selection, and focused API error feedback.
+- Added optional secure password generation with copy support while preserving manual password entry.
+
+### Password management
+
+- Added change-password actions to every driver and restaurant details page.
+- Connected password changes to the user-specific admin endpoint and clearly communicated that existing refresh sessions are revoked.
+
+### Authentication and configuration
+
+- Added public application configuration loading for role-based OTP or password authentication.
+- Added administrator password sign-in, required-update enforcement, and editable application settings.
+- Removed development OTP exposure from the administrator authentication flow.
+
+### Release quality
+
+- Expanded API and widget regression coverage for user creation, password changes, public configuration, authentication, and application settings.
+
 ## 1.0.9+10 — 2026-08-22
 
 ### Partner creation

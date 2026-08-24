@@ -20,7 +20,7 @@ void main() {
       client: MockClient((request) async {
         capturedUri = request.url;
         capturedBody = jsonDecode(request.body) as Map<String, dynamic>;
-        return http.Response(jsonEncode({'otp': '123456'}), 200);
+        return http.Response(jsonEncode({'detail': 'OTP sent'}), 200);
       }),
     );
 
@@ -31,7 +31,7 @@ void main() {
       capturedBody,
       equals({'phone': '555123456', 'target_role': 'admin'}),
     );
-    expect(response, equals({'otp': '123456'}));
+    expect(response, equals({'detail': 'OTP sent'}));
   });
 
   test('verifyOtp sends target_role=admin', () async {

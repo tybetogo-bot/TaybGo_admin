@@ -1,3 +1,5 @@
+import 'dart:math';
+
 class ManagedEntityValidation {
   static final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
   static final RegExp _phonePattern = RegExp(r'^\+?[0-9 ()-]{7,20}$');
@@ -69,6 +71,27 @@ String buildInternationalPhone(String dialCode, String nationalNumber) {
   if (normalized.startsWith('+')) return normalized;
   final prefix = dialCode.trim().replaceAll(RegExp(r'[^0-9+]'), '');
   return '$prefix$normalized';
+}
+
+String generateManagedPassword({int length = 16}) {
+  if (length < 8) {
+    throw ArgumentError.value(length, 'length', 'Must be at least 8');
+  }
+
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnopqrstuvwxyz';
+  const digits = '23456789';
+  const symbols = '!@#%*-_+';
+  const all = '$upper$lower$digits$symbols';
+  final random = Random.secure();
+  final characters = <String>[
+    upper[random.nextInt(upper.length)],
+    lower[random.nextInt(lower.length)],
+    digits[random.nextInt(digits.length)],
+    symbols[random.nextInt(symbols.length)],
+    ...List.generate(length - 4, (_) => all[random.nextInt(all.length)]),
+  ]..shuffle(random);
+  return characters.join();
 }
 
 List<int> buildManagedVehicleYears(int currentYear) {

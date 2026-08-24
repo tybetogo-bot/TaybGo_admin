@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../core/config/env_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/settings_provider.dart';
+import '../../core/providers/public_config_provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/models/country.dart';
 import 'country_picker_dialog.dart';
@@ -19,12 +22,16 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   Country _selectedCountry = Country.defaultCountry;
+  bool _forcePasswordMode = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -38,14 +45,32 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  Future<void> _handleRequestOtp() async {
+  Future<void> _handleSubmit(bool useOtp) async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
     final phone = '${_selectedCountry.dialCode}${_phoneController.text.trim()}';
-    final success = await auth.requestOtp(phone);
-    if (success && mounted) {
+    final success = useOtp
+        ? await auth.requestOtp(phone)
+        : await auth.loginWithPassword(
+            phone: phone,
+            password: _passwordController.text,
+          );
+    if (useOtp && success && mounted) {
       context.go('/verify-otp');
+    } else if (!success &&
+        auth.errorCode == 'otp_disabled_for_role' &&
+        mounted) {
+      setState(() => _forcePasswordMode = true);
+      context.read<PublicConfigProvider>().load();
     }
+  }
+
+  Future<void> _openUrl(String value) async {
+    final parsed = Uri.parse(value);
+    final uri = parsed.hasScheme
+        ? parsed
+        : Uri.parse(EnvConfig.baseUrl).resolveUri(parsed);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -54,6 +79,8 @@ class _SignInScreenState extends State<SignInScreen> {
     final auth = context.watch<AuthProvider>();
     final isDark = theme.brightness == Brightness.dark;
     final l = AppLocalizations.of(context);
+    final publicConfig = context.watch<PublicConfigProvider>();
+    final useOtp = !_forcePasswordMode && publicConfig.adminUsesOtp;
 
     return Scaffold(
       body: SafeArea(
@@ -131,11 +158,29 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                   ),
-                  Expanded(flex: 4, child: _buildForm(context, auth, theme, l)),
+                  Expanded(
+                    flex: 4,
+                    child: _buildForm(
+                      context,
+                      auth,
+                      theme,
+                      l,
+                      useOtp: useOtp,
+                      publicConfig: publicConfig,
+                    ),
+                  ),
                 ],
               );
             }
-            return _buildForm(context, auth, theme, l, showLogo: true);
+            return _buildForm(
+              context,
+              auth,
+              theme,
+              l,
+              useOtp: useOtp,
+              publicConfig: publicConfig,
+              showLogo: true,
+            );
           },
         ),
       ),
@@ -147,6 +192,8 @@ class _SignInScreenState extends State<SignInScreen> {
     AuthProvider auth,
     ThemeData theme,
     AppLocalizations l, {
+    required bool useOtp,
+    required PublicConfigProvider publicConfig,
     bool showLogo = false,
   }) {
     return Center(
@@ -183,13 +230,35 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  l.enterPhoneToSignIn,
+                  useOtp
+                      ? l.enterPhoneToSignIn
+                      : 'Enter your phone number and password to sign in.',
                   style: TextStyle(
                     fontSize: 15,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+                if (publicConfig.isLoading) ...[
+                  const LinearProgressIndicator(minHeight: 2),
+                  const SizedBox(height: 20),
+                ] else if (publicConfig.error != null) ...[
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Live configuration is unavailable. Using admin password sign-in.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: publicConfig.load,
+                        child: Text(l.retry),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // Phone number
                 _FieldLabel(l.phoneNumber),
@@ -197,8 +266,12 @@ class _SignInScreenState extends State<SignInScreen> {
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _handleRequestOtp(),
+                  textInputAction: useOtp
+                      ? TextInputAction.done
+                      : TextInputAction.next,
+                  onFieldSubmitted: useOtp
+                      ? (_) => _handleSubmit(useOtp)
+                      : null,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     hintText: '5XXXXXXXX',
@@ -243,6 +316,39 @@ class _SignInScreenState extends State<SignInScreen> {
                   },
                 ),
 
+                if (!useOtp) ...[
+                  const SizedBox(height: 18),
+                  const _FieldLabel('Password'),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    onFieldSubmitted: (_) => _handleSubmit(useOtp),
+                    decoration: InputDecoration(
+                      hintText: 'Enter your password',
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+
                 if (auth.error != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 14),
@@ -280,7 +386,9 @@ class _SignInScreenState extends State<SignInScreen> {
                 SizedBox(
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: auth.isLoading ? null : _handleRequestOtp,
+                    onPressed: auth.isLoading
+                        ? null
+                        : () => _handleSubmit(useOtp),
                     child: auth.isLoading
                         ? const SizedBox(
                             width: 20,
@@ -291,7 +399,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           )
                         : Text(
-                            l.sendOtp,
+                            useOtp ? l.sendOtp : 'Sign in',
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -299,6 +407,27 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                   ),
                 ),
+                if (publicConfig.config case final config?) ...[
+                  const SizedBox(height: 22),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 4,
+                    children: [
+                      TextButton(
+                        onPressed: () => _openUrl(config.privacyUrl),
+                        child: const Text('Privacy'),
+                      ),
+                      TextButton(
+                        onPressed: () => _openUrl(config.termsUrl),
+                        child: const Text('Terms'),
+                      ),
+                      TextButton(
+                        onPressed: () => _openUrl(config.supportUrl),
+                        child: const Text('Support'),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

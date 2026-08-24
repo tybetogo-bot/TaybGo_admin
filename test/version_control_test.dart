@@ -22,14 +22,16 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Version control'), findsOneWidget);
-    expect(find.textContaining('1.0.9+10'), findsNWidgets(2));
+    expect(find.textContaining('1.0.10+11'), findsNWidgets(2));
+    expect(find.textContaining('1.0.9+10'), findsOneWidget);
     expect(find.textContaining('1.0.8+9'), findsOneWidget);
     expect(find.textContaining('1.0.7+8'), findsOneWidget);
     expect(find.textContaining('1.0.6+7'), findsOneWidget);
     expect(find.textContaining('1.0.5+6'), findsOneWidget);
     expect(find.textContaining('1.0.3+4'), findsOneWidget);
     expect(find.textContaining('1.0.2+3'), findsOneWidget);
-    expect(find.textContaining('Released August 22, 2026'), findsNWidgets(2));
+    expect(find.textContaining('Released August 24, 2026'), findsNWidgets(2));
+    expect(find.textContaining('Released August 22, 2026'), findsOneWidget);
     expect(find.textContaining('Released August 20, 2026'), findsOneWidget);
     expect(find.textContaining('Released August 11, 2026'), findsOneWidget);
     expect(find.textContaining('Released August 10, 2026'), findsOneWidget);

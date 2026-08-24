@@ -286,6 +286,212 @@ class AppLocalizations {
     fr: '$drivers chauffeurs et $restaurants restaurants',
     de: '$drivers Fahrer und $restaurants Restaurants',
   );
+  String get addUserTitle => _t(
+    'Add user',
+    'إضافة مستخدم',
+    nl: 'Gebruiker toevoegen',
+    fr: 'Ajouter un utilisateur',
+    de: 'Benutzer hinzufügen',
+  );
+  String get addUserAction => addUserTitle;
+  String get addUserSubtitle => _t(
+    'Create a customer or restaurant login account.',
+    'أنشئ حساب دخول لعميل أو مطعم.',
+    nl: 'Maak een inlogaccount voor een klant of restaurant.',
+    fr: 'Créez un compte de connexion client ou restaurant.',
+    de: 'Erstellen Sie ein Anmeldekonto für einen Kunden oder ein Restaurant.',
+  );
+  String get chooseAccountType => _t(
+    'Choose account type',
+    'اختر نوع الحساب',
+    nl: 'Kies het accounttype',
+    fr: 'Choisir le type de compte',
+    de: 'Kontotyp auswählen',
+  );
+  String get chooseAccountTypeDescription => _t(
+    'Select how this user will access TaybGo.',
+    'حدد كيفية استخدام هذا المستخدم لتطبيق TaybGo.',
+    nl: 'Selecteer hoe deze gebruiker TaybGo gebruikt.',
+    fr: 'Sélectionnez comment cet utilisateur accédera à TaybGo.',
+    de: 'Wählen Sie aus, wie dieser Benutzer auf TaybGo zugreift.',
+  );
+  String get customerAccount =>
+      _t('Customer', 'عميل', nl: 'Klant', fr: 'Client', de: 'Kunde');
+  String get customerAccountDescription => _t(
+    'For ordering food and using TaybGo services.',
+    'لطلب الطعام واستخدام خدمات TaybGo.',
+    nl: 'Voor het bestellen van eten en het gebruiken van TaybGo-diensten.',
+    fr: 'Pour commander des repas et utiliser les services TaybGo.',
+    de: 'Zum Bestellen von Essen und Nutzen der TaybGo-Dienste.',
+  );
+  String get restaurantAccount => _t(
+    'Restaurant',
+    'مطعم',
+    nl: 'Restaurant',
+    fr: 'Restaurant',
+    de: 'Restaurant',
+  );
+  String get restaurantAccountDescription => _t(
+    'Creates the seller login used to set up a restaurant.',
+    'ينشئ حساب البائع المستخدم لإعداد المطعم.',
+    nl: 'Maakt de verkoperslogin waarmee een restaurant wordt ingesteld.',
+    fr: 'Crée le compte vendeur utilisé pour configurer un restaurant.',
+    de: 'Erstellt das Verkäuferkonto zum Einrichten eines Restaurants.',
+  );
+  String get accountOnlyNoticeTitle => _t(
+    'Account only',
+    'الحساب فقط',
+    nl: 'Alleen account',
+    fr: 'Compte uniquement',
+    de: 'Nur Konto',
+  );
+  String get accountOnlyNotice => _t(
+    'This creates login access and the selected role only. It does not create a restaurant or any other profile.',
+    'ينشئ هذا الإجراء بيانات الدخول والدور المحدد فقط، ولا ينشئ مطعماً أو أي ملف شخصي آخر.',
+    nl: 'Dit maakt alleen inlogtoegang en de gekozen rol aan. Er wordt geen restaurant of ander profiel aangemaakt.',
+    fr: 'Cela crée uniquement l’accès et le rôle sélectionné. Aucun restaurant ni autre profil n’est créé.',
+    de: 'Dadurch werden nur der Zugang und die ausgewählte Rolle erstellt. Es wird kein Restaurant oder anderes Profil angelegt.',
+  );
+  String get userDetails => _t(
+    'User details',
+    'بيانات المستخدم',
+    nl: 'Gebruikersgegevens',
+    fr: 'Informations utilisateur',
+    de: 'Benutzerdaten',
+  );
+  String get userDetailsDescription => _t(
+    'Enter the details the user will use to sign in.',
+    'أدخل البيانات التي سيستخدمها المستخدم لتسجيل الدخول.',
+    nl: 'Voer de gegevens in waarmee de gebruiker inlogt.',
+    fr: 'Saisissez les informations que l’utilisateur utilisera pour se connecter.',
+    de: 'Geben Sie die Daten ein, mit denen sich der Benutzer anmeldet.',
+  );
+  String get password => _t(
+    'Password',
+    'كلمة المرور',
+    nl: 'Wachtwoord',
+    fr: 'Mot de passe',
+    de: 'Passwort',
+  );
+  String get passwordHelp => _t(
+    'Use at least 8 characters. A stronger password may be required by the server.',
+    'استخدم 8 أحرف على الأقل. قد يطلب الخادم كلمة مرور أقوى.',
+    nl: 'Gebruik minimaal 8 tekens. De server kan een sterker wachtwoord vereisen.',
+    fr: 'Utilisez au moins 8 caractères. Le serveur peut exiger un mot de passe plus fort.',
+    de: 'Verwenden Sie mindestens 8 Zeichen. Der Server kann ein stärkeres Passwort verlangen.',
+  );
+  String get generatePassword => _t(
+    'Generate password',
+    'إنشاء كلمة مرور',
+    nl: 'Wachtwoord genereren',
+    fr: 'Générer un mot de passe',
+    de: 'Passwort generieren',
+  );
+  String get copyPassword => _t(
+    'Copy password',
+    'نسخ كلمة المرور',
+    nl: 'Wachtwoord kopiëren',
+    fr: 'Copier le mot de passe',
+    de: 'Passwort kopieren',
+  );
+  String get passwordCopied => _t(
+    'Password copied.',
+    'تم نسخ كلمة المرور.',
+    nl: 'Wachtwoord gekopieerd.',
+    fr: 'Mot de passe copié.',
+    de: 'Passwort kopiert.',
+  );
+  String get passwordTooShort => _t(
+    'Password must contain at least 8 characters.',
+    'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.',
+    nl: 'Het wachtwoord moet minimaal 8 tekens bevatten.',
+    fr: 'Le mot de passe doit contenir au moins 8 caractères.',
+    de: 'Das Passwort muss mindestens 8 Zeichen enthalten.',
+  );
+  String get passwordTooLong => _t(
+    'Password cannot exceed 128 characters.',
+    'لا يمكن أن تتجاوز كلمة المرور 128 حرفاً.',
+    nl: 'Het wachtwoord mag niet langer zijn dan 128 tekens.',
+    fr: 'Le mot de passe ne peut pas dépasser 128 caractères.',
+    de: 'Das Passwort darf höchstens 128 Zeichen lang sein.',
+  );
+  String get resetPassword => _t(
+    'Reset password',
+    'إعادة تعيين كلمة المرور',
+    nl: 'Wachtwoord opnieuw instellen',
+    fr: 'Réinitialiser le mot de passe',
+    de: 'Passwort zurücksetzen',
+  );
+  String get resetPasswordDescription => _t(
+    'Set a new login password for this account. Existing refresh sessions will be revoked.',
+    'عيّن كلمة مرور جديدة لهذا الحساب. سيتم إلغاء جلسات تسجيل الدخول الحالية.',
+    nl: 'Stel een nieuw wachtwoord in. Bestaande aanmeldsessies worden ingetrokken.',
+    fr: 'Définissez un nouveau mot de passe. Les sessions existantes seront révoquées.',
+    de: 'Legen Sie ein neues Passwort fest. Bestehende Sitzungen werden widerrufen.',
+  );
+  String get newPassword => _t(
+    'New password',
+    'كلمة المرور الجديدة',
+    nl: 'Nieuw wachtwoord',
+    fr: 'Nouveau mot de passe',
+    de: 'Neues Passwort',
+  );
+  String get confirmPassword => _t(
+    'Confirm password',
+    'تأكيد كلمة المرور',
+    nl: 'Wachtwoord bevestigen',
+    fr: 'Confirmer le mot de passe',
+    de: 'Passwort bestätigen',
+  );
+  String get passwordsDoNotMatch => _t(
+    'Passwords do not match.',
+    'كلمتا المرور غير متطابقتين.',
+    nl: 'De wachtwoorden komen niet overeen.',
+    fr: 'Les mots de passe ne correspondent pas.',
+    de: 'Die Passwörter stimmen nicht überein.',
+  );
+  String get showPassword => _t(
+    'Show password',
+    'إظهار كلمة المرور',
+    nl: 'Wachtwoord tonen',
+    fr: 'Afficher le mot de passe',
+    de: 'Passwort anzeigen',
+  );
+  String get hidePassword => _t(
+    'Hide password',
+    'إخفاء كلمة المرور',
+    nl: 'Wachtwoord verbergen',
+    fr: 'Masquer le mot de passe',
+    de: 'Passwort ausblenden',
+  );
+  String get passwordResetSuccessfully => _t(
+    'Password reset successfully.',
+    'تمت إعادة تعيين كلمة المرور بنجاح.',
+    nl: 'Het wachtwoord is opnieuw ingesteld.',
+    fr: 'Le mot de passe a été réinitialisé.',
+    de: 'Das Passwort wurde zurückgesetzt.',
+  );
+  String get selectAccountTypeError => _t(
+    'Select Customer or Restaurant.',
+    'اختر عميل أو مطعم.',
+    nl: 'Selecteer Klant of Restaurant.',
+    fr: 'Sélectionnez Client ou Restaurant.',
+    de: 'Wählen Sie Kunde oder Restaurant.',
+  );
+  String get duplicatePhone => _t(
+    'An account with this phone number already exists.',
+    'يوجد حساب مرتبط برقم الهاتف هذا بالفعل.',
+    nl: 'Er bestaat al een account met dit telefoonnummer.',
+    fr: 'Un compte avec ce numéro de téléphone existe déjà.',
+    de: 'Ein Konto mit dieser Telefonnummer existiert bereits.',
+  );
+  String get userCreatedSuccessfully => _t(
+    'User account created successfully.',
+    'تم إنشاء حساب المستخدم بنجاح.',
+    nl: 'Gebruikersaccount is aangemaakt.',
+    fr: 'Le compte utilisateur a été créé.',
+    de: 'Das Benutzerkonto wurde erstellt.',
+  );
   String get createDriverTitle => _t(
     'Create driver',
     'إنشاء سائق',
@@ -1352,6 +1558,41 @@ class AppLocalizations {
     nl: 'Uitgebracht op $date',
     fr: 'Sortie le $date',
     de: 'Veröffentlicht am $date',
+  );
+  String get release1010Change1 => _t(
+    'Added a unified, focused Add User flow for customer and restaurant accounts.',
+    'إضافة مسار موحد ومركز لإضافة حسابات العملاء والمطاعم.',
+    nl: 'Een uniforme, gerichte gebruikersflow toegevoegd voor klant- en restaurantaccounts.',
+    fr: 'Ajout d’un parcours unifié et ciblé pour créer des comptes client et restaurant.',
+    de: 'Einen einheitlichen, fokussierten Ablauf zum Hinzufügen von Kunden- und Restaurantkonten hinzugefügt.',
+  );
+  String get release1010Change2 => _t(
+    'Made names mandatory and added secure generated passwords with copy support.',
+    'جعل الاسم إلزامياً وإضافة إنشاء كلمات مرور آمنة مع إمكانية النسخ.',
+    nl: 'Namen verplicht gemaakt en veilige gegenereerde wachtwoorden met kopieerfunctie toegevoegd.',
+    fr: 'Nom rendu obligatoire et ajout de mots de passe sécurisés générés avec copie.',
+    de: 'Namen verpflichtend gemacht und sichere generierte Passwörter mit Kopierfunktion hinzugefügt.',
+  );
+  String get release1010Change3 => _t(
+    'Added password changes for drivers and restaurant owners with session revocation.',
+    'إضافة تغيير كلمة المرور للسائقين ومالكي المطاعم مع إلغاء الجلسات القائمة.',
+    nl: 'Wachtwoordwijzigingen toegevoegd voor chauffeurs en restauranteigenaren met intrekking van sessies.',
+    fr: 'Ajout du changement de mot de passe pour chauffeurs et propriétaires avec révocation des sessions.',
+    de: 'Passwortänderungen für Fahrer und Restaurantinhaber mit Sitzungswiderruf hinzugefügt.',
+  );
+  String get release1010Change4 => _t(
+    'Added live configuration for OTP or password sign-in and required application updates.',
+    'إضافة إعدادات مباشرة لتسجيل الدخول برمز OTP أو كلمة المرور وفرض تحديثات التطبيق.',
+    nl: 'Live configuratie toegevoegd voor aanmelden met OTP of wachtwoord en verplichte app-updates.',
+    fr: 'Ajout de la configuration dynamique pour la connexion par OTP ou mot de passe et les mises à jour obligatoires.',
+    de: 'Live-Konfiguration für OTP- oder Passwortanmeldung und erforderliche App-Updates hinzugefügt.',
+  );
+  String get release1010Change5 => _t(
+    'Added administrator application settings and expanded API and interface regression coverage.',
+    'إضافة إعدادات التطبيق للمسؤول وتوسيع اختبارات الانحدار للواجهات وواجهات API.',
+    nl: 'Beheerinstellingen voor de app en uitgebreidere regressiedekking voor API en interface toegevoegd.',
+    fr: 'Ajout des paramètres administrateur et extension de la couverture de régression API et interface.',
+    de: 'Administrator-App-Einstellungen und erweiterte API- und Oberflächen-Regressionstests hinzugefügt.',
   );
   String get release109Change1 => _t(
     'Added complete admin workflows for creating approved drivers and active restaurants.',

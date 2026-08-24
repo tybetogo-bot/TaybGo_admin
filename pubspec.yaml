@@ -1,7 +1,7 @@
 name: taybgoadmin
 description: "TaybGo Admin - Platform management dashboard"
 publish_to: 'none'
-version: 1.0.9+10
+version: 1.0.10+11
 
 environment:
   sdk: ^3.10.4

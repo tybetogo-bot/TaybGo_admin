@@ -68,6 +68,79 @@ void main() {
     expect(result['id'], 73);
   });
 
+  test('createUser posts the account payload and parses 201', () async {
+    late http.Request captured;
+    final api = ApiService(
+      client: MockClient((request) async {
+        captured = request;
+        return http.Response(
+          jsonEncode({
+            'id': 91,
+            'name': 'Green Table',
+            'phone': '+32472222222',
+            'roles': ['seller'],
+          }),
+          201,
+        );
+      }),
+    )..setAuthToken('admin-token');
+    final payload = {
+      'phone': '+32472222222',
+      'password': 'StrongPassword123!',
+      'role': 'seller',
+      'name': 'Green Table',
+    };
+
+    final result = await api.createUser(payload);
+
+    expect(captured.method, 'POST');
+    expect(captured.url.path, '/api/admin/users/');
+    expect(captured.headers['authorization'], 'Bearer admin-token');
+    expect(jsonDecode(captured.body), payload);
+    expect(result['roles'], ['seller']);
+  });
+
+  test('createUser exposes duplicate-phone conflicts', () async {
+    final api = ApiService(
+      client: MockClient(
+        (_) async => http.Response(
+          jsonEncode({'detail': 'A user with this phone already exists.'}),
+          409,
+        ),
+      ),
+    );
+
+    await expectLater(
+      api.createUser(const {}),
+      throwsA(
+        isA<ApiException>()
+            .having((error) => error.statusCode, 'statusCode', 409)
+            .having(
+              (error) => error.message,
+              'message',
+              contains('already exists'),
+            ),
+      ),
+    );
+  });
+
+  test('resetUserPassword patches the user password endpoint', () async {
+    late http.Request captured;
+    final api = ApiService(
+      client: MockClient((request) async {
+        captured = request;
+        return http.Response(jsonEncode({'detail': 'Password updated.'}), 200);
+      }),
+    )..setAuthToken('admin-token');
+
+    await api.resetUserPassword(userId: 42, password: 'NewStrongPassword123!');
+
+    expect(captured.method, 'PATCH');
+    expect(captured.url.path, '/api/admin/users/42/password/');
+    expect(captured.headers['authorization'], 'Bearer admin-token');
+    expect(jsonDecode(captured.body), {'password': 'NewStrongPassword123!'});
+  });
+
   test('nested API validation errors are flattened for form fields', () async {
     final api = ApiService(
       client: MockClient(

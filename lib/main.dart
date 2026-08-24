@@ -9,8 +9,10 @@ import 'core/providers/admin_provider.dart';
 import 'core/providers/country_filter_provider.dart';
 import 'core/providers/pricing_provider.dart';
 import 'core/providers/settings_provider.dart';
+import 'core/providers/public_config_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/l10n/app_localizations.dart';
+import 'core/widgets/required_update_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,9 +42,11 @@ void main() async {
   };
   apiService.onUnauthorized = () => authProvider.signOut();
   final settingsProvider = SettingsProvider();
+  final publicConfigProvider = PublicConfigProvider(apiService: apiService);
   await Future.wait([
     authProvider.tryRestoreSession(),
     settingsProvider.loadSettings(),
+    publicConfigProvider.load(notify: false),
   ]);
 
   runApp(
@@ -53,6 +57,7 @@ void main() async {
       pricingProvider: pricingProvider,
       authProvider: authProvider,
       settingsProvider: settingsProvider,
+      publicConfigProvider: publicConfigProvider,
     ),
   );
 }
@@ -64,6 +69,7 @@ class TaybGoAdminApp extends StatefulWidget {
   final PricingProvider pricingProvider;
   final AuthProvider authProvider;
   final SettingsProvider settingsProvider;
+  final PublicConfigProvider publicConfigProvider;
 
   const TaybGoAdminApp({
     super.key,
@@ -73,6 +79,7 @@ class TaybGoAdminApp extends StatefulWidget {
     required this.pricingProvider,
     required this.authProvider,
     required this.settingsProvider,
+    required this.publicConfigProvider,
   });
 
   @override
@@ -112,6 +119,7 @@ class _TaybGoAdminAppState extends State<TaybGoAdminApp>
         ChangeNotifierProvider.value(value: widget.countryFilterProvider),
         ChangeNotifierProvider.value(value: widget.pricingProvider),
         ChangeNotifierProvider.value(value: widget.settingsProvider),
+        ChangeNotifierProvider.value(value: widget.publicConfigProvider),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
@@ -130,6 +138,8 @@ class _TaybGoAdminAppState extends State<TaybGoAdminApp>
               GlobalCupertinoLocalizations.delegate,
             ],
             routerConfig: _appRouter.router,
+            builder: (context, child) =>
+                RequiredUpdateGate(child: child ?? const SizedBox.shrink()),
           );
         },
       ),

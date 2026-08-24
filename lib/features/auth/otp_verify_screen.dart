@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -27,6 +28,11 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
     await auth.verifyOtp(_codeController.text.trim());
+  }
+
+  void _returnToSignIn() {
+    context.read<AuthProvider>().clearError();
+    context.go('/sign-in');
   }
 
   @override
@@ -141,6 +147,11 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: BackButton(onPressed: _returnToSignIn),
+                ),
+                const SizedBox(height: 8),
                 if (showLogo) ...[
                   Center(
                     child: Image.asset('assets/TaybGo_green.png', width: 130),
@@ -164,54 +175,6 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
-
-                // Test OTP banner
-                if (auth.testOtp != null) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: AppColors.warning.withValues(alpha: 0.3),
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        AppSpacing.radiusSmall,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.bug_report_outlined,
-                          size: 18,
-                          color: AppColors.warning,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                              children: [
-                                TextSpan(text: l.testOtpLabel),
-                                TextSpan(
-                                  text: auth.testOtp!,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
 
                 const SizedBox(height: 24),
 
@@ -298,12 +261,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                 const SizedBox(height: 16),
                 Center(
                   child: TextButton(
-                    onPressed: auth.isLoading
-                        ? null
-                        : () {
-                            auth.clearError();
-                            Navigator.of(context).maybePop();
-                          },
+                    onPressed: auth.isLoading ? null : _returnToSignIn,
                     child: Text(
                       l.changePhoneNumber,
                       style: TextStyle(

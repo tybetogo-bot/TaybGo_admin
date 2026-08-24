@@ -5,7 +5,9 @@ import '../auth/auth_error_keys.dart';
 import '../config/env_config.dart';
 import '../models/admin_order.dart';
 import '../models/home_response.dart';
+import '../models/app_setting.dart';
 import '../models/pricing_policy.dart';
+import '../models/public_app_config.dart';
 import '../models/support_ticket.dart';
 
 class ApiService {
@@ -30,6 +32,80 @@ class ApiService {
     'Accept': 'application/json',
     if (_authToken != null) 'Authorization': 'Bearer $_authToken',
   };
+
+  Future<PublicAppConfig> getPublicConfig({
+    required String currentVersion,
+  }) async {
+    final uri = Uri.parse(
+      '$baseUrl/api/config/public',
+    ).replace(queryParameters: {'current_version': currentVersion});
+    final response = await _client.get(uri, headers: _headers);
+    if (response.statusCode != 200) {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to load application configuration',
+      );
+    }
+    return PublicAppConfig.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<Map<String, String>> loginWithPassword({
+    required String phone,
+    required String password,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/auth/token/'),
+      headers: _headers,
+      body: jsonEncode({'phone': phone, 'password': password}),
+    );
+    if (response.statusCode != 200) {
+      throw _apiException(response, fallbackMessage: 'Sign in failed');
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return {
+      'access': body['access'] as String,
+      'refresh': body['refresh'] as String,
+    };
+  }
+
+  Future<List<AppSetting>> getAppSettings() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/api/admin/app-settings/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 401) _throwUnauthorized();
+    if (response.statusCode != 200) {
+      throw _apiException(response, fallbackMessage: 'Failed to load settings');
+    }
+    final decoded = jsonDecode(response.body);
+    final items = decoded is List
+        ? decoded
+        : (decoded as Map<String, dynamic>)['results'] as List? ?? const [];
+    return items
+        .map((item) => AppSetting.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  Future<AppSetting> updateAppSetting(String key, dynamic value) async {
+    final encodedKey = Uri.encodeComponent(key);
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/api/admin/app-settings/$encodedKey/'),
+      headers: _headers,
+      body: jsonEncode({'value': value}),
+    );
+    if (response.statusCode == 401) _throwUnauthorized();
+    if (response.statusCode != 200) {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to update setting',
+      );
+    }
+    return AppSetting.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
 
   Never _throwUnauthorized() {
     onUnauthorized?.call();
@@ -97,6 +173,7 @@ class ApiService {
     required String fallbackMessage,
   }) {
     final detail = _extractApiErrorDetail(response);
+    final code = _extractApiErrorCode(response);
     if (_isOtpConflict(response.statusCode, detail)) {
       return ApiException(
         AuthErrorKeys.phoneAlreadyRegistered,
@@ -104,7 +181,20 @@ class ApiService {
       );
     }
 
-    return ApiException(detail ?? fallbackMessage, response.statusCode);
+    return ApiException(
+      detail ?? fallbackMessage,
+      response.statusCode,
+      code: code,
+    );
+  }
+
+  String? _extractApiErrorCode(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      return decoded is Map ? decoded['code'] as String? : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   String? _extractApiErrorDetail(http.Response response) {
@@ -169,13 +259,23 @@ class ApiService {
         return const {};
       }
 
-      return Map.fromEntries(
-        body.entries
-            .where((entry) => entry.value != null)
-            .map(
-              (entry) => MapEntry(entry.key, _stringifyApiError(entry.value)),
-            ),
-      );
+      final errors = <String, String>{};
+
+      void flatten(String key, dynamic value) {
+        if (value == null) return;
+        if (value is Map) {
+          for (final entry in value.entries) {
+            flatten('$key.${entry.key}', entry.value);
+          }
+          return;
+        }
+        errors[key] = _stringifyApiError(value);
+      }
+
+      for (final entry in body.entries) {
+        flatten(entry.key, entry.value);
+      }
+      return errors;
     } catch (_) {
       return const {};
     }
@@ -200,6 +300,84 @@ class ApiService {
             (normalized.contains('conflict') ||
                 normalized.contains('mismatch') ||
                 normalized.contains('registered')));
+  }
+
+  /// Create an approved driver account from the admin dashboard.
+  Future<Map<String, dynamic>> createDriver(
+    Map<String, dynamic> payload,
+  ) async {
+    final uri = Uri.parse('$baseUrl/api/admin/drivers/');
+    final response = await _client.post(
+      uri,
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(response, fallbackMessage: 'Failed to create driver');
+  }
+
+  /// Create a seller account and active restaurant from the admin dashboard.
+  Future<Map<String, dynamic>> createRestaurant(
+    Map<String, dynamic> payload,
+  ) async {
+    final uri = Uri.parse('$baseUrl/api/admin/restaurants/');
+    final response = await _client.post(
+      uri,
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to create restaurant',
+    );
+  }
+
+  /// Create an account with one application role.
+  ///
+  /// This endpoint does not create a customer, seller, or restaurant profile.
+  Future<Map<String, dynamic>> createUser(Map<String, dynamic> payload) async {
+    final uri = Uri.parse('$baseUrl/api/admin/users/');
+    final response = await _client.post(
+      uri,
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(response, fallbackMessage: 'Failed to create user');
+  }
+
+  /// Change an existing user's password and revoke their refresh sessions.
+  Future<Map<String, dynamic>> resetUserPassword({
+    required int userId,
+    required String password,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/admin/users/$userId/password/');
+    final response = await _client.patch(
+      uri,
+      headers: _headers,
+      body: jsonEncode({'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      if (response.body.trim().isEmpty) return const {};
+      final decoded = jsonDecode(response.body);
+      return decoded is Map<String, dynamic> ? decoded : const {};
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(response, fallbackMessage: 'Failed to reset password');
   }
 
   /// Update a driver's admin status.
@@ -893,11 +1071,13 @@ class ApiException implements Exception {
   final String message;
   final int statusCode;
   final Map<String, String> fieldErrors;
+  final String? code;
 
   const ApiException(
     this.message,
     this.statusCode, {
     this.fieldErrors = const {},
+    this.code,
   });
 
   @override

@@ -8,6 +8,7 @@ import '../../features/approvals/approvals_screen.dart';
 import '../../features/approvals/driver_request_detail_screen.dart';
 import '../../features/approvals/restaurant_request_detail_screen.dart';
 import '../../features/management/management_screen.dart';
+import '../../features/management/add_user_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
 import '../../features/orders/orders_screen.dart';
 import '../../features/restaurants/restaurant_detail_screen.dart';
@@ -16,6 +17,7 @@ import '../../features/support/ticket_detail_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/preferences_screen.dart';
 import '../../features/profile/version_control_screen.dart';
+import '../../features/profile/app_settings_screen.dart';
 import '../../core/models/pricing_policy.dart';
 import '../../features/pricing/pricing_screen.dart';
 import '../../features/pricing/pricing_policy_detail_screen.dart';
@@ -130,6 +132,18 @@ class AppRouter {
                 ),
                 routes: [
                   GoRoute(
+                    path: 'users/new',
+                    builder: (context, state) => const AddUserScreen(),
+                  ),
+                  GoRoute(
+                    path: 'drivers/new',
+                    redirect: (context, state) => '/management/users/new',
+                  ),
+                  GoRoute(
+                    path: 'restaurants/new',
+                    redirect: (context, state) => '/management/users/new',
+                  ),
+                  GoRoute(
                     path: 'restaurants/:id',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
@@ -194,6 +208,10 @@ class AppRouter {
                         },
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'app-settings',
+                    builder: (context, state) => const AppSettingsScreen(),
                   ),
                   GoRoute(
                     path: 'preferences',

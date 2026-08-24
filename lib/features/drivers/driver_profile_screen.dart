@@ -9,6 +9,7 @@ import '../../core/models/home_response.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../management/reset_password_dialog.dart';
 
 class DriverProfileScreen extends StatefulWidget {
   final int driverId;
@@ -120,6 +121,19 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         setState(() => _statusActionBusy = false);
       }
     }
+  }
+
+  Future<void> _resetPassword() async {
+    final reset = await showResetPasswordDialog(
+      context,
+      userId: widget.driverId,
+    );
+    if (!reset || !mounted) return;
+    _showSnack(
+      context,
+      AppLocalizations.of(context).passwordResetSuccessfully,
+      AppColors.success,
+    );
   }
 
   @override
@@ -235,6 +249,30 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   ),
                   if (profile.email != null)
                     _buildDetailRow(context, l.email, profile.email!),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildSection(
+                context,
+                title: l.accountInfo,
+                icon: Icons.security_outlined,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      key: const Key('driver-reset-password'),
+                      onPressed: _resetPassword,
+                      icon: const Icon(Icons.lock_reset_rounded, size: 19),
+                      label: Text(l.resetPassword),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
               if (profile.isOnline != null || profile.hasLocation) ...[

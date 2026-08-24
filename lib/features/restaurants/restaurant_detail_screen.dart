@@ -6,6 +6,7 @@ import '../../core/models/home_response.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../management/reset_password_dialog.dart';
 import 'restaurants_screen.dart';
 
 class RestaurantDetailScreen extends StatefulWidget {
@@ -25,6 +26,20 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     if (admin.homeData == null) {
       Future.microtask(() => admin.fetchHome());
     }
+  }
+
+  Future<void> _resetPassword(HomeRestaurant restaurant) async {
+    final reset = await showResetPasswordDialog(
+      context,
+      userId: restaurant.ownerUser,
+    );
+    if (!reset || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).passwordResetSuccessfully),
+        backgroundColor: AppColors.success,
+      ),
+    );
   }
 
   @override
@@ -152,6 +167,30 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                     restaurant.phone.isNotEmpty
                         ? restaurant.phone
                         : l.notProvided,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildSection(
+                context,
+                title: l.accountInfo,
+                icon: Icons.security_outlined,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      key: const Key('restaurant-reset-password'),
+                      onPressed: () => _resetPassword(restaurant),
+                      icon: const Icon(Icons.lock_reset_rounded, size: 19),
+                      label: Text(l.resetPassword),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

@@ -2,6 +2,66 @@
 
 All notable TaybGo Admin changes are documented here.
 
+## 1.0.10+11 — 2026-08-24
+
+### Account management
+
+- Replaced the separate driver and restaurant creation entry points with a unified Add User flow for customer and restaurant accounts.
+- Made the account name mandatory and added international phone validation, clear role selection, and focused API error feedback.
+- Added optional secure password generation with copy support while preserving manual password entry.
+
+### Password management
+
+- Added change-password actions to every driver and restaurant details page.
+- Connected password changes to the user-specific admin endpoint and clearly communicated that existing refresh sessions are revoked.
+
+### Authentication and configuration
+
+- Added public application configuration loading for role-based OTP or password authentication.
+- Added administrator password sign-in, required-update enforcement, and editable application settings.
+- Removed development OTP exposure from the administrator authentication flow.
+
+### Release quality
+
+- Expanded API and widget regression coverage for user creation, password changes, public configuration, authentication, and application settings.
+
+## 1.0.9+10 — 2026-08-22
+
+### Partner creation
+
+- Added complete admin workflows for creating approved drivers and active restaurants.
+- Added responsive, localized forms with nested API error handling and required-field validation.
+
+### Addresses and phone numbers
+
+- Added Google Places autocomplete and place details for precise, structured partner addresses.
+- Added searchable country pickers and international dial codes to driver, owner, and restaurant phone fields.
+
+### Driver vehicles and services
+
+- Limited new driver vehicles to Bike and Car.
+- Made car size, plate, color, make, model, and year mandatory for cars.
+- Added a vehicle year selector from 1960 through the following calendar year.
+- Limited taxi service availability to car drivers.
+
+### Cloudinary uploads
+
+- Added Cloudinary file uploads for driver documents, restaurant logos, and restaurant registration licenses.
+- Made all standard driver documents mandatory while keeping Other documents optional.
+- Made restaurant registration licenses mandatory and kept restaurant logos optional.
+- Added upload progress, replacement, file-size, file-type, and failure states.
+
+### Release quality
+
+- Added API, form, address, Cloudinary, validation, vehicle-rule, and payload regression coverage.
+
+## 1.0.8+9 — 2026-08-20
+
+### Authentication
+
+- Added a visible back button to the OTP verification screen.
+- Fixed the Change phone number action so it reliably returns administrators to sign-in.
+
 ## 1.0.7+8 — 2026-08-11
 
 ### Overview

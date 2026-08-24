@@ -295,11 +295,11 @@ class AppLocalizations {
   );
   String get addUserAction => addUserTitle;
   String get addUserSubtitle => _t(
-    'Create a customer or restaurant login account.',
-    'أنشئ حساب دخول لعميل أو مطعم.',
-    nl: 'Maak een inlogaccount voor een klant of restaurant.',
-    fr: 'Créez un compte de connexion client ou restaurant.',
-    de: 'Erstellen Sie ein Anmeldekonto für einen Kunden oder ein Restaurant.',
+    'Create a driver or restaurant login account.',
+    'أنشئ حساب دخول لسائق أو مطعم.',
+    nl: 'Maak een inlogaccount voor een chauffeur of restaurant.',
+    fr: 'Créez un compte de connexion chauffeur ou restaurant.',
+    de: 'Erstellen Sie ein Anmeldekonto für einen Fahrer oder ein Restaurant.',
   );
   String get chooseAccountType => _t(
     'Choose account type',
@@ -315,14 +315,14 @@ class AppLocalizations {
     fr: 'Sélectionnez comment cet utilisateur accédera à TaybGo.',
     de: 'Wählen Sie aus, wie dieser Benutzer auf TaybGo zugreift.',
   );
-  String get customerAccount =>
-      _t('Customer', 'عميل', nl: 'Klant', fr: 'Client', de: 'Kunde');
-  String get customerAccountDescription => _t(
-    'For ordering food and using TaybGo services.',
-    'لطلب الطعام واستخدام خدمات TaybGo.',
-    nl: 'Voor het bestellen van eten en het gebruiken van TaybGo-diensten.',
-    fr: 'Pour commander des repas et utiliser les services TaybGo.',
-    de: 'Zum Bestellen von Essen und Nutzen der TaybGo-Dienste.',
+  String get driverAccount =>
+      _t('Driver', 'سائق', nl: 'Chauffeur', fr: 'Chauffeur', de: 'Fahrer');
+  String get driverAccountDescription => _t(
+    'Creates the login used to set up a driver profile.',
+    'ينشئ حساب الدخول المستخدم لإعداد ملف السائق.',
+    nl: 'Maakt de login waarmee een chauffeursprofiel wordt ingesteld.',
+    fr: 'Crée le compte utilisé pour configurer un profil chauffeur.',
+    de: 'Erstellt das Konto zum Einrichten eines Fahrerprofils.',
   );
   String get restaurantAccount => _t(
     'Restaurant',
@@ -346,11 +346,11 @@ class AppLocalizations {
     de: 'Nur Konto',
   );
   String get accountOnlyNotice => _t(
-    'This creates login access and the selected role only. It does not create a restaurant or any other profile.',
-    'ينشئ هذا الإجراء بيانات الدخول والدور المحدد فقط، ولا ينشئ مطعماً أو أي ملف شخصي آخر.',
-    nl: 'Dit maakt alleen inlogtoegang en de gekozen rol aan. Er wordt geen restaurant of ander profiel aangemaakt.',
-    fr: 'Cela crée uniquement l’accès et le rôle sélectionné. Aucun restaurant ni autre profil n’est créé.',
-    de: 'Dadurch werden nur der Zugang und die ausgewählte Rolle erstellt. Es wird kein Restaurant oder anderes Profil angelegt.',
+    'This creates login access and the selected role only. It does not create a driver or restaurant profile.',
+    'ينشئ هذا الإجراء بيانات الدخول والدور المحدد فقط، ولا ينشئ ملف سائق أو مطعم.',
+    nl: 'Dit maakt alleen inlogtoegang en de gekozen rol aan. Er wordt geen chauffeurs- of restaurantprofiel aangemaakt.',
+    fr: 'Cela crée uniquement l’accès et le rôle sélectionné. Aucun profil chauffeur ou restaurant n’est créé.',
+    de: 'Dadurch werden nur der Zugang und die ausgewählte Rolle erstellt. Es wird kein Fahrer- oder Restaurantprofil angelegt.',
   );
   String get userDetails => _t(
     'User details',
@@ -472,11 +472,11 @@ class AppLocalizations {
     de: 'Das Passwort wurde zurückgesetzt.',
   );
   String get selectAccountTypeError => _t(
-    'Select Customer or Restaurant.',
-    'اختر عميل أو مطعم.',
-    nl: 'Selecteer Klant of Restaurant.',
-    fr: 'Sélectionnez Client ou Restaurant.',
-    de: 'Wählen Sie Kunde oder Restaurant.',
+    'Select Driver or Restaurant.',
+    'اختر سائقاً أو مطعماً.',
+    nl: 'Selecteer Chauffeur of Restaurant.',
+    fr: 'Sélectionnez Chauffeur ou Restaurant.',
+    de: 'Wählen Sie Fahrer oder Restaurant.',
   );
   String get duplicatePhone => _t(
     'An account with this phone number already exists.',
@@ -1560,11 +1560,11 @@ class AppLocalizations {
     de: 'Veröffentlicht am $date',
   );
   String get release1010Change1 => _t(
-    'Added a unified, focused Add User flow for customer and restaurant accounts.',
-    'إضافة مسار موحد ومركز لإضافة حسابات العملاء والمطاعم.',
-    nl: 'Een uniforme, gerichte gebruikersflow toegevoegd voor klant- en restaurantaccounts.',
-    fr: 'Ajout d’un parcours unifié et ciblé pour créer des comptes client et restaurant.',
-    de: 'Einen einheitlichen, fokussierten Ablauf zum Hinzufügen von Kunden- und Restaurantkonten hinzugefügt.',
+    'Added a unified, focused Add User flow for driver and restaurant accounts.',
+    'إضافة مسار موحد ومركز لإضافة حسابات السائقين والمطاعم.',
+    nl: 'Een uniforme, gerichte gebruikersflow toegevoegd voor chauffeurs- en restaurantaccounts.',
+    fr: 'Ajout d’un parcours unifié et ciblé pour créer des comptes chauffeur et restaurant.',
+    de: 'Einen einheitlichen, fokussierten Ablauf zum Hinzufügen von Fahrer- und Restaurantkonten hinzugefügt.',
   );
   String get release1010Change2 => _t(
     'Made names mandatory and added secure generated passwords with copy support.',

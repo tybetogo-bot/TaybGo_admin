@@ -6,7 +6,7 @@ All notable TaybGo Admin changes are documented here.
 
 ### Account management
 
-- Replaced the separate driver and restaurant creation entry points with a unified Add User flow for customer and restaurant accounts.
+- Replaced the separate driver and restaurant creation entry points with a unified Add User flow for driver and restaurant accounts.
 - Made the account name mandatory and added international phone validation, clear role selection, and focused API error feedback.
 - Added optional secure password generation with copy support while preserving manual password entry.
 

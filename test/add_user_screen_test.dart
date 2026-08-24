@@ -61,8 +61,57 @@ void main() {
     await tester.pump();
 
     expect(posts, 0);
-    expect(find.text('Select Customer or Restaurant.'), findsOneWidget);
+    expect(find.text('Select Driver or Restaurant.'), findsOneWidget);
     expect(find.text('This field is required.'), findsNWidgets(3));
+  });
+
+  testWidgets('shows compact driver and restaurant choices on mobile', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpScreen(
+      tester,
+      client: MockClient((_) async => http.Response('{}', 500)),
+    );
+
+    expect(find.byKey(const Key('add-user-role-driver')), findsOneWidget);
+    expect(find.byKey(const Key('add-user-role-restaurant')), findsOneWidget);
+    expect(find.text('Customer'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('driver selection sends the driver API role', (tester) async {
+    Map<String, dynamic>? posted;
+    await _pumpScreen(
+      tester,
+      client: MockClient((request) async {
+        posted = jsonDecode(request.body) as Map<String, dynamic>;
+        return http.Response(
+          jsonEncode({
+            'id': 13,
+            'name': 'Alex Driver',
+            'phone': '+32470000001',
+            'roles': ['driver'],
+          }),
+          201,
+        );
+      }),
+    );
+
+    await tester.tap(find.byKey(const Key('add-user-role-driver')));
+    await tester.enterText(_textFieldInside('add-user-name'), 'Alex Driver');
+    await tester.enterText(_textFieldInside('add-user-phone'), '+32470000001');
+    await tester.ensureVisible(find.byKey(const Key('generate-password')));
+    await tester.tap(find.byKey(const Key('generate-password')));
+    await tester.ensureVisible(find.byKey(const Key('managed-form-submit')));
+    await tester.tap(find.byKey(const Key('managed-form-submit')));
+    await tester.pumpAndSettle();
+
+    expect(posted?['role'], 'driver');
   });
 
   testWidgets('restaurant selection sends the seller API role', (tester) async {

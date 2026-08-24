@@ -12,10 +12,10 @@ import 'managed_entity_form_support.dart';
 import 'managed_entity_form_widgets.dart';
 import 'managed_phone_field.dart';
 
-enum _AccountType { customer, restaurant }
+enum _AccountType { driver, restaurant }
 
 extension on _AccountType {
-  String get apiRole => this == _AccountType.customer ? 'customer' : 'seller';
+  String get apiRole => this == _AccountType.driver ? 'driver' : 'seller';
 }
 
 class AddUserScreen extends StatefulWidget {
@@ -192,12 +192,12 @@ class _AddUserScreenState extends State<AddUserScreen> {
                     final wide = constraints.maxWidth >= 620;
                     final cards = [
                       _AccountTypeCard(
-                        key: const Key('add-user-role-customer'),
-                        title: l.customerAccount,
-                        description: l.customerAccountDescription,
-                        icon: Icons.shopping_bag_outlined,
-                        selected: _accountType == _AccountType.customer,
-                        onTap: () => _selectAccountType(_AccountType.customer),
+                        key: const Key('add-user-role-driver'),
+                        title: l.driverAccount,
+                        description: l.driverAccountDescription,
+                        icon: Icons.delivery_dining_outlined,
+                        selected: _accountType == _AccountType.driver,
+                        onTap: () => _selectAccountType(_AccountType.driver),
                       ),
                       _AccountTypeCard(
                         key: const Key('add-user-role-restaurant'),
@@ -213,7 +213,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                       return Column(
                         children: [
                           cards.first,
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           cards.last,
                         ],
                       );
@@ -451,7 +451,7 @@ class _AccountTypeCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
               border: Border.all(
@@ -465,18 +465,18 @@ class _AccountTypeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 30,
+                  height: 30,
                   alignment: Alignment.center,
                   child: Icon(
                     icon,
-                    size: 21,
+                    size: 19,
                     color: selected
                         ? AppColors.primary
                         : scheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 9),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,14 +488,14 @@ class _AccountTypeCard extends StatelessWidget {
                               title,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
-                                fontSize: 15,
+                                fontSize: 14,
                               ),
                             ),
                           ),
                           if (selected)
                             Container(
-                              width: 19,
-                              height: 19,
+                              width: 18,
+                              height: 18,
                               decoration: const BoxDecoration(
                                 color: AppColors.primary,
                                 shape: BoxShape.circle,
@@ -503,18 +503,18 @@ class _AccountTypeCard extends StatelessWidget {
                               child: const Icon(
                                 Icons.check_rounded,
                                 color: Colors.white,
-                                size: 13,
+                                size: 12,
                               ),
                             ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         description,
                         style: TextStyle(
                           color: scheme.onSurface.withValues(alpha: 0.58),
-                          height: 1.35,
-                          fontSize: 12.5,
+                          height: 1.25,
+                          fontSize: 12,
                         ),
                       ),
                     ],

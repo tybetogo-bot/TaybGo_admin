@@ -1499,6 +1499,201 @@ class AppLocalizations {
   );
   String get support =>
       _t('Support', 'الدعم', nl: 'Ondersteuning', fr: 'Support', de: 'Support');
+  String get createSupportTicket => _t(
+    'Create ticket',
+    'إنشاء تذكرة',
+    nl: 'Ticket aanmaken',
+    fr: 'Créer un ticket',
+    de: 'Ticket erstellen',
+  );
+  String get createSupportTicketTitle => _t(
+    'Create support ticket',
+    'إنشاء تذكرة دعم',
+    nl: 'Supportticket aanmaken',
+    fr: 'Créer un ticket de support',
+    de: 'Support-Ticket erstellen',
+  );
+  String get createSupportTicketSubtitle => _t(
+    'Send the first message with the ticket in one request.',
+    'أرسل الرسالة الأولى مع التذكرة في طلب واحد.',
+    nl: 'Verstuur het eerste bericht samen met het ticket in één verzoek.',
+    fr: 'Envoyez le premier message avec le ticket en une seule demande.',
+    de: 'Senden Sie die erste Nachricht zusammen mit dem Ticket in einer Anfrage.',
+  );
+  String get contactDriverSubtitle => _t(
+    'Contact this driver through support.',
+    'تواصل مع هذا السائق عبر الدعم.',
+    nl: 'Neem via support contact op met deze chauffeur.',
+    fr: 'Contactez ce chauffeur via le support.',
+    de: 'Kontaktieren Sie diesen Fahrer über den Support.',
+  );
+  String get contactRestaurantSubtitle => _t(
+    'Contact this restaurant through support.',
+    'تواصل مع هذا المطعم عبر الدعم.',
+    nl: 'Neem via support contact op met dit restaurant.',
+    fr: 'Contactez ce restaurant via le support.',
+    de: 'Kontaktieren Sie dieses Restaurant über den Support.',
+  );
+  String get contactOrderSubtitle => _t(
+    'Choose an eligible person connected to this order.',
+    'اختر شخصاً مؤهلاً مرتبطاً بهذا الطلب.',
+    nl: 'Kies een gerechtigde persoon die aan deze bestelling is gekoppeld.',
+    fr: 'Choisissez une personne éligible liée à cette commande.',
+    de: 'Wählen Sie eine berechtigte Person für diese Bestellung.',
+  );
+  String get subject =>
+      _t('Subject', 'الموضوع', nl: 'Onderwerp', fr: 'Objet', de: 'Betreff');
+  String get message =>
+      _t('Message', 'الرسالة', nl: 'Bericht', fr: 'Message', de: 'Nachricht');
+  String get delivery => _t(
+    'Delivery',
+    'التوصيل',
+    nl: 'Bezorging',
+    fr: 'Livraison',
+    de: 'Lieferung',
+  );
+  String get recipient => _t(
+    'Recipient',
+    'المستلم',
+    nl: 'Ontvanger',
+    fr: 'Destinataire',
+    de: 'Empfänger',
+  );
+  String get recipientUserId => _t(
+    'Recipient user ID',
+    'معرّف مستخدم المستلم',
+    nl: 'Gebruikers-ID van ontvanger',
+    fr: 'ID utilisateur du destinataire',
+    de: 'Benutzer-ID des Empfängers',
+  );
+  String get generalSupportRecipientHint => _t(
+    'Use a numeric user ID. General tickets have no target.',
+    'استخدم معرّف مستخدم رقمي. لا تحتوي التذاكر العامة على هدف.',
+    nl: 'Gebruik een numerieke gebruikers-ID. Algemene tickets hebben geen doel.',
+    fr: 'Utilisez un ID utilisateur numérique. Les tickets généraux n’ont pas de cible.',
+    de: 'Verwenden Sie eine numerische Benutzer-ID. Allgemeine Tickets haben kein Ziel.',
+  );
+  String get relatedOrderOptional => _t(
+    'Related order (optional)',
+    'الطلب المرتبط (اختياري)',
+    nl: 'Gerelateerde bestelling (optioneel)',
+    fr: 'Commande liée (facultatif)',
+    de: 'Zugehörige Bestellung (optional)',
+  );
+  String get attachmentsOptional => _t(
+    'Attachments (optional)',
+    'المرفقات (اختياري)',
+    nl: 'Bijlagen (optioneel)',
+    fr: 'Pièces jointes (facultatif)',
+    de: 'Anhänge (optional)',
+  );
+  String get addAttachment => _t(
+    'Add attachment',
+    'إضافة مرفق',
+    nl: 'Bijlage toevoegen',
+    fr: 'Ajouter une pièce jointe',
+    de: 'Anhang hinzufügen',
+  );
+  String get uploadingAttachment => _t(
+    'Uploading…',
+    'جارٍ الرفع…',
+    nl: 'Uploaden…',
+    fr: 'Importation…',
+    de: 'Wird hochgeladen…',
+  );
+  String get noEligibleRecipients => _t(
+    'No eligible recipients are available for this context.',
+    'لا يوجد مستلمون مؤهلون لهذا السياق.',
+    nl: 'Er zijn geen geschikte ontvangers beschikbaar voor deze context.',
+    fr: 'Aucun destinataire éligible n’est disponible pour ce contexte.',
+    de: 'Für diesen Kontext sind keine geeigneten Empfänger verfügbar.',
+  );
+  String get loadingRecipient => _t(
+    'Loading eligible recipients…',
+    'جارٍ تحميل المستلمين المؤهلين…',
+    nl: 'Geschikte ontvangers laden…',
+    fr: 'Chargement des destinataires éligibles…',
+    de: 'Geeignete Empfänger werden geladen…',
+  );
+  String get recipientRequired => _t(
+    'Select a recipient.',
+    'اختر مستلماً.',
+    nl: 'Selecteer een ontvanger.',
+    fr: 'Sélectionnez un destinataire.',
+    de: 'Wählen Sie einen Empfänger aus.',
+  );
+  String get invalidRecipient => _t(
+    'Enter a valid positive user ID.',
+    'أدخل معرّف مستخدم موجباً وصحيحاً.',
+    nl: 'Voer een geldige positieve gebruikers-ID in.',
+    fr: 'Saisissez un ID utilisateur positif valide.',
+    de: 'Geben Sie eine gültige positive Benutzer-ID ein.',
+  );
+  String get invalidRelatedOrder => _t(
+    'Enter a valid positive order ID.',
+    'أدخل معرّف طلب موجباً وصحيحاً.',
+    nl: 'Voer een geldige positieve bestel-ID in.',
+    fr: 'Saisissez un ID de commande positif valide.',
+    de: 'Geben Sie eine gültige positive Bestell-ID ein.',
+  );
+  String get notifications => _t(
+    'Notifications',
+    'الإشعارات',
+    nl: 'Meldingen',
+    fr: 'Notifications',
+    de: 'Benachrichtigungen',
+  );
+  String notificationsUnread(int count) => _t(
+    '$count unread',
+    '$count غير مقروءة',
+    nl: '$count ongelezen',
+    fr: '$count non lues',
+    de: '$count ungelesen',
+  );
+  String get noNotifications => _t(
+    'No notifications yet',
+    'لا توجد إشعارات بعد',
+    nl: 'Nog geen meldingen',
+    fr: 'Aucune notification pour le moment',
+    de: 'Noch keine Benachrichtigungen',
+  );
+  String get notificationsLoadError => _t(
+    'Unable to load notifications',
+    'تعذر تحميل الإشعارات',
+    nl: 'Meldingen kunnen niet worden geladen',
+    fr: 'Impossible de charger les notifications',
+    de: 'Benachrichtigungen konnten nicht geladen werden',
+  );
+  String get markAsRead => _t(
+    'Mark as read',
+    'تحديد كمقروء',
+    nl: 'Als gelezen markeren',
+    fr: 'Marquer comme lue',
+    de: 'Als gelesen markieren',
+  );
+  String get markAsUnread => _t(
+    'Mark as unread',
+    'تحديد كغير مقروء',
+    nl: 'Als ongelezen markeren',
+    fr: 'Marquer comme non lue',
+    de: 'Als ungelesen markieren',
+  );
+  String get deleteNotification => _t(
+    'Delete notification',
+    'حذف الإشعار',
+    nl: 'Melding verwijderen',
+    fr: 'Supprimer la notification',
+    de: 'Benachrichtigung löschen',
+  );
+  String get openNotification =>
+      _t('Open', 'فتح', nl: 'Openen', fr: 'Ouvrir', de: 'Öffnen');
+  String get notificationActionFailed => _t(
+    'The notification could not be updated.',
+    'تعذر تحديث الإشعار.',
+    nl: 'De melding kon niet worden bijgewerkt.',
+    fr: 'La notification n’a pas pu être mise à jour.',
+    de: 'Die Benachrichtigung konnte nicht aktualisiert werden.',
+  );
   String get profile =>
       _t('Profile', 'الملف الشخصي', nl: 'Profiel', fr: 'Profil', de: 'Profil');
   String get profileActions => _t(
@@ -1558,6 +1753,41 @@ class AppLocalizations {
     nl: 'Uitgebracht op $date',
     fr: 'Sortie le $date',
     de: 'Veröffentlicht am $date',
+  );
+  String get release1011Change1 => _t(
+    'Moved Drivers and Restaurants management lists to dedicated paginated admin data and backend-supported filters.',
+    'نقل قوائم إدارة السائقين والمطاعم إلى بيانات إدارية مخصصة ومقسمة إلى صفحات مع فلاتر مدعومة من الواجهة الخلفية.',
+    nl: 'De beheer­lijsten voor chauffeurs en restaurants verplaatst naar afzonderlijke gepagineerde admingegevens en backendfilters.',
+    fr: 'Listes de gestion des chauffeurs et restaurants basculées vers des données administrateur paginées et des filtres pris en charge par le backend.',
+    de: 'Fahrer- und Restaurantlisten auf eigene paginierte Admin-Daten und vom Backend unterstützte Filter umgestellt.',
+  );
+  String get release1011Change2 => _t(
+    'Aligned partner search with backend-supported names, phones, emails, vehicle plates, and restaurant owner contacts.',
+    'توحيد بحث الشركاء مع الأسماء والهواتف والبريد الإلكتروني ولوحات المركبات وجهات اتصال مالكي المطاعم المدعومة من الواجهة الخلفية.',
+    nl: 'Partnerzoeken afgestemd op backend-ondersteunde namen, telefoons, e-mails, kentekens en restaurantcontacten.',
+    fr: 'Recherche des partenaires alignée sur les noms, téléphones, e-mails, plaques et contacts de propriétaires pris en charge par le backend.',
+    de: 'Partnersuche an backend-unterstützte Namen, Telefone, E-Mails, Kennzeichen und Restaurantinhaberkontakte angepasst.',
+  );
+  String get release1011Change3 => _t(
+    'Preserved the active partner tab, search, and filter context through detail navigation and browser back navigation.',
+    'الحفاظ على تبويب الشركاء والبحث والفلاتر النشطة أثناء الانتقال إلى التفاصيل والعودة عبر المتصفح.',
+    nl: 'Het actieve partnertabblad, zoeken en filters behouden bij detailnavigatie en teruggaan in de browser.',
+    fr: 'Conservation de l’onglet partenaire, de la recherche et des filtres lors de la navigation vers les détails et du retour navigateur.',
+    de: 'Aktiven Partner-Tab, Suche und Filter bei Detailnavigation und Browser-Zurück beibehalten.',
+  );
+  String get release1011Change4 => _t(
+    'Added Firebase Messaging configuration and device-token registration for administrator notifications.',
+    'إضافة إعدادات Firebase Messaging وتسجيل رمز الجهاز لإشعارات المسؤولين.',
+    nl: 'Firebase Messaging-configuratie en apparaat-tokenregistratie toegevoegd voor beheerdersmeldingen.',
+    fr: 'Ajout de la configuration Firebase Messaging et de l’enregistrement du jeton pour les notifications administrateur.',
+    de: 'Firebase-Messaging-Konfiguration und Geräteregistrierung für Administratorbenachrichtigungen hinzugefügt.',
+  );
+  String get release1011Change5 => _t(
+    'Added regression coverage for pagination, backend search parameters, formatted phone input, no-result states, and detail routes.',
+    'إضافة اختبارات انحدار للصفحات ومعاملات البحث والفارمات المختلفة للهواتف وحالات عدم وجود النتائج ومسارات التفاصيل.',
+    nl: 'Regressiedekking toegevoegd voor paginering, backendzoekparameters, opgemaakte telefoonnummers, lege resultaten en detailroutes.',
+    fr: 'Ajout de tests de régression pour la pagination, les paramètres de recherche, les téléphones formatés, les résultats vides et les routes de détail.',
+    de: 'Regressionstests für Paginierung, Backend-Suchparameter, formatierte Telefonnummern, leere Ergebnisse und Detailrouten ergänzt.',
   );
   String get release1010Change1 => _t(
     'Added a unified, focused Add User flow for driver and restaurant accounts.',
@@ -2558,6 +2788,104 @@ class AppLocalizations {
     fr: 'Informations du restaurant',
     de: 'Restaurantinformationen',
   );
+  String get disableRestaurant => _t(
+    'Disable restaurant',
+    'تعطيل المطعم',
+    nl: 'Restaurant uitschakelen',
+    fr: 'Désactiver le restaurant',
+    de: 'Restaurant deaktivieren',
+  );
+  String get enableRestaurant => _t(
+    'Enable restaurant',
+    'تفعيل المطعم',
+    nl: 'Restaurant inschakelen',
+    fr: 'Activer le restaurant',
+    de: 'Restaurant aktivieren',
+  );
+  String get disableRestaurantConfirmation => _t(
+    'Disable this restaurant? Customers will no longer see it or place new orders. Existing orders will not be cancelled automatically.',
+    'هل تريد تعطيل هذا المطعم؟ لن يتمكن العملاء من رؤيته أو إنشاء طلبات جديدة. لن تُلغى الطلبات الحالية تلقائياً.',
+    nl: 'Dit restaurant uitschakelen? Klanten kunnen het niet meer zien of nieuwe bestellingen plaatsen. Bestaande bestellingen worden niet automatisch geannuleerd.',
+    fr: 'Désactiver ce restaurant ? Les clients ne pourront plus le voir ni passer de nouvelles commandes. Les commandes existantes ne seront pas annulées automatiquement.',
+    de: 'Dieses Restaurant deaktivieren? Kunden können es nicht mehr sehen oder neue Bestellungen aufgeben. Bestehende Bestellungen werden nicht automatisch storniert.',
+  );
+  String get enableRestaurantConfirmation => _t(
+    'Enable this restaurant? Customers will be able to see it and place new orders again. Existing orders will not be changed.',
+    'هل تريد تفعيل هذا المطعم؟ سيتمكن العملاء من رؤيته وإنشاء طلبات جديدة مرة أخرى. لن تتغير الطلبات الحالية.',
+    nl: 'Dit restaurant inschakelen? Klanten kunnen het weer zien en nieuwe bestellingen plaatsen. Bestaande bestellingen worden niet gewijzigd.',
+    fr: 'Activer ce restaurant ? Les clients pourront à nouveau le voir et passer de nouvelles commandes. Les commandes existantes ne seront pas modifiées.',
+    de: 'Dieses Restaurant aktivieren? Kunden können es wieder sehen und neue Bestellungen aufgeben. Bestehende Bestellungen werden nicht geändert.',
+  );
+  String get restaurantStatusUpdating => _t(
+    'Updating restaurant status...',
+    'جارٍ تحديث حالة المطعم...',
+    nl: 'Restaurantstatus wordt bijgewerkt...',
+    fr: 'Mise à jour du statut du restaurant...',
+    de: 'Restaurantstatus wird aktualisiert...',
+  );
+  String get restaurantStatusUpdated => _t(
+    'Restaurant status updated.',
+    'تم تحديث حالة المطعم.',
+    nl: 'Restaurantstatus bijgewerkt.',
+    fr: 'Statut du restaurant mis à jour.',
+    de: 'Restaurantstatus aktualisiert.',
+  );
+  String get restaurantStatusNotChanged => _t(
+    'The backend returned a different status. Refresh the restaurant and try again.',
+    'أعاد الخادم حالة مختلفة. حدّث المطعم وحاول مرة أخرى.',
+    nl: 'De server gaf een andere status terug. Vernieuw het restaurant en probeer het opnieuw.',
+    fr: 'Le serveur a renvoyé un statut différent. Actualisez le restaurant et réessayez.',
+    de: 'Das Backend hat einen anderen Status zurückgegeben. Aktualisieren Sie das Restaurant und versuchen Sie es erneut.',
+  );
+  String get restaurantActiveStatusDescription => _t(
+    'Customers can see this restaurant and place new orders.',
+    'يمكن للعملاء رؤية هذا المطعم وإنشاء طلبات جديدة.',
+    nl: 'Klanten kunnen dit restaurant zien en nieuwe bestellingen plaatsen.',
+    fr: 'Les clients peuvent voir ce restaurant et passer de nouvelles commandes.',
+    de: 'Kunden können dieses Restaurant sehen und neue Bestellungen aufgeben.',
+  );
+  String get restaurantInactiveStatusDescription => _t(
+    'This restaurant is hidden from customer discovery and new checkout attempts. Existing orders are unchanged.',
+    'هذا المطعم مخفي عن اكتشاف العملاء ومحاولات الدفع الجديدة. لا تتغير الطلبات الحالية.',
+    nl: 'Dit restaurant is verborgen voor klanten en nieuwe checkoutpogingen. Bestaande bestellingen blijven ongewijzigd.',
+    fr: 'Ce restaurant est masqué de la découverte client et des nouvelles tentatives de paiement. Les commandes existantes restent inchangées.',
+    de: 'Dieses Restaurant ist für Kunden und neue Checkout-Versuche verborgen. Bestehende Bestellungen bleiben unverändert.',
+  );
+  String get restaurantPendingStatusDescription => _t(
+    'This restaurant is still in onboarding. Continue the pending workflow from Approvals.',
+    'هذا المطعم لا يزال قيد الإعداد. تابع سير العمل المعلّق من صفحة الموافقات.',
+    nl: 'Dit restaurant bevindt zich nog in de onboarding. Ga verder via Goedkeuringen.',
+    fr: 'Ce restaurant est encore en cours d’intégration. Poursuivez le workflow en attente depuis les approbations.',
+    de: 'Dieses Restaurant befindet sich noch im Onboarding. Setzen Sie den offenen Workflow unter Genehmigungen fort.',
+  );
+  String get restaurantNoLongerExists => _t(
+    'This restaurant no longer exists. The restaurant list was refreshed.',
+    'لم يعد هذا المطعم موجوداً. تم تحديث قائمة المطاعم.',
+    nl: 'Dit restaurant bestaat niet meer. De restaurantlijst is vernieuwd.',
+    fr: 'Ce restaurant n’existe plus. La liste des restaurants a été actualisée.',
+    de: 'Dieses Restaurant existiert nicht mehr. Die Restaurantliste wurde aktualisiert.',
+  );
+  String get restaurantAdminPermissionDenied => _t(
+    'You do not have permission to change restaurant status.',
+    'ليس لديك صلاحية تغيير حالة المطعم.',
+    nl: 'U heeft geen toestemming om de restaurantstatus te wijzigen.',
+    fr: 'Vous n’avez pas l’autorisation de modifier le statut du restaurant.',
+    de: 'Sie haben keine Berechtigung, den Restaurantstatus zu ändern.',
+  );
+  String get restaurantActionUnauthorized => _t(
+    'Your session has expired. Please sign in again.',
+    'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.',
+    nl: 'Uw sessie is verlopen. Meld u opnieuw aan.',
+    fr: 'Votre session a expiré. Veuillez vous reconnecter.',
+    de: 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
+  );
+  String get restaurantStatusRetry => _t(
+    'The restaurant status could not be confirmed. Refresh the restaurant before trying again.',
+    'تعذر تأكيد حالة المطعم. حدّث المطعم قبل المحاولة مرة أخرى.',
+    nl: 'De restaurantstatus kon niet worden bevestigd. Vernieuw het restaurant voordat u het opnieuw probeert.',
+    fr: 'Le statut du restaurant n’a pas pu être confirmé. Actualisez le restaurant avant de réessayer.',
+    de: 'Der Restaurantstatus konnte nicht bestätigt werden. Aktualisieren Sie das Restaurant, bevor Sie es erneut versuchen.',
+  );
   String get searchRestaurants => _t(
     'Search restaurants...',
     'ابحث عن المطاعم...',
@@ -2573,7 +2901,7 @@ class AppLocalizations {
     'Approved',
     'موافق عليه',
     nl: 'Goedgekeurd',
-    fr: 'Approuve',
+    fr: 'Approuvé',
     de: 'Genehmigt',
   );
   String get openNow => _t(
@@ -2587,7 +2915,7 @@ class AppLocalizations {
     'Closed now',
     'مغلق الآن',
     nl: 'Nu gesloten',
-    fr: 'Ferme',
+    fr: 'Fermé',
     de: 'Jetzt geschlossen',
   );
   String get allStatuses => _t(
@@ -2602,14 +2930,14 @@ class AppLocalizations {
     'كل المدن',
     nl: 'Alle steden',
     fr: 'Toutes les villes',
-    de: 'Alle Staedte',
+    de: 'Alle Städte',
   );
   String get openingHours => _t(
     'Opening Hours',
     'ساعات العمل',
     nl: 'Openingstijden',
     fr: 'Horaires',
-    de: 'Oeffnungszeiten',
+    de: 'Öffnungszeiten',
   );
   String get workingHours => _t(
     'Working Hours',
@@ -2630,7 +2958,7 @@ class AppLocalizations {
     'لا توجد ساعات عمل',
     nl: 'Geen openingstijden beschikbaar',
     fr: 'Aucun horaire disponible',
-    de: 'Keine Zeiten verfuegbar',
+    de: 'Keine Zeiten verfügbar',
   );
   String openUntil(String time) => _t(
     'Open until $time',
@@ -2644,14 +2972,14 @@ class AppLocalizations {
     'يفتح اليوم في $time',
     nl: 'Opent vandaag om $time',
     fr: 'Ouvre aujourd hui a $time',
-    de: 'Oeffnet heute um $time',
+    de: 'Öffnet heute um $time',
   );
   String opensDayAt(String day, String time) => _t(
     'Opens $day at $time',
     'يفتح $day في $time',
     nl: 'Opent $day om $time',
     fr: 'Ouvre $day a $time',
-    de: 'Oeffnet $day um $time',
+    de: 'Öffnet $day um $time',
   );
   String get ownerUser => _t(
     'Owner user',
@@ -2678,10 +3006,10 @@ class AppLocalizations {
     'العنوان الكامل',
     nl: 'Volledig adres',
     fr: 'Adresse complete',
-    de: 'Vollstaendige Adresse',
+    de: 'Vollständige Adresse',
   );
   String get streetName =>
-      _t('Street', 'الشارع', nl: 'Straat', fr: 'Rue', de: 'Strasse');
+      _t('Street', 'الشارع', nl: 'Straat', fr: 'Rue', de: 'Straße');
   String get houseNumber => _t(
     'House number',
     'رقم المنزل',
@@ -2788,7 +3116,7 @@ class AppLocalizations {
   // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Drivers Screen Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   String driversScreenSub(int total, int online, int offline) => _t(
     '$total drivers - $online online - $offline offline',
-    '$total ???? - $online ???? - $offline ??? ????',
+    '$total سائقون - $online متصلون - $offline غير متصلين',
     nl: '$total chauffeurs - $online online - $offline offline',
     fr: '$total chauffeurs - $online en ligne - $offline hors ligne',
     de: '$total Fahrer - $online online - $offline offline',
@@ -2800,7 +3128,7 @@ class AppLocalizations {
     int suspended,
   ) => _t(
     '$total drivers - $online online - $offline offline - $suspended suspended',
-    '$total ???? - $online ???? - $offline ??? ???? - $suspended ?????',
+    '$total سائقون - $online متصلون - $offline غير متصلين - $suspended معلّقون',
     nl: '$total chauffeurs - $online online - $offline offline - $suspended opgeschort',
     fr: '$total chauffeurs - $online en ligne - $offline hors ligne - $suspended suspendus',
     de: '$total Fahrer - $online online - $offline offline - $suspended gesperrt',
@@ -2865,9 +3193,9 @@ class AppLocalizations {
   );
   String driversOfflineHint(int total) => _t(
     '$total registered drivers - locations appear when drivers go online',
-    '$total ???? ???? - ???? ??????? ??? ????? ????????',
+    '$total سائقون مسجلون - تظهر المواقع عندما يتصل السائقون',
     nl: '$total geregistreerde chauffeurs - locaties verschijnen wanneer chauffeurs online gaan',
-    fr: '$total chauffeurs enregistr?s - les emplacements apparaissent lorsque les chauffeurs se connectent',
+    fr: '$total chauffeurs enregistrés - les emplacements apparaissent lorsque les chauffeurs se connectent',
     de: '$total registrierte Fahrer - Standorte erscheinen, wenn Fahrer online gehen',
   );
   String get mapView =>
@@ -2923,13 +3251,30 @@ class AppLocalizations {
     fr: 'En attente',
     de: 'Ausstehend',
   );
-  String statusLabel(String s) => _t(
-    'Status: $s',
-    'Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ˜Â©: $s',
-    nl: 'Status: $s',
-    fr: 'Statut : $s',
-    de: 'Status: $s',
-  );
+  String statusLabel(String s) {
+    final normalized = s.trim().toUpperCase().replaceAll(
+      RegExp(r'[\s-]+'),
+      '_',
+    );
+    final localizedStatus = switch (normalized) {
+      'PENDING' => pending,
+      'APPROVED' => approved,
+      'REJECTED' => rejected,
+      'SUSPENDED' => suspended,
+      'ACTIVE' => active,
+      'INACTIVE' => inactive,
+      'CLOSED' => closed,
+      _ => s,
+    };
+    return switch (locale.languageCode) {
+      'ar' => 'الحالة: $localizedStatus',
+      'nl' => 'Status: $localizedStatus',
+      'fr' => 'Statut : $localizedStatus',
+      'de' => 'Status: $localizedStatus',
+      _ => 'Status: $localizedStatus',
+    };
+  }
+
   String get decline => _t(
     'Decline',
     'Ã˜Â±Ã™ÂÃ˜Â¶',
@@ -3554,6 +3899,186 @@ class AppLocalizations {
       'en' => '$month ${date.day}, ${date.year}',
       'de' => '${date.day}. $month ${date.year}',
       _ => '${date.day} $month ${date.year}',
+    };
+  }
+
+  String formatDateTime(DateTime date) {
+    final local = date.toLocal();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '${formatReleaseDate(local)} $hour:$minute';
+  }
+
+  String get updateRequired => _t(
+    'Update required',
+    'التحديث مطلوب',
+    nl: 'Update vereist',
+    fr: 'Mise à jour requise',
+    de: 'Update erforderlich',
+  );
+  String requiredUpdateMessage(String version) => _t(
+    'A newer version of TaybGo Admin is required to continue. Latest version: $version.',
+    'يلزم إصدار أحدث من TaybGo Admin للمتابعة. أحدث إصدار: $version.',
+    nl: 'Een nieuwere versie van TaybGo Admin is vereist om door te gaan. Nieuwste versie: $version.',
+    fr: 'Une version plus récente de TaybGo Admin est requise pour continuer. Dernière version : $version.',
+    de: 'Zum Fortfahren ist eine neuere Version von TaybGo Admin erforderlich. Neueste Version: $version.',
+  );
+  String get updateNow => _t(
+    'Update now',
+    'التحديث الآن',
+    nl: 'Nu bijwerken',
+    fr: 'Mettre à jour',
+    de: 'Jetzt aktualisieren',
+  );
+  String get checkAgain => _t(
+    'Check again',
+    'تحقق مرة أخرى',
+    nl: 'Opnieuw controleren',
+    fr: 'Vérifier à nouveau',
+    de: 'Erneut prüfen',
+  );
+  String get enterPhoneAndPasswordToSignIn => _t(
+    'Enter your phone number and password to sign in.',
+    'أدخل رقم هاتفك وكلمة المرور لتسجيل الدخول.',
+    nl: 'Voer uw telefoonnummer en wachtwoord in om u aan te melden.',
+    fr: 'Saisissez votre numéro de téléphone et votre mot de passe pour vous connecter.',
+    de: 'Geben Sie Ihre Telefonnummer und Ihr Passwort ein, um sich anzumelden.',
+  );
+  String get liveConfigurationUnavailable => _t(
+    'Live configuration is unavailable. Using admin password sign-in.',
+    'الإعدادات المباشرة غير متاحة. سيتم استخدام تسجيل الدخول بكلمة مرور المسؤول.',
+    nl: 'De liveconfiguratie is niet beschikbaar. Aanmelden met het beheerderswachtwoord wordt gebruikt.',
+    fr: 'La configuration en direct est indisponible. La connexion par mot de passe administrateur est utilisée.',
+    de: 'Die Live-Konfiguration ist nicht verfügbar. Die Anmeldung mit dem Admin-Passwort wird verwendet.',
+  );
+  String get enterYourPassword => _t(
+    'Enter your password',
+    'أدخل كلمة المرور',
+    nl: 'Voer uw wachtwoord in',
+    fr: 'Saisissez votre mot de passe',
+    de: 'Geben Sie Ihr Passwort ein',
+  );
+  String get signIn => _t(
+    'Sign in',
+    'تسجيل الدخول',
+    nl: 'Aanmelden',
+    fr: 'Se connecter',
+    de: 'Anmelden',
+  );
+  String get privacy => _t(
+    'Privacy',
+    'الخصوصية',
+    nl: 'Privacy',
+    fr: 'Confidentialité',
+    de: 'Datenschutz',
+  );
+  String get terms => _t(
+    'Terms',
+    'الشروط',
+    nl: 'Voorwaarden',
+    fr: 'Conditions',
+    de: 'Bedingungen',
+  );
+  String get searchCountry => _t(
+    'Search country...',
+    'ابحث عن دولة...',
+    nl: 'Land zoeken...',
+    fr: 'Rechercher un pays...',
+    de: 'Land suchen...',
+  );
+  String get driverDetails => _t(
+    'Driver Details',
+    'تفاصيل السائق',
+    nl: 'Chauffeursgegevens',
+    fr: 'Détails du chauffeur',
+    de: 'Fahrerdetails',
+  );
+  String get lastUpdated => _t(
+    'Last updated',
+    'آخر تحديث',
+    nl: 'Laatst bijgewerkt',
+    fr: 'Dernière mise à jour',
+    de: 'Zuletzt aktualisiert',
+  );
+  String get call =>
+      _t('Call', 'اتصال', nl: 'Bellen', fr: 'Appeler', de: 'Anrufen');
+  String get couldNotLoadImage => _t(
+    'Could not load image',
+    'تعذر تحميل الصورة',
+    nl: 'Afbeelding kan niet worden geladen',
+    fr: 'Impossible de charger l’image',
+    de: 'Bild konnte nicht geladen werden',
+  );
+  String get previewUnavailable => _t(
+    'Preview unavailable',
+    'المعاينة غير متاحة',
+    nl: 'Voorbeeld niet beschikbaar',
+    fr: 'Aperçu indisponible',
+    de: 'Vorschau nicht verfügbar',
+  );
+  String get id => _t('ID', 'المعرّف', nl: 'ID', fr: 'ID', de: 'ID');
+  String get applicationSettings => _t(
+    'Application settings',
+    'إعدادات التطبيق',
+    nl: 'Applicatie-instellingen',
+    fr: 'Paramètres de l’application',
+    de: 'App-Einstellungen',
+  );
+  String settingUpdated(String key) => _t(
+    '$key updated',
+    'تم تحديث $key',
+    nl: '$key bijgewerkt',
+    fr: '$key mis à jour',
+    de: '$key aktualisiert',
+  );
+  String get publicLabel =>
+      _t('Public', 'عام', nl: 'Openbaar', fr: 'Public', de: 'Öffentlich');
+  String get enabled =>
+      _t('Enabled', 'مفعّل', nl: 'Ingeschakeld', fr: 'Activé', de: 'Aktiviert');
+  String get disabled => _t(
+    'Disabled',
+    'معطّل',
+    nl: 'Uitgeschakeld',
+    fr: 'Désactivé',
+    de: 'Deaktiviert',
+  );
+  String get emptyMeansNoUpdateUrl => _t(
+    'Empty means no update URL',
+    'تركه فارغاً يعني عدم وجود رابط تحديث',
+    nl: 'Leeg betekent geen update-URL',
+    fr: 'Vide signifie aucun lien de mise à jour',
+    de: 'Leer bedeutet keine Update-URL',
+  );
+  String get comfort =>
+      _t('Comfort', 'كومفورت', nl: 'Comfort', fr: 'Confort', de: 'Komfort');
+  String get black =>
+      _t('Black', 'بلاك', nl: 'Black', fr: 'Black', de: 'Black');
+  String maximumCharacters(int count) => _t(
+    'Maximum $count characters.',
+    'الحد الأقصى $count حرفاً.',
+    nl: 'Maximaal $count tekens.',
+    fr: '$count caractères maximum.',
+    de: 'Maximal $count Zeichen.',
+  );
+  String roleLabel(String role) {
+    return switch (role.toLowerCase()) {
+      'customer' => customer,
+      'seller' => _t(
+        'Seller',
+        'البائع',
+        nl: 'Verkoper',
+        fr: 'Vendeur',
+        de: 'Verkäufer',
+      ),
+      'driver' => driver,
+      'admin' => _t(
+        'Admin',
+        'المسؤول',
+        nl: 'Beheerder',
+        fr: 'Administrateur',
+        de: 'Administrator',
+      ),
+      _ => role,
     };
   }
 

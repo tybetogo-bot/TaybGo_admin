@@ -255,16 +255,16 @@ class _CreateDriverScreenState extends State<CreateDriverScreen> {
                         label: l.carSize,
                         icon: Icons.airline_seat_recline_extra_rounded,
                         errorText: _error('profile.car_size'),
-                        items: const [
+                        items: [
                           DropdownMenuItem(value: 'X', child: Text('X')),
                           DropdownMenuItem(
                             value: 'COMFORT',
-                            child: Text('Comfort'),
+                            child: Text(l.comfort),
                           ),
                           DropdownMenuItem(value: 'XL', child: Text('XL')),
                           DropdownMenuItem(
                             value: 'BLACK',
-                            child: Text('Black'),
+                            child: Text(l.black),
                           ),
                         ],
                         onChanged: (value) => setState(() => _carSize = value),

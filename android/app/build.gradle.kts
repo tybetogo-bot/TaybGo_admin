@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.taybgoadmin"
+    namespace = "com.taybgo.admin"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.taybgoadmin"
+        applicationId = "com.taybgo.admin"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

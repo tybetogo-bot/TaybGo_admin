@@ -200,6 +200,10 @@ class DriverWithLocation {
       return null;
     }
 
+    final rawUser = json['user'];
+    final user = rawUser is Map
+        ? Map<String, dynamic>.from(rawUser)
+        : const <String, dynamic>{};
     final rawDocuments = json['documents'];
     final documents = rawDocuments is Map
         ? Map<String, dynamic>.from(rawDocuments)
@@ -215,12 +219,16 @@ class DriverWithLocation {
 
     return DriverWithLocation(
       id: json['id'] ?? 0,
-      email: nullIfEmpty(json['email']),
-      name: json['name'] ?? '',
-      phone: json['phone'] ?? '',
-      status: (nullIfEmpty(json['status'] ?? json['approval_status']) ?? '')
-          .toUpperCase(),
-      isOnline: json['is_online'] ?? false,
+      email: nullIfEmpty(json['email'] ?? user['email']),
+      name: json['name'] ?? user['name'] ?? '',
+      phone: json['phone'] ?? user['phone'] ?? '',
+      status:
+          (nullIfEmpty(
+                    json['status'] ?? json['approval_status'] ?? user['status'],
+                  ) ??
+                  '')
+              .toUpperCase(),
+      isOnline: parseBool(json['is_online'] ?? user['is_online']) ?? false,
       vehicleType:
           nullIfEmpty(
             json['vehicle_type'] ??
@@ -305,15 +313,25 @@ class DriverWithLocation {
             vehicle['vehicle_year'] ??
             vehicle['year'],
       ),
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString())
+      createdAt: (json['created_at'] ?? user['created_at']) != null
+          ? DateTime.tryParse(
+              (json['created_at'] ?? user['created_at']).toString(),
+            )
           : null,
-      latitude: nullIfEmpty(json['latitude']),
-      longitude: nullIfEmpty(json['longitude']),
+      latitude: nullIfEmpty(
+        json['latitude'] ??
+            json['lat'] ??
+            (json['address'] is Map ? json['address']['lat'] : null),
+      ),
+      longitude: nullIfEmpty(
+        json['longitude'] ??
+            json['lng'] ??
+            (json['address'] is Map ? json['address']['lng'] : null),
+      ),
       locationUpdatedAt: json['location_updated_at'] != null
           ? DateTime.tryParse(json['location_updated_at'])
           : null,
-      address: DriverAddress.fromDynamic(json['address']),
+      address: DriverAddress.fromDynamic(json['address'] ?? user['address']),
       documentItems: _parseDriverDocuments(json, documents),
     );
   }
@@ -322,6 +340,8 @@ class DriverWithLocation {
 class HomeRestaurant {
   final int id;
   final int ownerUser;
+  final String ownerName;
+  final String ownerPhone;
   final String name;
   final String? logo;
   final RestaurantAddress? address;
@@ -334,6 +354,8 @@ class HomeRestaurant {
   const HomeRestaurant({
     required this.id,
     required this.ownerUser,
+    this.ownerName = '',
+    this.ownerPhone = '',
     required this.name,
     this.logo,
     this.address,
@@ -346,9 +368,16 @@ class HomeRestaurant {
 
   factory HomeRestaurant.fromJson(Map<String, dynamic> json) {
     final rawAddress = json['address'];
+    final rawUser = json['user'];
+    final user = rawUser is Map
+        ? Map<String, dynamic>.from(rawUser)
+        : const <String, dynamic>{};
+    final status = _stringValue(json['status']).toUpperCase();
     return HomeRestaurant(
       id: _intValue(json['id']),
-      ownerUser: _intValue(json['owner_user']),
+      ownerUser: _intValue(json['owner_user'] ?? user['id']),
+      ownerName: _stringValue(user['name']),
+      ownerPhone: _stringValue(user['phone']),
       name: _stringValue(json['name']),
       logo: _nullIfEmpty(json['logo']),
       address: rawAddress is Map
@@ -356,10 +385,21 @@ class HomeRestaurant {
           : null,
       phone: _stringValue(json['phone']),
       workHours: RestaurantWorkHours.fromJson(json['work_hours']),
-      status: _stringValue(json['status']).toUpperCase(),
+      status: status,
       createdAt: _dateValue(json['created_at']),
-      isActive: _boolValue(json['is_active']) ?? false,
+      isActive: _boolValue(json['is_active']) ?? status == 'ACTIVE',
     );
+  }
+
+  /// The backend status is authoritative for admin restaurant actions.
+  ///
+  /// Older responses may omit `status`, so retain the legacy boolean only as
+  /// a compatibility fallback for those responses.
+  String get effectiveStatus {
+    final normalized = status.trim().toUpperCase();
+    return normalized.isNotEmpty
+        ? normalized
+        : (isActive ? 'ACTIVE' : 'INACTIVE');
   }
 
   RestaurantOpeningSnapshot openingStatus([DateTime? now]) {
@@ -367,7 +407,7 @@ class HomeRestaurant {
   }
 
   bool isOpenNow([DateTime? now]) {
-    return isActive && openingStatus(now).isOpenNow;
+    return effectiveStatus == 'ACTIVE' && openingStatus(now).isOpenNow;
   }
 
   String get city => address?.city ?? '';
@@ -963,6 +1003,10 @@ class DriverProfile {
     final driver = rawDriver is Map
         ? Map<String, dynamic>.from(rawDriver)
         : const <String, dynamic>{};
+    final rawUser = json['user'];
+    final user = rawUser is Map
+        ? Map<String, dynamic>.from(rawUser)
+        : const <String, dynamic>{};
     final rawVehicle = json['vehicle'];
     final vehicle = rawVehicle is Map
         ? Map<String, dynamic>.from(rawVehicle)
@@ -985,30 +1029,37 @@ class DriverProfile {
       driverDocuments: driverDocuments,
     );
     final address = DriverAddress.fromDynamic(
-      json['address'] ?? driver['address'],
+      json['address'] ?? driver['address'] ?? user['address'],
     );
 
     final firstName =
-        nullIfEmpty(json['first_name']) ?? nullIfEmpty(driver['first_name']);
+        nullIfEmpty(json['first_name']) ??
+        nullIfEmpty(driver['first_name']) ??
+        nullIfEmpty(user['first_name']);
     final lastName =
-        nullIfEmpty(json['last_name']) ?? nullIfEmpty(driver['last_name']);
+        nullIfEmpty(json['last_name']) ??
+        nullIfEmpty(driver['last_name']) ??
+        nullIfEmpty(user['last_name']);
     final fullName =
         nullIfEmpty(json['name']) ??
         nullIfEmpty(json['full_name']) ??
         nullIfEmpty(json['driver_name']) ??
         nullIfEmpty(driver['name']) ??
         nullIfEmpty(driver['full_name']) ??
+        nullIfEmpty(user['name']) ??
+        nullIfEmpty(user['full_name']) ??
         [firstName, lastName].whereType<String>().join(' ').trim();
 
     return DriverProfile(
       id: parseId(json['id'] ?? json['driver_id'] ?? driver['id']),
-      email: nullIfEmpty(json['email'] ?? driver['email']),
+      email: nullIfEmpty(json['email'] ?? driver['email'] ?? user['email']),
       name: fullName,
       status:
           (nullIfEmpty(
                     json['status'] ??
                         json['approval_status'] ??
-                        driver['status'],
+                        driver['status'] ??
+                        user['status'],
                   ) ??
                   'PENDING')
               .toUpperCase(),
@@ -1017,7 +1068,9 @@ class DriverProfile {
             json['phone_number'] ??
             json['driver_phone'] ??
             driver['phone'] ??
-            driver['phone_number'],
+            driver['phone_number'] ??
+            user['phone'] ??
+            user['phone_number'],
       ),
       vehicleType:
           nullIfEmpty(
@@ -1104,12 +1157,25 @@ class DriverProfile {
             documents['other'],
       ),
       createdAt: parseDate(
-        json['created_at'] ?? json['registered_at'] ?? driver['created_at'],
+        json['created_at'] ??
+            json['registered_at'] ??
+            driver['created_at'] ??
+            user['created_at'],
       ),
       submittedAt: parseDate(json['submitted_at']),
-      isOnline: parseBool(json['is_online'] ?? driver['is_online']),
-      latitude: nullIfEmpty(json['latitude'] ?? driver['latitude']),
-      longitude: nullIfEmpty(json['longitude'] ?? driver['longitude']),
+      isOnline: parseBool(
+        json['is_online'] ?? driver['is_online'] ?? user['is_online'],
+      ),
+      latitude: nullIfEmpty(
+        json['latitude'] ??
+            driver['latitude'] ??
+            (json['address'] is Map ? json['address']['lat'] : null),
+      ),
+      longitude: nullIfEmpty(
+        json['longitude'] ??
+            driver['longitude'] ??
+            (json['address'] is Map ? json['address']['lng'] : null),
+      ),
       locationUpdatedAt: parseDate(
         json['location_updated_at'] ?? driver['location_updated_at'],
       ),

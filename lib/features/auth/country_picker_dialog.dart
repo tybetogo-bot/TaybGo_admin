@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/models/country.dart';
 
 class CountryPickerDialog extends StatefulWidget {
@@ -34,6 +35,7 @@ class _CountryPickerDialogState extends State<CountryPickerDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -49,7 +51,7 @@ class _CountryPickerDialogState extends State<CountryPickerDialog> {
                 autofocus: true,
                 onChanged: _onSearch,
                 decoration: InputDecoration(
-                  hintText: 'Search country...',
+                  hintText: l.searchCountry,
                   prefixIcon: const Icon(Icons.search, size: 20),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(

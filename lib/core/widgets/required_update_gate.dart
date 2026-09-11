@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/env_config.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/public_config_provider.dart';
 
 class RequiredUpdateGate extends StatelessWidget {
@@ -13,6 +14,7 @@ class RequiredUpdateGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PublicConfigProvider>();
+    final l = AppLocalizations.of(context);
     final config = provider.config;
     if (config == null || !config.forceUpdate) return child;
 
@@ -41,14 +43,14 @@ class RequiredUpdateGate extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Update required',
+                    l.updateRequired,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'A newer version of TaybGo Admin is required to continue. Latest version: ${config.latestVersion}.',
+                    l.requiredUpdateMessage(config.latestVersion),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
@@ -62,13 +64,13 @@ class RequiredUpdateGate extends StatelessWidget {
                               mode: LaunchMode.externalApplication,
                             ),
                       icon: const Icon(Icons.open_in_new_rounded),
-                      label: const Text('Update now'),
+                      label: Text(l.updateNow),
                     ),
                   ),
                   TextButton.icon(
                     onPressed: provider.isLoading ? null : provider.load,
                     icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Check again'),
+                    label: Text(l.checkAgain),
                   ),
                 ],
               ),

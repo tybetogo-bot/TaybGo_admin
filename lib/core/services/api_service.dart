@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../auth/auth_error_keys.dart';
 import '../config/env_config.dart';
 import '../models/admin_order.dart';
+import '../models/app_notification.dart';
 import '../models/home_response.dart';
 import '../models/app_setting.dart';
 import '../models/pricing_policy.dart';
@@ -245,6 +246,7 @@ class ApiService {
       message,
       response.statusCode,
       fieldErrors: _extractApiFieldErrors(response),
+      code: _extractApiErrorCode(response),
     );
   }
 
@@ -410,15 +412,200 @@ class ApiService {
   }
 
   /// Activate a restaurant so it appears to customers and accepts orders.
-  Future<void> activateRestaurant(int restaurantId) async {
-    final uri = Uri.parse(
-      '$baseUrl/api/admin/restaurants/$restaurantId/activate/',
+  ///
+  /// The endpoint intentionally returns an empty 200 response. Do not decode
+  /// the response body here; callers refetch the restaurant after the action.
+  Future<void> activateRestaurant(int restaurantId) {
+    return _postRestaurantStatusAction(
+      restaurantId: restaurantId,
+      action: 'activate',
     );
-    final response = await _client.post(uri, headers: _headers);
+  }
+
+  /// Deactivate a restaurant so it is hidden from discovery and new checkout.
+  /// Existing orders and the seller account are not changed.
+  ///
+  /// The endpoint intentionally returns an empty 200 response. Do not decode
+  /// the response body here; callers refetch the restaurant after the action.
+  Future<void> deactivateRestaurant(int restaurantId) {
+    return _postRestaurantStatusAction(
+      restaurantId: restaurantId,
+      action: 'deactivate',
+    );
+  }
+
+  Future<void> _postRestaurantStatusAction({
+    required int restaurantId,
+    required String action,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/admin/restaurants/$restaurantId/$action/'),
+      headers: _headers,
+    );
 
     if (response.statusCode == 200) return;
     if (response.statusCode == 401) _throwUnauthorized();
-    throw ApiException('Failed to activate restaurant', response.statusCode);
+    throw _apiException(
+      response,
+      fallbackMessage: action == 'activate'
+          ? 'Failed to activate restaurant'
+          : 'Failed to deactivate restaurant',
+    );
+  }
+
+  /// Fetch the paginated admin driver collection.
+  ///
+  /// The `id` in each result is the driver user's id. `profile_id` is kept in
+  /// the response for callers that need the DriverProfile primary key.
+  Future<PaginatedResponse<DriverWithLocation>> getAdminDrivers({
+    int? page,
+    String? search,
+    String? status,
+    bool? isOnline,
+    int? countryId,
+  }) async {
+    final params = <String, String>{};
+    if (page != null) params['page'] = '$page';
+    if (search != null && search.trim().isNotEmpty) {
+      params['search'] = search.trim();
+    }
+    if (status != null && status.trim().isNotEmpty) {
+      params['status'] = status.trim().toUpperCase();
+    }
+    if (isOnline != null) params['is_online'] = '$isOnline';
+    if (countryId != null) params['country_id'] = '$countryId';
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/drivers/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is List) {
+        final results = decoded
+            .whereType<Map>()
+            .map(
+              (item) =>
+                  DriverWithLocation.fromJson(Map<String, dynamic>.from(item)),
+            )
+            .toList();
+        return PaginatedResponse(
+          count: results.length,
+          next: null,
+          previous: null,
+          results: results,
+          rawResponse: decoded,
+        );
+      }
+      if (decoded is! Map) {
+        throw const FormatException('Unexpected admin driver response shape');
+      }
+      return PaginatedResponse.fromJson(
+        Map<String, dynamic>.from(decoded),
+        DriverWithLocation.fromJson,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to load admin drivers',
+    );
+  }
+
+  /// Fetch a single admin driver by the driver user's id.
+  Future<DriverProfile> getAdminDriver(int userId) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/api/admin/drivers/$userId/'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      return DriverProfile.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to load admin driver',
+    );
+  }
+
+  /// Fetch the paginated admin restaurant collection.
+  Future<PaginatedResponse<HomeRestaurant>> getAdminRestaurants({
+    int? page,
+    String? search,
+    String? status,
+    int? countryId,
+  }) async {
+    final params = <String, String>{};
+    if (page != null) params['page'] = '$page';
+    if (search != null && search.trim().isNotEmpty) {
+      params['search'] = search.trim();
+    }
+    if (status != null && status.trim().isNotEmpty) {
+      params['status'] = status.trim().toUpperCase();
+    }
+    if (countryId != null) params['country_id'] = '$countryId';
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/restaurants/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is List) {
+        final results = decoded
+            .whereType<Map>()
+            .map(
+              (item) =>
+                  HomeRestaurant.fromJson(Map<String, dynamic>.from(item)),
+            )
+            .toList();
+        return PaginatedResponse(
+          count: results.length,
+          next: null,
+          previous: null,
+          results: results,
+          rawResponse: decoded,
+        );
+      }
+      if (decoded is! Map) {
+        throw const FormatException(
+          'Unexpected admin restaurant response shape',
+        );
+      }
+      return PaginatedResponse.fromJson(
+        Map<String, dynamic>.from(decoded),
+        HomeRestaurant.fromJson,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to load admin restaurants',
+    );
+  }
+
+  /// Fetch a single admin restaurant by its restaurant id.
+  Future<HomeRestaurant> getAdminRestaurant(int restaurantId) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/api/admin/restaurants/$restaurantId/'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      return HomeRestaurant.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to load admin restaurant',
+    );
   }
 
   /// Fetch the driver verification queue with full profile details.
@@ -1018,6 +1205,54 @@ class ApiService {
     }
   }
 
+  /// Creates a support ticket and its initial message atomically.
+  ///
+  /// The backend owns the ticket/message transaction. The initial message is
+  /// therefore sent in this request and must not be posted again through
+  /// [addTicketMessage].
+  Future<SupportTicket> createAdminSupportTicket({
+    required String subject,
+    required String category,
+    required String priority,
+    required Map<String, dynamic>? target,
+    int? relatedOrderId,
+    required int recipientUserId,
+    required String body,
+    List<Map<String, String>> attachments = const [],
+    required String idempotencyKey,
+  }) async {
+    final payload = <String, dynamic>{
+      'subject': subject,
+      'category': category,
+      'priority': priority,
+      'target': target,
+      'recipient_user_id': recipientUserId,
+      'body': body,
+      'attachments': attachments,
+      'idempotency_key': idempotencyKey,
+    };
+    if (relatedOrderId != null) {
+      payload['related_order_id'] = relatedOrderId;
+    }
+
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/admin/support/tickets/'),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return SupportTicket.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to create support ticket',
+    );
+  }
+
   // ─── User Profile ─────────────────────────────────────────────
 
   Future<Map<String, dynamic>> getMe() async {
@@ -1031,6 +1266,92 @@ class ApiService {
     } else {
       throw ApiException('Failed to load profile', response.statusCode);
     }
+  }
+
+  /// Register the authenticated device/browser with the backend FCM registry.
+  Future<void> registerDeviceToken({
+    required String token,
+    String? deviceType,
+  }) async {
+    final body = <String, dynamic>{'token': token};
+    if (deviceType != null && deviceType.trim().isNotEmpty) {
+      body['device_type'] = deviceType.trim();
+    }
+
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/notifications/device'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) return;
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to register notification device',
+    );
+  }
+
+  /// Returns the authenticated admin's notifications. The backend contract
+  /// intentionally returns a plain array; accepting a `results` envelope as
+  /// well keeps the client tolerant of standard pagination middleware.
+  Future<List<AppNotification>> getNotifications() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/api/notifications'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      final items = decoded is List
+          ? decoded
+          : decoded is Map
+          ? decoded['results'] as List? ?? const []
+          : const [];
+      return items
+          .whereType<Map>()
+          .map(
+            (item) => AppNotification.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList(growable: false);
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to load notifications',
+    );
+  }
+
+  Future<void> updateNotificationRead(
+    int notificationId, {
+    required bool isRead,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/api/notifications/$notificationId'),
+      headers: _headers,
+      body: jsonEncode({'is_read': isRead}),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) return;
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to update notification',
+    );
+  }
+
+  Future<void> deleteNotification(int notificationId) async {
+    final response = await _client.delete(
+      Uri.parse('$baseUrl/api/notifications/$notificationId'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) return;
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to delete notification',
+    );
   }
 
   // ─── Restaurant ──────────────────────────────────────────────

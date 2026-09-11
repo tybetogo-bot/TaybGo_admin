@@ -10,6 +10,7 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../management/reset_password_dialog.dart';
+import '../support/create_support_ticket_dialog.dart';
 
 class DriverProfileScreen extends StatefulWidget {
   final int driverId;
@@ -215,23 +216,25 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 _buildActionsCard(context, profile),
               ],
               const SizedBox(height: 16),
+              _buildSupportCard(context, profile),
+              const SizedBox(height: 16),
               _buildSection(
                 context,
-                title: 'Driver Details',
+                title: l.driverDetails,
                 icon: Icons.assignment_outlined,
                 children: [
-                  _buildDetailRow(context, 'ID', '${profile.id}'),
+                  _buildDetailRow(context, l.id, '${profile.id}'),
                   if (profile.createdAt != null)
                     _buildDetailRow(
                       context,
                       l.registeredDate,
-                      _fmtDateTimeFull(profile.createdAt!),
+                      _fmtDateTimeFull(l, profile.createdAt!),
                     ),
                   if (profile.locationUpdatedAt != null)
                     _buildDetailRow(
                       context,
-                      'Last updated',
-                      _fmtDateTimeFull(profile.locationUpdatedAt!),
+                      l.lastUpdated,
+                      _fmtDateTimeFull(l, profile.locationUpdatedAt!),
                     ),
                 ],
               ),
@@ -313,7 +316,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 const SizedBox(height: 16),
                 _buildCollapsibleSection(
                   context,
-                  title: 'Vehicle Details',
+                  title: l.vehicleDetails,
                   icon: Icons.directions_car_outlined,
                   expanded: _vehicleSectionExpanded,
                   onToggle: () => setState(
@@ -483,6 +486,46 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     ),
                   ),
                 ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSupportCard(BuildContext context, DriverProfile profile) {
+    final l = AppLocalizations.of(context);
+    final canContact = profile.id > 0;
+    return _buildSection(
+      context,
+      title: l.support,
+      icon: Icons.support_agent_outlined,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            key: const Key('driver-create-support-ticket'),
+            onPressed: canContact
+                ? () => createSupportTicketFromContext(
+                    context,
+                    preset: SupportTicketComposerPreset.driver(
+                      driverId: profile.id,
+                      driverName: profile.name.isNotEmpty
+                          ? profile.name
+                          : widget.driverName,
+                    ),
+                  )
+                : null,
+            icon: const Icon(Icons.add_comment_outlined, size: 19),
+            label: Text(
+              canContact ? l.createSupportTicket : l.noEligibleRecipients,
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -690,6 +733,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     required String notProvidedText,
   }) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final canCall = _dialablePhone(phone) != null;
 
     return Padding(
@@ -736,7 +780,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   ),
                   visualDensity: VisualDensity.compact,
                   splashRadius: 18,
-                  tooltip: 'Call',
+                  tooltip: l.call,
                 ),
               ],
             ),
@@ -914,30 +958,34 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       rows.add(
         _buildDetailRow(
           context,
-          'Vehicle Type',
+          l.vehicleType,
           _vehicleLabel(l, profile.vehicleType),
         ),
       );
     }
     if (profile.carSize != null) {
-      rows.add(_buildDetailRow(context, 'Car Size', profile.carSize!));
+      rows.add(_buildDetailRow(context, l.carSize, profile.carSize!));
     }
     if (profile.vehiclePlateNumber != null) {
       rows.add(
-        _buildDetailRow(context, 'Plate Number', profile.vehiclePlateNumber!),
+        _buildDetailRow(
+          context,
+          l.vehiclePlateNumber,
+          profile.vehiclePlateNumber!,
+        ),
       );
     }
     if (profile.vehicleColor != null) {
-      rows.add(_buildDetailRow(context, 'Color', profile.vehicleColor!));
+      rows.add(_buildDetailRow(context, l.vehicleColor, profile.vehicleColor!));
     }
     if (profile.vehicleMake != null) {
-      rows.add(_buildDetailRow(context, 'Make', profile.vehicleMake!));
+      rows.add(_buildDetailRow(context, l.vehicleMake, profile.vehicleMake!));
     }
     if (profile.vehicleModel != null) {
-      rows.add(_buildDetailRow(context, 'Model', profile.vehicleModel!));
+      rows.add(_buildDetailRow(context, l.vehicleModel, profile.vehicleModel!));
     }
     if (profile.vehicleYear != null) {
-      rows.add(_buildDetailRow(context, 'Year', profile.vehicleYear!));
+      rows.add(_buildDetailRow(context, l.vehicleYear, profile.vehicleYear!));
     }
 
     return rows;
@@ -1087,7 +1135,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     return _buildFileTile(
                       theme,
                       icon: Icons.broken_image_outlined,
-                      title: 'Could not load image',
+                      title: l.couldNotLoadImage,
                       subtitle: label,
                     );
                   },
@@ -1098,7 +1146,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             _buildFileTile(
               theme,
               icon: _documentFileIconForUrl(doc.url!),
-              title: 'Preview unavailable',
+              title: l.previewUnavailable,
               subtitle: label,
               onTap: () => _openUrl(doc.url!),
             ),
@@ -1274,6 +1322,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   void _showFullImage(BuildContext context, String url, String title) {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
@@ -1317,7 +1366,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         return const Center(child: CircularProgressIndicator());
                       },
                       errorBuilder: (_, error, stackTrace) =>
-                          const Center(child: Text('Could not load image')),
+                          Center(child: Text(l.couldNotLoadImage)),
                     ),
                   ),
                 ),
@@ -1368,24 +1417,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     }
   }
 
-  String _fmtDateTimeFull(DateTime d) {
-    const m = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final hour = d.hour.toString().padLeft(2, '0');
-    final minute = d.minute.toString().padLeft(2, '0');
-    return '${m[d.month - 1]} ${d.day}, ${d.year} $hour:$minute';
+  String _fmtDateTimeFull(AppLocalizations l, DateTime d) {
+    return l.formatDateTime(d);
   }
 
   String _statusText(AppLocalizations l, DriverProfile profile) {

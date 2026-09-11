@@ -12,12 +12,14 @@ class ManagementScreen extends StatefulWidget {
   final String initialTab;
   final String driverFilter;
   final String restaurantFilter;
+  final String searchQuery;
 
   const ManagementScreen({
     super.key,
     this.initialTab = 'drivers',
     this.driverFilter = 'all',
     this.restaurantFilter = 'all',
+    this.searchQuery = '',
   });
 
   @override
@@ -36,6 +38,9 @@ class _ManagementScreenState extends State<ManagementScreen>
   void initState() {
     super.initState();
     _selectedTabIndex = _tabIndex(widget.initialTab);
+    _searchQuery = widget.searchQuery.trim();
+    _searchController.text = _searchQuery;
+    _searchOpen = _searchQuery.isNotEmpty;
     _tabController = TabController(
       length: 2,
       vsync: this,
@@ -48,13 +53,32 @@ class _ManagementScreenState extends State<ManagementScreen>
   void didUpdateWidget(covariant ManagementScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialTab != widget.initialTab) {
-      _tabController.index = _tabIndex(widget.initialTab);
+      final nextIndex = _tabIndex(widget.initialTab);
+      if (_selectedTabIndex != nextIndex) {
+        setState(() => _selectedTabIndex = nextIndex);
+        _tabController.index = nextIndex;
+      }
+    }
+    if (oldWidget.searchQuery != widget.searchQuery) {
+      final nextSearch = widget.searchQuery.trim();
+      if (nextSearch != _searchQuery) {
+        setState(() {
+          _searchQuery = nextSearch;
+          _searchController.value = TextEditingValue(
+            text: nextSearch,
+            selection: TextSelection.collapsed(offset: nextSearch.length),
+          );
+          _searchOpen = nextSearch.isNotEmpty;
+        });
+      }
     }
   }
 
   void _handleTabChanged() {
     if (_selectedTabIndex == _tabController.index) return;
-    setState(() => _selectedTabIndex = _tabController.index);
+    final nextIndex = _tabController.index;
+    setState(() => _selectedTabIndex = nextIndex);
+    _syncManagementLocation(nextIndex);
   }
 
   int _tabIndex(String tab) {
@@ -70,12 +94,39 @@ class _ManagementScreenState extends State<ManagementScreen>
   }
 
   void _toggleSearch() {
-    setState(() => _searchOpen = !_searchOpen);
+    if (_searchOpen) {
+      _clearSearch();
+      setState(() => _searchOpen = false);
+      return;
+    }
+    setState(() => _searchOpen = true);
   }
 
   void _clearSearch() {
     _searchController.clear();
     setState(() => _searchQuery = '');
+    _syncManagementLocation(_selectedTabIndex);
+  }
+
+  void _syncManagementLocation(int tabIndex) {
+    final queryParameters = <String, String>{
+      'tab': tabIndex == 1 ? 'restaurants' : 'drivers',
+    };
+    final search = _searchQuery.trim();
+    if (search.isNotEmpty) queryParameters['search'] = search;
+
+    final filter = tabIndex == 1
+        ? widget.restaurantFilter
+        : widget.driverFilter;
+    if (filter != 'all') {
+      queryParameters[tabIndex == 1 ? 'restaurant_filter' : 'driver_filter'] =
+          filter;
+    }
+
+    if (!mounted) return;
+    context.go(
+      Uri(path: '/management', queryParameters: queryParameters).toString(),
+    );
   }
 
   Future<void> _openCreateForm() async {
@@ -121,8 +172,8 @@ class _ManagementScreenState extends State<ManagementScreen>
                               const SizedBox(height: 4),
                               Text(
                                 l.managementSubtitle(
-                                  admin.driversTotal,
-                                  admin.restaurantsTotal,
+                                  admin.managementDriversSummaryTotal,
+                                  admin.managementRestaurantsSummaryTotal,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -156,7 +207,9 @@ class _ManagementScreenState extends State<ManagementScreen>
                           ),
                         ),
                         IconButton(
-                          onPressed: admin.isLoading ? null : admin.refreshHome,
+                          onPressed: admin.managementLoading
+                              ? null
+                              : admin.refreshManagementData,
                           icon: const Icon(Icons.refresh_rounded, size: 19),
                           tooltip: l.refresh,
                           style: IconButton.styleFrom(
@@ -190,8 +243,11 @@ class _ManagementScreenState extends State<ManagementScreen>
                               child: TextField(
                                 controller: _searchController,
                                 autofocus: true,
-                                onChanged: (value) =>
-                                    setState(() => _searchQuery = value),
+                                onChanged: (value) {
+                                  setState(() => _searchQuery = value);
+                                },
+                                onSubmitted: (_) =>
+                                    _syncManagementLocation(_selectedTabIndex),
                                 style: const TextStyle(fontSize: 13),
                                 decoration: InputDecoration(
                                   hintText: l.searchByNameOrPhone,
@@ -266,14 +322,14 @@ class _ManagementScreenState extends State<ManagementScreen>
                             child: _ManagementTabLabel(
                               icon: Icons.local_shipping_outlined,
                               label: l.drivers,
-                              count: admin.driversTotal,
+                              count: admin.managementDriversSummaryTotal,
                             ),
                           ),
                           Tab(
                             child: _ManagementTabLabel(
                               icon: Icons.storefront_outlined,
                               label: l.restaurants,
-                              count: admin.restaurantsTotal,
+                              count: admin.managementRestaurantsSummaryTotal,
                             ),
                           ),
                         ],

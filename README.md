@@ -8,6 +8,7 @@ Platform management dashboard for the TaybGo delivery ecosystem. Built with Flut
 - **Driver Management** — List, filter, and locate drivers on an interactive map (OpenStreetMap)
 - **Approvals** — Review and approve/reject pending driver and restaurant applications
 - **Support Tickets** — Manage customer support tickets with threaded conversations, priority, and status tracking
+- **Notifications** — Receive administrator notifications, track unread state, and open support tickets from safe push destinations
 - **Localization** — English, Arabic (RTL), Dutch, French, German
 - **Theming** — Light, Dark, and System-default modes
 - **Auth** — Phone + OTP authentication with JWT token management and session persistence
@@ -37,7 +38,7 @@ lib/
 │   ├── config/          # Environment configuration (dev/prod)
 │   ├── l10n/            # Localization (5 languages)
 │   ├── models/          # Driver, Restaurant, SupportTicket, HomeResponse, etc.
-│   ├── providers/       # AuthProvider, AdminProvider, SettingsProvider
+│   ├── providers/       # AuthProvider, AdminProvider, NotificationProvider, SettingsProvider
 │   ├── router/          # GoRouter config with auth guards
 │   ├── services/        # API client with Bearer token auth
 │   ├── theme/           # Colors, spacing, typography, light/dark themes
@@ -116,8 +117,10 @@ flutter build ios -t lib/main_prod.dart --flavor prod
 ### Web
 
 ```bash
-# Production build (wasm)
-flutter build web --release --wasm -t lib/main_prod.dart
+# Production build (wasm). FCM_WEB_VAPID_KEY is the Firebase Web Push
+# certificate key from the taybgoadmin project.
+flutter build web --release --wasm -t lib/main_prod.dart \
+  --dart-define=FCM_WEB_VAPID_KEY=YOUR_FIREBASE_WEB_PUSH_CERTIFICATE_KEY
 ```
 
 #### Build Optimization
@@ -158,6 +161,10 @@ OTP auth requests include `target_role: admin` in both the request and verify pa
 | GET | `/api/admin/support/tickets/{id}/` | Ticket detail |
 | PATCH | `/api/admin/support/tickets/{id}/` | Update ticket status/priority |
 | POST | `/api/admin/support/tickets/{id}/messages/` | Reply to ticket |
+| GET | `/api/notifications` | List authenticated admin notifications |
+| PATCH | `/api/notifications/{id}` | Mark a notification read or unread |
+| DELETE | `/api/notifications/{id}` | Delete an authenticated admin notification |
+| POST | `/api/notifications/device` | Register an authenticated FCM device/browser token |
 | GET | `/api/me/` | Current user profile |
 | GET | `/api/customer/restaurants/{id}/` | Restaurant detail |
 

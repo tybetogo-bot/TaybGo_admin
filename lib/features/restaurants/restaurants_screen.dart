@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +9,7 @@ import '../../core/models/home_response.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/partner_search.dart';
 
 class RestaurantsScreen extends StatefulWidget {
   final String initialFilter;
@@ -32,15 +35,16 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
   String? _selectedStatus;
   String? _selectedCity;
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _filter = _normalizeFilter(widget.initialFilter);
-    final admin = context.read<AdminProvider>();
-    if (admin.homeData == null) {
-      Future.microtask(() => admin.fetchHome());
-    }
+    debugPrint(
+      '[RestaurantsScreen] Loading direct admin restaurant collection',
+    );
+    Future.microtask(_loadRestaurants);
   }
 
   @override
@@ -48,13 +52,43 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialFilter != widget.initialFilter) {
       setState(() => _filter = _normalizeFilter(widget.initialFilter));
+      _loadRestaurants();
+    }
+    if (oldWidget.searchQuery != widget.searchQuery) {
+      _scheduleLoadRestaurants();
     }
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRestaurants() {
+    final search = widget.searchQuery ?? _search;
+    return context.read<AdminProvider>().fetchManagementRestaurants(
+      search: search,
+      status: _serverStatus,
+    );
+  }
+
+  void _scheduleLoadRestaurants() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 300),
+      () => unawaited(_loadRestaurants()),
+    );
+  }
+
+  String? get _serverStatus {
+    if (_selectedStatus != null) return _selectedStatus;
+    return switch (_filter) {
+      'active' || 'open' || 'closed' => 'ACTIVE',
+      'inactive' => 'INACTIVE',
+      _ => null,
+    };
   }
 
   @override
@@ -64,10 +98,11 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
     final l = AppLocalizations.of(context);
     final now = DateTime.now();
 
-    final restaurants = admin.restaurants;
-    final activeCount = restaurants.where((r) => r.isActive).length;
-    final inactiveCount = restaurants.length - activeCount;
-    final openCount = restaurants.where((r) => r.isOpenNow(now)).length;
+    final restaurants = admin.managementRestaurants;
+    final totalCount = admin.managementRestaurantsSummaryTotal;
+    final activeCount = admin.managementRestaurantsSummaryActive;
+    final inactiveCount = admin.managementRestaurantsSummaryInactive;
+    final openCount = admin.managementRestaurantsSummaryOpen;
     final filtered = _apply(restaurants, now);
     final activeSearch = widget.searchQuery ?? _search;
     final hasActiveFilters =
@@ -103,7 +138,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                           const SizedBox(height: 4),
                           Text(
                             l.restaurantsScreenSub(
-                              restaurants.length,
+                              totalCount,
                               activeCount,
                               openCount,
                             ),
@@ -117,7 +152,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                         ],
                       ),
                     ),
-                    if (admin.isLoading)
+                    if (admin.managementRestaurantsLoading)
                       const SizedBox(
                         width: 20,
                         height: 20,
@@ -125,7 +160,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                       )
                     else
                       IconButton(
-                        onPressed: admin.refreshHome,
+                        onPressed: _loadRestaurants,
                         icon: const Icon(Icons.refresh_rounded, size: 20),
                         tooltip: l.refresh,
                       ),
@@ -144,7 +179,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                         width: cardWidth,
                         icon: Icons.storefront_outlined,
                         label: l.total,
-                        value: '${restaurants.length}',
+                        value: '$totalCount',
                         color: theme.colorScheme.onSurface,
                         selected: _filter == 'all',
                         compact: compact,
@@ -209,7 +244,10 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                             height: 38,
                             child: TextField(
                               controller: _searchController,
-                              onChanged: (v) => setState(() => _search = v),
+                              onChanged: (v) {
+                                setState(() => _search = v);
+                                _scheduleLoadRestaurants();
+                              },
                               style: const TextStyle(fontSize: 13),
                               decoration: InputDecoration(
                                 hintText: l.searchRestaurants,
@@ -245,6 +283,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                                         onPressed: () {
                                           _searchController.clear();
                                           setState(() => _search = '');
+                                          _loadRestaurants();
                                         },
                                         icon: const Icon(Icons.close, size: 17),
                                       ),
@@ -260,6 +299,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                             setState(() {
                               _selectedStatus = value == '_all' ? null : value;
                             });
+                            _loadRestaurants();
                           },
                         ),
                         _dropdown(
@@ -319,11 +359,13 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
     ThemeData theme,
     AppLocalizations l,
   ) {
-    if (admin.isLoading && admin.homeData == null) {
+    if (admin.managementRestaurantsLoading &&
+        admin.managementRestaurants.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (admin.error != null && admin.restaurants.isEmpty) {
+    if (admin.managementRestaurantsError != null &&
+        admin.managementRestaurants.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -335,7 +377,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              admin.error!,
+              admin.managementRestaurantsError!,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -344,7 +386,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            TextButton(onPressed: admin.fetchHome, child: Text(l.retry)),
+            TextButton(onPressed: _loadRestaurants, child: Text(l.retry)),
           ],
         ),
       );
@@ -457,7 +499,19 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
   }
 
   void _openRestaurant(HomeRestaurant restaurant) {
-    context.go('/management/restaurants/${restaurant.id}');
+    final queryParameters = <String, String>{
+      'tab': 'restaurants',
+      'restaurant_filter': _filter,
+    };
+    final search = (widget.searchQuery ?? _search).trim();
+    if (search.isNotEmpty) queryParameters['search'] = search;
+
+    context.push(
+      Uri(
+        path: '/management/restaurants/${restaurant.id}',
+        queryParameters: queryParameters,
+      ).toString(),
+    );
   }
 
   List<HomeRestaurant> _apply(List<HomeRestaurant> restaurants, DateTime now) {
@@ -465,9 +519,9 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
 
     switch (_filter) {
       case 'active':
-        result = result.where((r) => r.isActive).toList();
+        result = result.where((r) => r.effectiveStatus == 'ACTIVE').toList();
       case 'inactive':
-        result = result.where((r) => !r.isActive).toList();
+        result = result.where((r) => r.effectiveStatus == 'INACTIVE').toList();
       case 'open':
         result = result.where((r) => r.isOpenNow(now)).toList();
       case 'closed':
@@ -475,7 +529,9 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
     }
 
     if (_selectedStatus != null) {
-      result = result.where((r) => r.status == _selectedStatus).toList();
+      result = result
+          .where((r) => r.effectiveStatus == _selectedStatus)
+          .toList();
     }
 
     if (_selectedCity != null) {
@@ -485,11 +541,16 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
     final search = widget.searchQuery ?? _search;
     if (search.trim().isNotEmpty) {
       final query = search.trim().toLowerCase();
-      result = result.where((r) {
-        return r.name.toLowerCase().contains(query) ||
-            r.phone.toLowerCase().contains(query) ||
-            r.displayAddress.toLowerCase().contains(query);
-      }).toList();
+      result = result
+          .where(
+            (r) => matchesPartnerSearch(query, [
+              r.name,
+              r.phone,
+              r.ownerName,
+              r.ownerPhone,
+            ]),
+          )
+          .toList();
     }
 
     return result;
@@ -497,6 +558,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
 
   void _setFilter(String filter) {
     setState(() => _filter = _normalizeFilter(filter));
+    _loadRestaurants();
   }
 
   void _clearFilters() {
@@ -507,6 +569,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
       _selectedStatus = null;
       _selectedCity = null;
     });
+    _loadRestaurants();
   }
 
   String _normalizeFilter(String value) {
@@ -520,7 +583,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
   ) {
     final statuses =
         restaurants
-            .map((r) => r.status)
+            .map((r) => r.effectiveStatus)
             .where((status) => status.isNotEmpty)
             .toSet()
             .toList()
@@ -713,19 +776,14 @@ class _RestaurantTableRowState extends State<_RestaurantTableRow> {
                       runSpacing: 6,
                       children: [
                         StatusBadge(
-                          label: restaurant.isActive ? l.active : l.inactive,
-                          color: restaurant.isActive
-                              ? AppColors.success
-                              : AppColors.offline,
-                        ),
-                        if (shouldShowRestaurantStatusBadge(restaurant))
-                          StatusBadge(
-                            label: localizedRestaurantStatus(
-                              l,
-                              restaurant.status,
-                            ),
-                            color: restaurantStatusColor(restaurant.status),
+                          label: localizedRestaurantStatus(
+                            l,
+                            restaurant.effectiveStatus,
                           ),
+                          color: restaurantStatusColor(
+                            restaurant.effectiveStatus,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -877,16 +935,12 @@ class _RestaurantCard extends StatelessWidget {
                   color: openNow ? AppColors.online : AppColors.offline,
                 ),
                 StatusBadge(
-                  label: restaurant.isActive ? l.active : l.inactive,
-                  color: restaurant.isActive
-                      ? AppColors.success
-                      : AppColors.offline,
-                ),
-                if (shouldShowRestaurantStatusBadge(restaurant))
-                  StatusBadge(
-                    label: localizedRestaurantStatus(l, restaurant.status),
-                    color: restaurantStatusColor(restaurant.status),
+                  label: localizedRestaurantStatus(
+                    l,
+                    restaurant.effectiveStatus,
                   ),
+                  color: restaurantStatusColor(restaurant.effectiveStatus),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -1195,7 +1249,8 @@ String restaurantHoursSummary(
   DateTime now,
   AppLocalizations l,
 ) {
-  if (!restaurant.isActive) return l.inactive;
+  if (restaurant.effectiveStatus == 'PENDING') return l.pending;
+  if (restaurant.effectiveStatus != 'ACTIVE') return l.inactive;
 
   final opening = restaurant.openingStatus(now);
   if (opening.isOpenNow && opening.currentRange != null) {

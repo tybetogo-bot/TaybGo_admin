@@ -8,6 +8,7 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../support/create_support_ticket_dialog.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final int orderId;
@@ -390,6 +391,26 @@ class _PeoplePanel extends StatelessWidget {
             label: l.assignedDriver,
             name: order.driver?.displayName ?? l.unassignedDriver,
             phone: order.driver?.phone,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: const Key('order-create-support-ticket'),
+              onPressed: () => createSupportTicketFromContext(
+                context,
+                preset: SupportTicketComposerPreset.order(order),
+              ),
+              icon: const Icon(Icons.add_comment_outlined, size: 19),
+              label: Text(l.createSupportTicket),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ],
       ),

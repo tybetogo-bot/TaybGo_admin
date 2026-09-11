@@ -23,6 +23,12 @@ void main() {
               jsonEncode({'count': 0, 'next': null, 'results': []}),
               200,
             );
+          case '/api/admin/drivers/':
+          case '/api/admin/restaurants/':
+            return http.Response(
+              jsonEncode({'count': 0, 'next': null, 'results': []}),
+              200,
+            );
           case '/api/admin/orders/':
           case '/api/admin/pricing-policies/':
             return http.Response(
@@ -46,13 +52,15 @@ void main() {
     );
 
     await api.getHome(countryId: 2);
+    await api.getAdminDrivers(countryId: 2);
+    await api.getAdminRestaurants(countryId: 2);
     await api.getAdminOrders(countryId: 2);
     await api.getVerificationQueue(countryId: 2);
     await api.getTickets(countryId: 2);
     await api.getPricingPolicies(countryId: 2);
     await api.getAdminCities(countryId: 2);
 
-    expect(uris, hasLength(6));
+    expect(uris, hasLength(8));
     expect(
       uris.map((uri) => uri.queryParameters['country_id']),
       everyElement('2'),

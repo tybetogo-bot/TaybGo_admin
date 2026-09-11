@@ -232,7 +232,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 Text(
                   useOtp
                       ? l.enterPhoneToSignIn
-                      : 'Enter your phone number and password to sign in.',
+                      : l.enterPhoneAndPasswordToSignIn,
                   style: TextStyle(
                     fontSize: 15,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -245,10 +245,10 @@ class _SignInScreenState extends State<SignInScreen> {
                 ] else if (publicConfig.error != null) ...[
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Live configuration is unavailable. Using admin password sign-in.',
-                          style: TextStyle(fontSize: 12),
+                          l.liveConfigurationUnavailable,
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                       TextButton(
@@ -318,7 +318,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                 if (!useOtp) ...[
                   const SizedBox(height: 18),
-                  const _FieldLabel('Password'),
+                  _FieldLabel(l.password),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _passwordController,
@@ -327,7 +327,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     autofillHints: const [AutofillHints.password],
                     onFieldSubmitted: (_) => _handleSubmit(useOtp),
                     decoration: InputDecoration(
-                      hintText: 'Enter your password',
+                      hintText: l.enterYourPassword,
                       prefixIcon: const Icon(Icons.lock_outline_rounded),
                       suffixIcon: IconButton(
                         onPressed: () => setState(
@@ -342,7 +342,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter your password';
+                        return l.enterYourPassword;
                       }
                       return null;
                     },
@@ -399,7 +399,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           )
                         : Text(
-                            useOtp ? l.sendOtp : 'Sign in',
+                            useOtp ? l.sendOtp : l.signIn,
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -415,15 +415,15 @@ class _SignInScreenState extends State<SignInScreen> {
                     children: [
                       TextButton(
                         onPressed: () => _openUrl(config.privacyUrl),
-                        child: const Text('Privacy'),
+                        child: Text(l.privacy),
                       ),
                       TextButton(
                         onPressed: () => _openUrl(config.termsUrl),
-                        child: const Text('Terms'),
+                        child: Text(l.terms),
                       ),
                       TextButton(
                         onPressed: () => _openUrl(config.supportUrl),
-                        child: const Text('Support'),
+                        child: Text(l.support),
                       ),
                     ],
                   ),
@@ -467,10 +467,11 @@ class _LanguageSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final current = settings.locale;
 
     return PopupMenuButton<Locale>(
-      tooltip: 'Language',
+      tooltip: l.language,
       onSelected: (locale) => settings.setLocale(locale),
       offset: const Offset(0, 36),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

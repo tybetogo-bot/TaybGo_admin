@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -7,7 +10,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/models/home_response.dart';
 import '../../core/l10n/app_localizations.dart';
-import 'driver_profile_screen.dart';
+import '../../core/partner_search.dart';
 
 class DriversScreen extends StatefulWidget {
   final String initialFilter;
@@ -33,22 +36,15 @@ class _DriversScreenState extends State<DriversScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _showMap = false;
   final MapController _mapController = MapController();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _filter = _normalizeFilter(widget.initialFilter);
     debugPrint('[DriversScreen] initState');
-    final admin = context.read<AdminProvider>();
-    if (admin.homeData == null) {
-      debugPrint('[DriversScreen] No home data cached — fetching');
-      Future.microtask(() => admin.fetchHome());
-    } else {
-      debugPrint(
-        '[DriversScreen] Using cached data — '
-        '${admin.drivers.length} drivers',
-      );
-    }
+    debugPrint('[DriversScreen] Loading direct admin driver collection');
+    Future.microtask(_loadDrivers);
   }
 
   @override
@@ -56,13 +52,39 @@ class _DriversScreenState extends State<DriversScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialFilter != widget.initialFilter) {
       setState(() => _filter = _normalizeFilter(widget.initialFilter));
+      _loadDrivers();
+    }
+    if (oldWidget.searchQuery != widget.searchQuery) {
+      _scheduleLoadDrivers();
     }
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadDrivers() {
+    final search = widget.searchQuery ?? _search;
+    return context.read<AdminProvider>().fetchManagementDrivers(
+      search: search,
+      status: _filter == 'suspended' ? 'SUSPENDED' : null,
+      isOnline: switch (_filter) {
+        'online' => true,
+        'offline' => false,
+        _ => null,
+      },
+    );
+  }
+
+  void _scheduleLoadDrivers() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 300),
+      () => unawaited(_loadDrivers()),
+    );
   }
 
   @override
@@ -71,17 +93,16 @@ class _DriversScreenState extends State<DriversScreen> {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
 
-    final all = admin.drivers;
-    final suspendedCount = all.where(_isSuspended).length;
-    final onlineCount = all.where((d) => !_isSuspended(d) && d.isOnline).length;
-    final offlineCount = all
-        .where((d) => !_isSuspended(d) && !d.isOnline)
-        .length;
-    final totalCount = all.length;
-    final locatedCount = all.where(_hasLocation).length;
+    final all = admin.managementDrivers;
+    final suspendedCount = admin.managementDriversSummarySuspended;
+    final onlineCount = admin.managementDriversSummaryOnline;
+    final offlineCount = admin.managementDriversSummaryOffline;
+    final totalCount = admin.managementDriversSummaryTotal;
     final filtered = _apply(all);
     final activeSearch = widget.searchQuery ?? _search;
     final hasActiveFilters = _filter != 'all' || activeSearch.trim().isNotEmpty;
+    final locatedCount = filtered.where(_hasLocation).length;
+    final locatedTotal = hasActiveFilters ? filtered.length : totalCount;
 
     return Scaffold(
       body: Padding(
@@ -112,7 +133,7 @@ class _DriversScreenState extends State<DriversScreen> {
                     IconButton(
                       onPressed: () {
                         debugPrint('[DriversScreen] Manual refresh triggered');
-                        admin.refreshHome();
+                        _loadDrivers();
                       },
                       icon: const Icon(Icons.refresh_rounded, size: 20),
                       tooltip: l.refresh,
@@ -198,7 +219,10 @@ class _DriversScreenState extends State<DriversScreen> {
                               height: 38,
                               child: TextField(
                                 controller: _searchController,
-                                onChanged: (v) => setState(() => _search = v),
+                                onChanged: (v) {
+                                  setState(() => _search = v);
+                                  _scheduleLoadDrivers();
+                                },
                                 style: const TextStyle(fontSize: 13),
                                 decoration: InputDecoration(
                                   hintText: l.searchByNameOrPhone,
@@ -233,6 +257,7 @@ class _DriversScreenState extends State<DriversScreen> {
                                           onPressed: () {
                                             _searchController.clear();
                                             setState(() => _search = '');
+                                            _loadDrivers();
                                           },
                                           icon: const Icon(
                                             Icons.close,
@@ -282,8 +307,8 @@ class _DriversScreenState extends State<DriversScreen> {
                   _MetaPill(
                     icon: Icons.location_on_outlined,
                     label:
-                        '$locatedCount/$totalCount ${l.location.toLowerCase()}',
-                    color: locatedCount == totalCount
+                        '$locatedCount/$locatedTotal ${l.location.toLowerCase()}',
+                    color: locatedCount == locatedTotal
                         ? AppColors.primary
                         : AppColors.warning,
                   ),
@@ -292,13 +317,13 @@ class _DriversScreenState extends State<DriversScreen> {
               const SizedBox(height: 8),
 
               // Content
-              if (admin.isLoading && admin.homeData == null)
+              if (admin.managementDriversLoading && all.isEmpty)
                 _LoadingPanel(theme: theme)
-              else if (admin.error != null && all.isEmpty)
+              else if (admin.managementDriversError != null && all.isEmpty)
                 _ErrorPanel(
-                  message: admin.error!,
+                  message: admin.managementDriversError!,
                   retryLabel: l.retry,
-                  onRetry: admin.fetchHome,
+                  onRetry: _loadDrivers,
                   theme: theme,
                 )
               else if (_showMap)
@@ -419,6 +444,7 @@ class _DriversScreenState extends State<DriversScreen> {
       _search = '';
       _filter = 'all';
     });
+    _loadDrivers();
   }
 
   // ─── Map View ─────────────────────────────────────────────────
@@ -573,14 +599,20 @@ class _DriversScreenState extends State<DriversScreen> {
       'id=${d.id}, name="${d.name}", phone="${d.phone}", '
       'online=${d.isOnline}, lat=${d.latitude}, lng=${d.longitude}',
     );
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => DriverProfileScreen(
-          driverId: d.id,
-          driverName: d.name,
-          driverPhone: d.phone,
-        ),
-      ),
+    final queryParameters = <String, String>{
+      'tab': 'drivers',
+      'driver_filter': _filter,
+      'name': d.name,
+      'phone': d.phone,
+    };
+    final search = (widget.searchQuery ?? _search).trim();
+    if (search.isNotEmpty) queryParameters['search'] = search;
+
+    context.push(
+      Uri(
+        path: '/management/drivers/${d.id}',
+        queryParameters: queryParameters,
+      ).toString(),
     );
   }
 
@@ -625,7 +657,7 @@ class _DriversScreenState extends State<DriversScreen> {
           if (filtered.isEmpty)
             SizedBox(
               height: 360,
-              child: _emptyState(theme, l, admin.drivers.length),
+              child: _emptyState(theme, l, admin.managementDriversTotal),
             )
           else
             ...filtered.map(
@@ -646,7 +678,7 @@ class _DriversScreenState extends State<DriversScreen> {
   ) {
     final admin = context.read<AdminProvider>();
     if (filtered.isEmpty) {
-      return _emptyState(theme, l, admin.drivers.length);
+      return _emptyState(theme, l, admin.managementDriversTotal);
     }
 
     return Column(
@@ -665,7 +697,9 @@ class _DriversScreenState extends State<DriversScreen> {
   }
 
   Widget _emptyState(ThemeData theme, AppLocalizations l, int totalDrivers) {
-    final showAllOfflineState = _filter == 'all' && totalDrivers > 0;
+    final search = widget.searchQuery ?? _search;
+    final showAllOfflineState =
+        _filter == 'all' && totalDrivers > 0 && search.trim().isEmpty;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -710,14 +744,17 @@ class _DriversScreenState extends State<DriversScreen> {
       r = r.where(_isSuspended).toList();
     }
     final search = widget.searchQuery ?? _search;
-    if (search.isNotEmpty) {
-      final q = search.toLowerCase();
-      r = r.where((d) {
-        final address = d.address?.searchText.toLowerCase() ?? '';
-        return d.name.toLowerCase().contains(q) ||
-            d.phone.contains(q) ||
-            address.contains(q);
-      }).toList();
+    if (search.trim().isNotEmpty) {
+      r = r
+          .where(
+            (d) => matchesPartnerSearch(search, [
+              d.name,
+              d.phone,
+              d.email ?? '',
+              d.vehiclePlateNumber ?? '',
+            ]),
+          )
+          .toList();
     }
     debugPrint(
       '[DriversScreen] Filter: $_filter, search: "$search", '
@@ -737,6 +774,7 @@ class _DriversScreenState extends State<DriversScreen> {
 
   void _setFilter(String filter) {
     setState(() => _filter = _normalizeFilter(filter));
+    _loadDrivers();
   }
 
   String _normalizeFilter(String value) {

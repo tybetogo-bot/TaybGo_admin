@@ -319,13 +319,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             Divider(color: theme.dividerColor, height: 1),
             _ProfileAction(
-              icon: Icons.settings_applications_outlined,
-              title: 'Application settings',
-              subtitle: 'Authentication, versions, updates, and legal links',
-              onTap: () => context.push('/profile/app-settings'),
-            ),
-            Divider(color: theme.dividerColor, height: 1),
-            _ProfileAction(
               icon: Icons.tune_rounded,
               title: l.preferences,
               subtitle: l.preferencesActionSubtitle,

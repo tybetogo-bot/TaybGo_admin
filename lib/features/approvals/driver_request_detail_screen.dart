@@ -172,18 +172,18 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
                 title: l.requestDetails,
                 icon: Icons.assignment_outlined,
                 children: [
-                  _buildDetailRow(context, 'ID', '${profile.id}'),
+                  _buildDetailRow(context, l.id, '${profile.id}'),
                   if (profile.createdAt != null)
                     _buildDetailRow(
                       context,
                       l.registeredDate,
-                      _fmtDateTimeFull(profile.createdAt!),
+                      _fmtDateTimeFull(l, profile.createdAt!),
                     ),
                   if (profile.submittedAt != null)
                     _buildDetailRow(
                       context,
                       l.submittedDate,
-                      _fmtDateTimeFull(profile.submittedAt!),
+                      _fmtDateTimeFull(l, profile.submittedAt!),
                     ),
                 ],
               ),
@@ -206,7 +206,7 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
                 const SizedBox(height: 16),
                 _buildSection(
                   context,
-                  title: 'Vehicle Details',
+                  title: l.vehicleDetails,
                   icon: Icons.directions_car_outlined,
                   children: _buildVehicleDetails(context, profile, l),
                 ),
@@ -540,30 +540,34 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
       rows.add(
         _buildDetailRow(
           context,
-          'Vehicle Type',
+          l.vehicleType,
           _vehicleLabel(l, profile.vehicleType),
         ),
       );
     }
     if (profile.carSize != null) {
-      rows.add(_buildDetailRow(context, 'Car Size', profile.carSize!));
+      rows.add(_buildDetailRow(context, l.carSize, profile.carSize!));
     }
     if (profile.vehiclePlateNumber != null) {
       rows.add(
-        _buildDetailRow(context, 'Plate Number', profile.vehiclePlateNumber!),
+        _buildDetailRow(
+          context,
+          l.vehiclePlateNumber,
+          profile.vehiclePlateNumber!,
+        ),
       );
     }
     if (profile.vehicleColor != null) {
-      rows.add(_buildDetailRow(context, 'Color', profile.vehicleColor!));
+      rows.add(_buildDetailRow(context, l.vehicleColor, profile.vehicleColor!));
     }
     if (profile.vehicleMake != null) {
-      rows.add(_buildDetailRow(context, 'Make', profile.vehicleMake!));
+      rows.add(_buildDetailRow(context, l.vehicleMake, profile.vehicleMake!));
     }
     if (profile.vehicleModel != null) {
-      rows.add(_buildDetailRow(context, 'Model', profile.vehicleModel!));
+      rows.add(_buildDetailRow(context, l.vehicleModel, profile.vehicleModel!));
     }
     if (profile.vehicleYear != null) {
-      rows.add(_buildDetailRow(context, 'Year', profile.vehicleYear!));
+      rows.add(_buildDetailRow(context, l.vehicleYear, profile.vehicleYear!));
     }
 
     return rows;
@@ -709,7 +713,7 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
                     return _buildFileTile(
                       theme,
                       icon: Icons.broken_image_outlined,
-                      title: 'Could not load image',
+                      title: l.couldNotLoadImage,
                       subtitle: label,
                     );
                   },
@@ -720,7 +724,7 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
             _buildFileTile(
               theme,
               icon: _documentFileIconForUrl(doc.url!),
-              title: 'Preview unavailable',
+              title: l.previewUnavailable,
               subtitle: label,
               onTap: () => _openUrl(doc.url!),
             ),
@@ -892,6 +896,7 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
   }
 
   void _showFullImage(BuildContext context, String url, String title) {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
@@ -935,7 +940,7 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
                         return const Center(child: CircularProgressIndicator());
                       },
                       errorBuilder: (_, error, stackTrace) =>
-                          const Center(child: Text('Could not load image')),
+                          Center(child: Text(l.couldNotLoadImage)),
                     ),
                   ),
                 ),
@@ -969,24 +974,8 @@ class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
     }
   }
 
-  String _fmtDateTimeFull(DateTime d) {
-    const m = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final hour = d.hour.toString().padLeft(2, '0');
-    final minute = d.minute.toString().padLeft(2, '0');
-    return '${m[d.month - 1]} ${d.day}, ${d.year} $hour:$minute';
+  String _fmtDateTimeFull(AppLocalizations l, DateTime d) {
+    return l.formatDateTime(d);
   }
 
   String _statusText(AppLocalizations l, DriverProfile profile) {

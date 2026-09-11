@@ -23,11 +23,8 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     debugPrint('[ApprovalsScreen] initState');
-    final admin = context.read<AdminProvider>();
-    if (admin.homeData == null) {
-      debugPrint('[ApprovalsScreen] No home data cached — fetching');
-      Future.microtask(() => admin.fetchHome());
-    }
+    debugPrint('[ApprovalsScreen] Loading direct approval collections');
+    Future.microtask(_loadApprovals);
     _tabController.addListener(() {
       final tab = _tabController.index == 0 ? 'Drivers' : 'Restaurants';
       debugPrint('[ApprovalsScreen] Tab switched to: $tab');
@@ -38,6 +35,15 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadApprovals() async {
+    final admin = context.read<AdminProvider>();
+    if (admin.homeData == null) {
+      debugPrint('[ApprovalsScreen] No home data cached — fetching dashboard');
+      await admin.fetchHome();
+    }
+    await admin.fetchApprovals();
   }
 
   @override
@@ -86,7 +92,7 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
                 IconButton(
                   onPressed: () {
                     debugPrint('[ApprovalsScreen] Manual refresh triggered');
-                    admin.refreshHome();
+                    _loadApprovals();
                   },
                   icon: const Icon(Icons.refresh_rounded, size: 20),
                   tooltip: l.refresh,
@@ -363,7 +369,7 @@ class _DriverCardState extends State<_DriverCard> {
                       const SizedBox(height: 2),
                       Text(
                         driver.submittedAt != null
-                            ? _fmtDate(driver.submittedAt!)
+                            ? _fmtDate(l, driver.submittedAt!)
                             : l.pending,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -602,7 +608,7 @@ class _RestaurantCardState extends State<_RestaurantCard> {
                       const SizedBox(height: 2),
                       Text(
                         restaurant.submittedAt != null
-                            ? _fmtDate(restaurant.submittedAt!)
+                            ? _fmtDate(l, restaurant.submittedAt!)
                             : l.pending,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -744,20 +750,6 @@ void _snack(BuildContext context, String msg, Color color) {
   );
 }
 
-String _fmtDate(DateTime d) {
-  const m = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${m[d.month - 1]} ${d.day}, ${d.year}';
+String _fmtDate(AppLocalizations l, DateTime d) {
+  return l.formatReleaseDate(d);
 }

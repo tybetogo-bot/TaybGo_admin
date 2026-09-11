@@ -46,7 +46,9 @@ class _AdminShellState extends State<AdminShell> {
     // Stop polling when shell is disposed (e.g., on logout)
     // Use try-catch since context may not be available in dispose
     try {
-      context.read<AdminProvider>().stopPolling();
+      final admin = context.read<AdminProvider>();
+      admin.stopPolling();
+      admin.stopSupportPolling();
     } catch (_) {}
     super.dispose();
   }

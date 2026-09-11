@@ -32,6 +32,7 @@ class AuthProvider extends ChangeNotifier {
 
   final ApiService _apiService;
   VoidCallback? onSignedOut;
+  Future<void> Function()? onAuthenticated;
 
   AuthProvider({ApiService? apiService})
     : _apiService = apiService ?? ApiService();
@@ -170,6 +171,9 @@ class AuthProvider extends ChangeNotifier {
     _pendingOtpTargetRole = null;
     _isLoading = false;
     notifyListeners();
+
+    final callback = onAuthenticated;
+    if (callback != null) unawaited(callback());
   }
 
   /// Verify the OTP code and obtain JWT tokens.

@@ -123,7 +123,7 @@ class _RestaurantRequestDetailScreenState
                             _buildDetailRow(
                               context,
                               l.submittedDate,
-                              _fmtDateTime(restaurant.submittedAt!),
+                              _fmtDateTime(l, restaurant.submittedAt!),
                             ),
                         ],
                       ),
@@ -314,21 +314,7 @@ class _RestaurantRequestDetailScreenState
     );
   }
 
-  String _fmtDateTime(DateTime d) {
-    const m = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${m[d.month - 1]} ${d.day}, ${d.year}';
+  String _fmtDateTime(AppLocalizations l, DateTime d) {
+    return l.formatReleaseDate(d);
   }
 }

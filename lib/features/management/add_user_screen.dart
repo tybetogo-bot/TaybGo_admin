@@ -93,7 +93,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
     if (name.isEmpty) {
       errors['name'] = l.requiredField;
     } else if (name.length > 255) {
-      errors['name'] = 'Maximum 255 characters.';
+      errors['name'] = l.maximumCharacters(255);
     }
     if (_phoneController.text.trim().isEmpty) {
       errors['phone'] = l.requiredField;
@@ -105,7 +105,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
     } else if (password.length < 8) {
       errors['password'] = l.passwordTooShort;
     } else if (password.length > 128) {
-      errors['password'] = 'Maximum 128 characters.';
+      errors['password'] = l.maximumCharacters(128);
     }
     return errors;
   }
@@ -293,7 +293,9 @@ class _AddUserScreenState extends State<AddUserScreen> {
                     errorText: _errors['password'],
                     prefixIcon: Icons.lock_outline_rounded,
                     suffixIcon: IconButton(
-                      tooltip: _obscurePassword ? 'Show' : 'Hide',
+                      tooltip: _obscurePassword
+                          ? l.showPassword
+                          : l.hidePassword,
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
                       icon: Icon(

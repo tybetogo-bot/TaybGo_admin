@@ -2,6 +2,33 @@
 
 All notable TaybGo Admin changes are documented here.
 
+## 1.0.11+12 — 2026-09-12
+
+### Partner management
+
+- Switched Drivers and Restaurants management lists to their dedicated paginated admin data and backend-supported filters.
+- Aligned partner search with the backend contract for names, phones, emails, vehicle plates, and restaurant owner contacts, including formatted phone input.
+- Kept totals and online/offline status counts consistent with the visible partner filters.
+- Added backend-compliant restaurant status controls: confirmed disable/enable actions, authoritative detail refetches, safe error handling, and filtered-list refreshes that preserve the current search and scope.
+
+### Navigation and notifications
+
+- Added router-backed driver detail navigation and preserved the active partner tab, search, and filter context when opening details or using browser navigation.
+- Added an authenticated notifications inbox with local unread counts, newest-first ordering, read/unread actions, deletion, retry, refresh, and localized empty/error states.
+- Added Firebase Messaging configuration and device-token registration for administrator notifications, including foreground banners, background/cold-start routing, and safe support-ticket destinations.
+
+### Support workflows
+
+- Added a reusable support-ticket composer from the support list, driver details, restaurant details, and order details with backend-compliant recipient and target mappings.
+- Created tickets atomically with their initial message, UUIDv4 idempotency keys, retry-safe payloads, 200/201 handling, field/business error feedback, and optional Cloudinary attachments.
+- Added support-list pagination, visible refresh controls, post-create refresh and navigation to the returned ticket conversation, and dedicated three-second polling for new ticket messages.
+- Clarified support action styling and removed the Application Settings shortcut from the profile quick actions.
+
+### Release quality
+
+- Added regression coverage for partner pagination, backend search parameters, formatted phone searches, no-result states, and partner detail routes.
+- Completed localization coverage for the latest partner, support, notification, restaurant-status, authentication, and settings UI across English, Arabic, Dutch, French, and German, including locale-aware dates/statuses and repaired malformed translation copy.
+
 ## 1.0.10+11 — 2026-08-24
 
 ### Account management

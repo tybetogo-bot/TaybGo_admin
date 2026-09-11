@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/models/support_ticket.dart';
 import '../../core/l10n/app_localizations.dart';
+import 'create_support_ticket_dialog.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -15,13 +16,23 @@ class SupportScreen extends StatefulWidget {
 
 class _SupportScreenState extends State<SupportScreen> {
   String _filter = 'all';
+  late final AdminProvider _admin;
 
   @override
   void initState() {
     super.initState();
     debugPrint('[SupportScreen] initState — loading tickets');
-    final admin = context.read<AdminProvider>();
-    Future.microtask(() => admin.fetchTickets());
+    _admin = context.read<AdminProvider>();
+    Future.microtask(() async {
+      await _admin.fetchTickets(page: 1);
+      if (mounted) _admin.startSupportPolling();
+    });
+  }
+
+  @override
+  void dispose() {
+    _admin.stopSupportPolling();
+    super.dispose();
   }
 
   @override
@@ -70,12 +81,31 @@ class _SupportScreenState extends State<SupportScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: () => createSupportTicketFromContext(
+                    context,
+                    preset: SupportTicketComposerPreset.general(),
+                  ),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(l.createSupportTicket),
+                ),
                 IconButton(
-                  onPressed: () {
-                    debugPrint('[SupportScreen] Manual refresh triggered');
-                    admin.fetchTickets();
-                  },
-                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                  onPressed: admin.ticketsLoading
+                      ? null
+                      : () {
+                          debugPrint(
+                            '[SupportScreen] Manual refresh triggered',
+                          );
+                          admin.fetchTickets(page: 1);
+                        },
+                  icon: admin.ticketsLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh_rounded, size: 20),
                   tooltip: l.refresh,
                 ),
               ],
@@ -140,7 +170,7 @@ class _SupportScreenState extends State<SupportScreen> {
             ),
             const SizedBox(height: 12),
             TextButton(
-              onPressed: () => admin.fetchTickets(),
+              onPressed: () => admin.fetchTickets(page: 1),
               child: Text(l.retry),
             ),
           ],
@@ -149,37 +179,51 @@ class _SupportScreenState extends State<SupportScreen> {
     }
 
     if (tickets.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.inbox_rounded,
-              size: 40,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l.noTicketsFound,
-              style: TextStyle(
-                fontSize: 14,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+      return Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.inbox_rounded,
+                    size: 40,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l.noTicketsFound,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          _SupportPaginationBar(admin: admin),
+        ],
       );
     }
 
-    return ListView.builder(
-      itemCount: tickets.length,
-      itemBuilder: (context, i) {
-        final t = tickets[i];
-        return _TicketRow(
-          ticket: t,
-          onTap: () => context.go('/support/${t.id}'),
-        );
-      },
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: tickets.length,
+            itemBuilder: (context, i) {
+              final t = tickets[i];
+              return _TicketRow(
+                ticket: t,
+                onTap: () => context.go('/support/${t.id}'),
+              );
+            },
+          ),
+        ),
+        _SupportPaginationBar(admin: admin),
+      ],
     );
   }
 
@@ -258,6 +302,52 @@ class _SupportScreenState extends State<SupportScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SupportPaginationBar extends StatelessWidget {
+  const _SupportPaginationBar({required this.admin});
+
+  final AdminProvider admin;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
+    return Container(
+      height: 58,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            l.pageNumber(admin.ticketsPage),
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: admin.ticketsLoading || admin.ticketsPrevious == null
+                ? null
+                : () => admin.fetchTickets(page: admin.ticketsPage - 1),
+            icon: const Icon(Icons.chevron_left_rounded),
+            tooltip: l.previousPage,
+          ),
+          IconButton(
+            onPressed: admin.ticketsLoading || admin.ticketsNext == null
+                ? null
+                : () => admin.fetchTickets(page: admin.ticketsPage + 1),
+            icon: const Icon(Icons.chevron_right_rounded),
+            tooltip: l.nextPage,
+          ),
+        ],
       ),
     );
   }

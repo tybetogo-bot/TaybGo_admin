@@ -113,5 +113,28 @@ void main() {
       expect(ar.formatReleaseDate(DateTime(2026, 8, 9)), '9 أغسطس 2026');
       expect(fr.releasedOn('11 mai 2026'), 'Sortie le 11 mai 2026');
     });
+
+    test('localizes shared fallback copy and status summaries', () {
+      final ar = AppLocalizations(const Locale('ar'));
+      final fr = AppLocalizations(const Locale('fr'));
+      final de = AppLocalizations(const Locale('de'));
+
+      expect(
+        ar.driversScreenSub(3, 2, 1),
+        '3 سائقون - 2 متصلون - 1 غير متصلين',
+      );
+      expect(
+        fr.driversOfflineHint(3),
+        '3 chauffeurs enregistrés - les emplacements apparaissent lorsque les chauffeurs se connectent',
+      );
+      expect(ar.updateRequired, 'التحديث مطلوب');
+      expect(fr.applicationSettings, 'Paramètres de l’application');
+      expect(de.couldNotLoadImage, 'Bild konnte nicht geladen werden');
+      expect(ar.statusLabel('SUSPENDED'), 'الحالة: معلّق');
+      expect(
+        de.formatDateTime(DateTime(2026, 8, 9, 7, 5)),
+        '9. August 2026 07:05',
+      );
+    });
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/l10n/app_localizations.dart';
 import '../../core/models/app_setting.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/services/api_service.dart';
@@ -37,6 +38,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   }
 
   Future<String?> _save(AppSetting setting, dynamic value) async {
+    final l = AppLocalizations.of(context);
     try {
       final updated = await _api.updateAppSetting(setting.key, value);
       if (mounted) {
@@ -48,7 +50,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${setting.key} updated'),
+            content: Text(l.settingUpdated(setting.key)),
             backgroundColor: AppColors.success,
           ),
         );
@@ -63,13 +65,14 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: const Text('Application settings'),
+        title: Text(l.applicationSettings),
         actions: [
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
         ],
@@ -83,10 +86,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   children: [
                     Text(_error!, textAlign: TextAlign.center),
                     const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _load,
-                      child: const Text('Retry'),
-                    ),
+                    ElevatedButton(onPressed: _load, child: Text(l.retry)),
                   ],
                 ),
               ),
@@ -156,6 +156,7 @@ class _SettingEditorState extends State<_SettingEditor> {
   @override
   Widget build(BuildContext context) {
     final setting = widget.setting;
+    final l = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -171,8 +172,8 @@ class _SettingEditorState extends State<_SettingEditor> {
                   ),
                 ),
                 if (setting.isPublic)
-                  const Chip(
-                    label: Text('Public'),
+                  Chip(
+                    label: Text(l.publicLabel),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
@@ -191,7 +192,7 @@ class _SettingEditorState extends State<_SettingEditor> {
             if (_value is bool)
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                title: Text((_value as bool) ? 'Enabled' : 'Disabled'),
+                title: Text((_value as bool) ? l.enabled : l.disabled),
                 value: _value as bool,
                 onChanged: _saving ? null : _save,
               )
@@ -201,7 +202,7 @@ class _SettingEditorState extends State<_SettingEditor> {
                 children: _roles.map((role) {
                   final selected = (_value as List).contains(role);
                   return FilterChip(
-                    label: Text(role),
+                    label: Text(l.roleLabel(role)),
                     selected: selected,
                     onSelected: _saving
                         ? null
@@ -219,10 +220,10 @@ class _SettingEditorState extends State<_SettingEditor> {
                 enabled: !_saving,
                 decoration: InputDecoration(
                   hintText: setting.key == 'app.update_url'
-                      ? 'Empty means no update URL'
+                      ? l.emptyMeansNoUpdateUrl
                       : null,
                   suffixIcon: IconButton(
-                    tooltip: 'Save',
+                    tooltip: l.save,
                     onPressed: _saving
                         ? null
                         : () => _save(

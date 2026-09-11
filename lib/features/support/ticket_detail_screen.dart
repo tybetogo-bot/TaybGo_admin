@@ -20,15 +20,28 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   bool _sending = false;
   bool _detailsExpanded = false;
   String? _restaurantName;
+  late final AdminProvider _admin;
 
   @override
   void initState() {
     super.initState();
-    final admin = context.read<AdminProvider>();
-    Future.microtask(() async {
-      await admin.fetchTicketDetail(widget.ticketId);
+    _admin = context.read<AdminProvider>();
+    _admin.stopSupportPolling();
+    if (_admin.selectedTicket?.id != widget.ticketId) {
+      _admin.clearSelectedTicket();
+    }
+    Future.microtask(_refreshTicket);
+  }
+
+  Future<void> _refreshTicket() async {
+    _admin.stopSupportPolling();
+    await _admin.fetchTicketDetail(widget.ticketId);
+    if (!mounted) return;
+
+    if (_admin.selectedTicket?.id == widget.ticketId) {
+      _admin.startSupportPolling(ticketId: widget.ticketId);
       _loadRestaurantName();
-    });
+    }
   }
 
   Future<void> _loadRestaurantName() async {
@@ -55,6 +68,9 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 
   @override
   void dispose() {
+    // The parent SupportScreen stays mounted for nested ticket routes. Resume
+    // its list polling when this detail route is popped.
+    _admin.startSupportPolling();
     _replyCtrl.dispose();
     super.dispose();
   }
@@ -95,6 +111,28 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         titleSpacing: 0,
         elevation: 0,
         scrolledUnderElevation: 1,
+        actions: [
+          IconButton(
+            onPressed: admin.ticketDetailLoading
+                ? null
+                : () {
+                    debugPrint(
+                      '[TicketDetailScreen] Manual refresh triggered '
+                      'for ticket #${widget.ticketId}',
+                    );
+                    _refreshTicket();
+                  },
+            icon: admin.ticketDetailLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh_rounded, size: 20),
+            tooltip: l.refresh,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: _buildBody(context, admin, t, theme, l),
     );
@@ -130,10 +168,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => admin.fetchTicketDetail(widget.ticketId),
-              child: Text(l.retry),
-            ),
+            TextButton(onPressed: _refreshTicket, child: Text(l.retry)),
           ],
         ),
       );
@@ -500,8 +535,8 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                   ),
                 _ActionBtn(
                   label: l.close,
-                  icon: null,
-                  color: null,
+                  icon: Icons.close_rounded,
+                  color: AppColors.error,
                   onPressed: () => _updateStatus(t.id, 'CLOSED'),
                 ),
               ],
@@ -838,9 +873,12 @@ class _ActionBtnState extends State<_ActionBtn> {
         style: OutlinedButton.styleFrom(
           foregroundColor: widget.color,
           side: BorderSide(color: widget.color!),
+          minimumSize: const Size(0, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+          ),
           textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          minimumSize: Size.zero,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         ),
       );
     }
@@ -848,9 +886,12 @@ class _ActionBtnState extends State<_ActionBtn> {
     return OutlinedButton(
       onPressed: _busy ? null : _run,
       style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 40),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+        ),
         textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        minimumSize: Size.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       ),
       child: _busy
           ? const SizedBox(

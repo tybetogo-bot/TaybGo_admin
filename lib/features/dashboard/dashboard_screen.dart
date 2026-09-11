@@ -7,6 +7,7 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/models/home_response.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/widgets/country_filter_dropdown.dart';
+import '../notifications/notification_bell.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -94,7 +95,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               icon: const Icon(Icons.forum_outlined, size: 18),
                               label: Text(l.support),
                             ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
+                          NotificationBellButton(compact: compactHeader),
+                          const SizedBox(width: 4),
                         ],
                         if (!admin.isLoading)
                           IconButton(

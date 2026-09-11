@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../core/l10n/app_localizations.dart';
+import '../../core/models/home_response.dart';
+import '../../core/providers/admin_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/providers/admin_provider.dart';
-import '../../core/models/home_response.dart';
-import '../../core/l10n/app_localizations.dart';
 
 class DriverRequestDetailScreen extends StatefulWidget {
   final int driverId;
@@ -24,8 +25,7 @@ class DriverRequestDetailScreen extends StatefulWidget {
       _DriverRequestDetailScreenState();
 }
 
-class _DriverRequestDetailScreenState
-    extends State<DriverRequestDetailScreen> {
+class _DriverRequestDetailScreenState extends State<DriverRequestDetailScreen> {
   bool _actionBusy = false;
   late final AdminProvider _admin;
 
@@ -33,43 +33,46 @@ class _DriverRequestDetailScreenState
   void initState() {
     super.initState();
     _admin = context.read<AdminProvider>();
-    Future.microtask(() => _admin.fetchDriverProfile(
-          widget.driverId,
-          driverName: widget.driverName,
-        ));
+    Future.microtask(_loadProfile);
   }
 
   @override
   void dispose() {
     Future.microtask(() {
       try {
-        _admin.clearDriverProfile();
+        _admin.clearDriverRequestProfile();
       } catch (_) {}
     });
     super.dispose();
   }
 
-  Future<void> _verify(String status) async {
+  Future<void> _loadProfile() {
+    return _admin.fetchDriverRequestProfile(
+      widget.driverId,
+      driverName: widget.driverName,
+      driverPhone: widget.driverPhone,
+    );
+  }
+
+  Future<void> _updateStatus(String status) async {
     if (_actionBusy) return;
     setState(() => _actionBusy = true);
     final admin = context.read<AdminProvider>();
     final l = AppLocalizations.of(context);
     final nav = Navigator.of(context);
     try {
-      await admin.verifyDriver(widget.driverId, status: status);
+      await admin.updateDriverStatus(widget.driverId, status: status);
       if (!mounted) return;
       final msg = status == 'APPROVED'
           ? l.driverApproved(widget.driverName)
           : l.driverRejected(widget.driverName);
-      final color =
-          status == 'APPROVED' ? AppColors.success : AppColors.error;
+      final color = status == 'APPROVED' ? AppColors.success : AppColors.error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg, style: const TextStyle(fontSize: 13)),
           backgroundColor: color,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           width: 300,
         ),
       );
@@ -78,12 +81,10 @@ class _DriverRequestDetailScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l.failed('$e'),
-              style: const TextStyle(fontSize: 13)),
+          content: Text(l.failed('$e'), style: const TextStyle(fontSize: 13)),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           width: 300,
         ),
       );
@@ -96,59 +97,65 @@ class _DriverRequestDetailScreenState
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
     final admin = context.watch<AdminProvider>();
-    final profile = admin.driverProfile;
-    final loading = admin.driverProfileLoading;
+    final profile = admin.driverRequestProfile;
+    final loading = admin.driverRequestProfileLoading;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.driverRequest),
-        centerTitle: false,
-      ),
-      body: loading
+      appBar: AppBar(title: Text(l.driverRequest), centerTitle: false),
+      body: loading && profile == null
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
-                  Text(l.loadingDetails,
-                      style: TextStyle(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5))),
+                  Text(
+                    l.loadingDetails,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
                 ],
               ),
             )
           : profile == null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.error_outline,
-                          size: 48,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.3)),
-                      const SizedBox(height: 16),
-                      Text(l.failedToLoadDetails,
-                          style: TextStyle(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.5))),
-                      const SizedBox(height: 16),
-                      OutlinedButton(
-                        onPressed: () => admin.fetchDriverProfile(
-                          widget.driverId,
-                          driverName: widget.driverName,
-                        ),
-                        child: Text(l.retry),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
-                )
-              : _buildContent(context, profile),
+                  const SizedBox(height: 16),
+                  Text(
+                    l.failedToLoadDetails,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton(onPressed: _loadProfile, child: Text(l.retry)),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                if (loading) const LinearProgressIndicator(minHeight: 2),
+                Expanded(child: _buildContent(context, profile, admin)),
+              ],
+            ),
     );
   }
 
-  Widget _buildContent(BuildContext context, DriverProfile profile) {
+  Widget _buildContent(
+    BuildContext context,
+    DriverProfile profile,
+    AdminProvider admin,
+  ) {
     final l = AppLocalizations.of(context);
+    final contactPhone = profile.phone ?? widget.driverPhone;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -158,75 +165,71 @@ class _DriverRequestDetailScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header card
               _buildHeaderCard(context, profile),
+              const SizedBox(height: 16),
+              _buildSection(
+                context,
+                title: l.requestDetails,
+                icon: Icons.assignment_outlined,
+                children: [
+                  _buildDetailRow(context, l.id, '${profile.id}'),
+                  if (profile.createdAt != null)
+                    _buildDetailRow(
+                      context,
+                      l.registeredDate,
+                      _fmtDateTimeFull(l, profile.createdAt!),
+                    ),
+                  if (profile.submittedAt != null)
+                    _buildDetailRow(
+                      context,
+                      l.submittedDate,
+                      _fmtDateTimeFull(l, profile.submittedAt!),
+                    ),
+                ],
+              ),
               const SizedBox(height: 20),
-
-              // Contact info
               _buildSection(
                 context,
                 title: l.contactInfo,
                 icon: Icons.contact_phone_outlined,
                 children: [
-                  _buildDetailRow(context, l.phone,
-                      widget.driverPhone.isNotEmpty
-                          ? widget.driverPhone
-                          : l.notProvided),
                   _buildDetailRow(
-                      context, l.email, profile.email ?? l.notProvided),
+                    context,
+                    l.phone,
+                    contactPhone.isNotEmpty ? contactPhone : l.notProvided,
+                  ),
+                  if (profile.email != null)
+                    _buildDetailRow(context, l.email, profile.email!),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // Vehicle type
-              _buildSection(
-                context,
-                title: l.vehicleType,
-                icon: Icons.directions_car_outlined,
-                children: [
-                  _buildDetailRow(context, l.vehicleType,
-                      profile.vehicleType.isNotEmpty
-                          ? _vehicleLabel(l, profile.vehicleType)
-                          : l.notProvided),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Service types
-              _buildSection(
-                context,
-                title: l.serviceTypes,
-                icon: Icons.miscellaneous_services_outlined,
-                children: [
-                  _buildServiceChips(context, profile, l),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Documents
-              _buildSection(
-                context,
-                title: l.documents,
-                icon: Icons.folder_outlined,
-                children: _buildDocumentsList(context, profile, l),
-              ),
-              const SizedBox(height: 16),
-
-              // Dates
-              _buildSection(
-                context,
-                title: l.submittedDate,
-                icon: Icons.calendar_today_outlined,
-                children: [
-                  _buildDetailRow(context, l.registeredDate,
-                      profile.createdAt != null
-                          ? _fmtDateTime(profile.createdAt!)
-                          : l.notProvided),
-                ],
-              ),
+              if (profile.hasVehicleDetails) ...[
+                const SizedBox(height: 16),
+                _buildSection(
+                  context,
+                  title: l.vehicleDetails,
+                  icon: Icons.directions_car_outlined,
+                  children: _buildVehicleDetails(context, profile, l),
+                ),
+              ],
+              if (profile.hasServiceDetails) ...[
+                const SizedBox(height: 16),
+                _buildSection(
+                  context,
+                  title: l.serviceTypes,
+                  icon: Icons.miscellaneous_services_outlined,
+                  children: [_buildServiceChips(context, profile, l)],
+                ),
+              ],
+              if (profile.hasDocuments) ...[
+                const SizedBox(height: 16),
+                _buildSection(
+                  context,
+                  title: l.documents,
+                  icon: Icons.folder_outlined,
+                  children: _buildDocumentsList(context, profile, l),
+                ),
+              ],
               const SizedBox(height: 32),
-
-              // Action buttons
               if (_actionBusy)
                 const Center(
                   child: Padding(
@@ -241,12 +244,14 @@ class _DriverRequestDetailScreenState
                       child: SizedBox(
                         height: 48,
                         child: OutlinedButton(
-                          onPressed: () => _verify('REJECTED'),
+                          onPressed: () => _updateStatus('REJECTED'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.error,
                             side: const BorderSide(color: AppColors.error),
                             textStyle: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w600),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           child: Text(l.decline),
                         ),
@@ -257,10 +262,12 @@ class _DriverRequestDetailScreenState
                       child: SizedBox(
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: () => _verify('APPROVED'),
+                          onPressed: () => _updateStatus('APPROVED'),
                           style: ElevatedButton.styleFrom(
                             textStyle: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w600),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           child: Text(l.approve),
                         ),
@@ -278,7 +285,10 @@ class _DriverRequestDetailScreenState
 
   Widget _buildHeaderCard(BuildContext context, DriverProfile profile) {
     final theme = Theme.of(context);
-    final l = AppLocalizations.of(context);
+    final displayName = profile.name.isNotEmpty
+        ? profile.name
+        : widget.driverName;
+    final statusColor = _statusColor(profile);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -305,7 +315,7 @@ class _DriverRequestDetailScreenState
             ),
             child: Center(
               child: Text(
-                profile.name
+                displayName
                     .split(' ')
                     .map((n) => n.isNotEmpty ? n[0] : '')
                     .take(2)
@@ -324,7 +334,7 @@ class _DriverRequestDetailScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  profile.name,
+                  displayName,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -334,17 +344,19 @@ class _DriverRequestDetailScreenState
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.12),
+                    color: statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    l.statusLabel(profile.status),
+                    _statusText(AppLocalizations.of(context), profile),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.warning,
+                      color: statusColor,
                     ),
                   ),
                 ),
@@ -377,18 +389,18 @@ class _DriverRequestDetailScreenState
         children: [
           Row(
             children: [
-              Icon(icon,
-                  size: 16,
-                  color:
-                      theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+              Icon(
+                icon,
+                size: 16,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.5),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   letterSpacing: 0.3,
                 ),
               ),
@@ -401,8 +413,7 @@ class _DriverRequestDetailScreenState
     );
   }
 
-  Widget _buildDetailRow(
-      BuildContext context, String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -416,8 +427,7 @@ class _DriverRequestDetailScreenState
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: theme.colorScheme.onSurface
-                    .withValues(alpha: 0.45),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
               ),
             ),
           ),
@@ -437,12 +447,18 @@ class _DriverRequestDetailScreenState
   }
 
   Widget _buildServiceChips(
-      BuildContext context, DriverProfile profile, AppLocalizations l) {
+    BuildContext context,
+    DriverProfile profile,
+    AppLocalizations l,
+  ) {
     final theme = Theme.of(context);
     final services = <_ServiceInfo>[
       _ServiceInfo(l.food, Icons.restaurant_outlined, profile.acceptsFood),
       _ServiceInfo(
-          l.shipping, Icons.local_shipping_outlined, profile.acceptsShipping),
+        l.shipping,
+        Icons.local_shipping_outlined,
+        profile.acceptsShipping,
+      ),
       _ServiceInfo(l.taxi, Icons.local_taxi_outlined, profile.acceptsTaxi),
     ];
 
@@ -450,14 +466,16 @@ class _DriverRequestDetailScreenState
       spacing: 8,
       runSpacing: 8,
       children: services.map((s) {
-        final active = s.enabled;
+        final active = s.enabled == true;
+        final inactive = s.enabled == false;
         return Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: active
                 ? AppColors.primary.withValues(alpha: 0.08)
-                : theme.colorScheme.onSurface.withValues(alpha: 0.04),
+                : theme.colorScheme.onSurface.withValues(
+                    alpha: inactive ? 0.04 : 0.02,
+                  ),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: active
@@ -468,12 +486,15 @@ class _DriverRequestDetailScreenState
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(s.icon,
-                  size: 16,
-                  color: active
-                      ? AppColors.primary
-                      : theme.colorScheme.onSurface
-                          .withValues(alpha: 0.3)),
+              Icon(
+                s.icon,
+                size: 16,
+                color: active
+                    ? AppColors.primary
+                    : theme.colorScheme.onSurface.withValues(
+                        alpha: inactive ? 0.3 : 0.2,
+                      ),
+              ),
               const SizedBox(width: 6),
               Text(
                 s.label,
@@ -482,20 +503,24 @@ class _DriverRequestDetailScreenState
                   fontWeight: FontWeight.w500,
                   color: active
                       ? AppColors.primary
-                      : theme.colorScheme.onSurface
-                          .withValues(alpha: 0.35),
+                      : theme.colorScheme.onSurface.withValues(
+                          alpha: inactive ? 0.35 : 0.25,
+                        ),
                 ),
               ),
               const SizedBox(width: 4),
               Icon(
                 active
                     ? Icons.check_circle_rounded
-                    : Icons.cancel_rounded,
+                    : inactive
+                    ? Icons.cancel_rounded
+                    : Icons.help_outline_rounded,
                 size: 14,
                 color: active
                     ? AppColors.primary
-                    : theme.colorScheme.onSurface
-                        .withValues(alpha: 0.2),
+                    : theme.colorScheme.onSurface.withValues(
+                        alpha: inactive ? 0.2 : 0.15,
+                      ),
               ),
             ],
           ),
@@ -504,42 +529,133 @@ class _DriverRequestDetailScreenState
     );
   }
 
-  List<Widget> _buildDocumentsList(
-      BuildContext context, DriverProfile profile, AppLocalizations l) {
-    final docs = <_DocInfo>[
-      _DocInfo(l.drivingLicense, Icons.badge_outlined,
-          profile.drivingLicense),
-      _DocInfo(l.idDocument, Icons.credit_card_outlined,
-          profile.idDocument),
-      _DocInfo(l.otherDocuments, Icons.description_outlined,
-          profile.otherDocuments),
-    ];
+  List<Widget> _buildVehicleDetails(
+    BuildContext context,
+    DriverProfile profile,
+    AppLocalizations l,
+  ) {
+    final rows = <Widget>[];
 
-    return docs
-        .map((doc) => _buildDocumentCard(context, doc, l))
-        .toList();
+    if (profile.vehicleType.isNotEmpty) {
+      rows.add(
+        _buildDetailRow(
+          context,
+          l.vehicleType,
+          _vehicleLabel(l, profile.vehicleType),
+        ),
+      );
+    }
+    if (profile.carSize != null) {
+      rows.add(_buildDetailRow(context, l.carSize, profile.carSize!));
+    }
+    if (profile.vehiclePlateNumber != null) {
+      rows.add(
+        _buildDetailRow(
+          context,
+          l.vehiclePlateNumber,
+          profile.vehiclePlateNumber!,
+        ),
+      );
+    }
+    if (profile.vehicleColor != null) {
+      rows.add(_buildDetailRow(context, l.vehicleColor, profile.vehicleColor!));
+    }
+    if (profile.vehicleMake != null) {
+      rows.add(_buildDetailRow(context, l.vehicleMake, profile.vehicleMake!));
+    }
+    if (profile.vehicleModel != null) {
+      rows.add(_buildDetailRow(context, l.vehicleModel, profile.vehicleModel!));
+    }
+    if (profile.vehicleYear != null) {
+      rows.add(_buildDetailRow(context, l.vehicleYear, profile.vehicleYear!));
+    }
+
+    return rows;
+  }
+
+  List<Widget> _buildDocumentsList(
+    BuildContext context,
+    DriverProfile profile,
+    AppLocalizations l,
+  ) {
+    final theme = Theme.of(context);
+    final docs = profile.documentItems.isNotEmpty
+        ? profile.documentItems
+        : <DriverDocument>[
+            if (profile.drivingLicense != null)
+              DriverDocument(
+                key: 'driving_license',
+                label: l.drivingLicense,
+                url: profile.drivingLicense,
+              ),
+            if (profile.idDocument != null)
+              DriverDocument(
+                key: 'id_document',
+                label: l.idDocument,
+                url: profile.idDocument,
+              ),
+            if (profile.otherDocuments != null)
+              DriverDocument(
+                key: 'other_documents',
+                label: l.otherDocuments,
+                url: profile.otherDocuments,
+              ),
+          ];
+
+    if (docs.isEmpty) {
+      return [
+        Container(
+          height: 48,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: theme.dividerColor,
+              strokeAlign: BorderSide.strokeAlignInside,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              l.noDocumentsUploaded,
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    return docs.map((doc) => _buildDocumentCard(context, doc, l)).toList();
   }
 
   Widget _buildDocumentCard(
-      BuildContext context, _DocInfo doc, AppLocalizations l) {
+    BuildContext context,
+    DriverDocument doc,
+    AppLocalizations l,
+  ) {
     final theme = Theme.of(context);
     final hasUrl = doc.url != null;
+    final icon = _documentIconForKey(doc.key);
+    final label = _documentLabelForKey(l, doc);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Label row
           Row(
             children: [
-              Icon(doc.icon,
-                  size: 16,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.4)),
+              Icon(
+                icon,
+                size: 16,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
               const SizedBox(width: 8),
               Text(
-                doc.label,
+                label,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -555,7 +671,9 @@ class _DriverRequestDetailScreenState
                   style: TextButton.styleFrom(
                     textStyle: const TextStyle(fontSize: 11),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -563,10 +681,11 @@ class _DriverRequestDetailScreenState
             ],
           ),
           const SizedBox(height: 8),
-          // Image preview or placeholder
-          if (hasUrl)
+          if (!hasUrl)
+            _buildMissingDocumentTile(theme, l)
+          else if (_isImageUrl(doc.url!))
             GestureDetector(
-              onTap: () => _showFullImage(context, doc.url!, doc.label),
+              onTap: () => _showFullImage(context, doc.url!, label),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.network(
@@ -580,124 +699,250 @@ class _DriverRequestDetailScreenState
                       height: 180,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.04),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.04,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2)),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     );
                   },
                   errorBuilder: (context, error, stack) {
-                    return Container(
-                      height: 60,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.04),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.broken_image_outlined,
-                                size: 16,
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.3)),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Could not load image',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.4),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    return _buildFileTile(
+                      theme,
+                      icon: Icons.broken_image_outlined,
+                      title: l.couldNotLoadImage,
+                      subtitle: label,
                     );
                   },
                 ),
               ),
             )
           else
-            Container(
-              height: 48,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: theme.dividerColor,
-                  strokeAlign: BorderSide.strokeAlignInside,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  l.noDocumentsUploaded,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurface
-                        .withValues(alpha: 0.35),
-                  ),
-                ),
-              ),
+            _buildFileTile(
+              theme,
+              icon: _documentFileIconForUrl(doc.url!),
+              title: l.previewUnavailable,
+              subtitle: label,
+              onTap: () => _openUrl(doc.url!),
             ),
         ],
       ),
     );
   }
 
+  Widget _buildMissingDocumentTile(ThemeData theme, AppLocalizations l) {
+    return Container(
+      height: 48,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: theme.dividerColor,
+          strokeAlign: BorderSide.strokeAlignInside,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          l.notProvided,
+          style: TextStyle(
+            fontSize: 12,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFileTile(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    VoidCallback? onTap,
+  }) {
+    final tile = Container(
+      height: 72,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: theme.dividerColor,
+          strokeAlign: BorderSide.strokeAlignInside,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.45,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              Icon(
+                Icons.open_in_new,
+                size: 16,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    if (onTap == null) return tile;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: tile,
+    );
+  }
+
+  IconData _documentIconForKey(String key) {
+    switch (key) {
+      case 'driving_license':
+        return Icons.badge_outlined;
+      case 'id_document':
+        return Icons.credit_card_outlined;
+      case 'health_insurance_document':
+        return Icons.health_and_safety_outlined;
+      case 'address_document':
+        return Icons.home_work_outlined;
+      case 'bank_document':
+        return Icons.account_balance_outlined;
+      case 'other_documents':
+        return Icons.description_outlined;
+      default:
+        return Icons.description_outlined;
+    }
+  }
+
+  String _documentLabelForKey(AppLocalizations l, DriverDocument doc) {
+    switch (doc.key) {
+      case 'driving_license':
+        return l.drivingLicense;
+      case 'id_document':
+        return l.idDocument;
+      case 'health_insurance_document':
+        return l.healthInsuranceDocument;
+      case 'address_document':
+        return l.addressDocument;
+      case 'bank_document':
+        return l.bankDocument;
+      case 'other_documents':
+        return l.otherDocuments;
+      default:
+        return doc.label;
+    }
+  }
+
+  IconData _documentFileIconForUrl(String url) {
+    final lower = url.toLowerCase();
+    if (lower.endsWith('.pdf')) return Icons.picture_as_pdf_outlined;
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) {
+      return Icons.description_outlined;
+    }
+    return Icons.insert_drive_file_outlined;
+  }
+
+  bool _isImageUrl(String url) {
+    final lower = url.toLowerCase();
+    return lower.contains('.jpg') ||
+        lower.contains('.jpeg') ||
+        lower.contains('.png') ||
+        lower.contains('.webp') ||
+        lower.contains('.gif') ||
+        lower.contains('.bmp');
+  }
+
   void _showFullImage(BuildContext context, String url, String title) {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
+        insetPadding: const EdgeInsets.all(24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600, maxHeight: 600),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+                padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(title,
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                     IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: const Icon(Icons.close),
                     ),
                   ],
                 ),
               ),
               const Divider(),
-              Flexible(
+              Expanded(
                 child: InteractiveViewer(
-                  child: Image.network(
-                    url,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stack) => const Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Center(child: Text('Failed to load image')),
+                  minScale: 0.8,
+                  maxScale: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Image.network(
+                      url,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return const Center(child: CircularProgressIndicator());
+                      },
+                      errorBuilder: (_, error, stackTrace) =>
+                          Center(child: Text(l.couldNotLoadImage)),
                     ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _openUrl(url);
-                  },
-                  icon: const Icon(Icons.open_in_new, size: 14),
-                  label: const Text('Open in browser'),
                 ),
               ),
             ],
@@ -708,22 +953,17 @@ class _DriverRequestDetailScreenState
   }
 
   Future<void> _openUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      // Fallback for web
-      try {
-        await launchUrl(uri);
-      } catch (_) {}
-    }
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   String _vehicleLabel(AppLocalizations l, String type) {
-    switch (type) {
+    switch (type.toUpperCase()) {
       case 'BIKE':
         return l.bike;
       case 'MOTOR':
+      case 'MOTORCYCLE':
         return l.motorcycle;
       case 'CAR':
         return l.car;
@@ -734,25 +974,30 @@ class _DriverRequestDetailScreenState
     }
   }
 
-  String _fmtDateTime(DateTime d) {
-    const m = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return '${m[d.month - 1]} ${d.day}, ${d.year}';
+  String _fmtDateTimeFull(AppLocalizations l, DateTime d) {
+    return l.formatDateTime(d);
+  }
+
+  String _statusText(AppLocalizations l, DriverProfile profile) {
+    return l.statusLabel(profile.status);
+  }
+
+  Color _statusColor(DriverProfile profile) {
+    switch (profile.status.toUpperCase()) {
+      case 'APPROVED':
+        return AppColors.success;
+      case 'REJECTED':
+        return AppColors.error;
+      default:
+        return AppColors.warning;
+    }
   }
 }
 
 class _ServiceInfo {
   final String label;
   final IconData icon;
-  final bool enabled;
-  const _ServiceInfo(this.label, this.icon, this.enabled);
-}
+  final bool? enabled;
 
-class _DocInfo {
-  final String label;
-  final IconData icon;
-  final String? url;
-  const _DocInfo(this.label, this.icon, this.url);
+  const _ServiceInfo(this.label, this.icon, this.enabled);
 }

@@ -69,9 +69,9 @@ class SupportTicket {
       closedAt: json['closed_at'] != null
           ? DateTime.tryParse(json['closed_at'])
           : null,
-      messages: (json['messages'] as List<dynamic>?)
-              ?.map((m) =>
-                  TicketMessage.fromJson(m as Map<String, dynamic>))
+      messages:
+          (json['messages'] as List<dynamic>?)
+              ?.map((m) => TicketMessage.fromJson(m as Map<String, dynamic>))
               .toList() ??
           const [],
     );
@@ -112,15 +112,17 @@ class TicketMessage {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at']) ?? DateTime.now()
           : DateTime.now(),
-      attachments: (json['attachments'] as List<dynamic>?)
-              ?.map((a) =>
-                  TicketAttachment.fromJson(a as Map<String, dynamic>))
+      attachments:
+          (json['attachments'] as List<dynamic>?)
+              ?.map((a) => TicketAttachment.fromJson(a as Map<String, dynamic>))
               .toList() ??
           const [],
     );
   }
 
-  bool get isAdmin => authorRole == 'ADMIN';
+  bool get isAdmin => authorRole == 'ADMIN' || authorRole == 'STAFF';
+  bool get isSeller => authorRole == 'SELLER' || authorRole == 'RESTAURANT';
+  bool get isCustomer => !isAdmin && !isSeller;
 }
 
 class TicketAttachment {

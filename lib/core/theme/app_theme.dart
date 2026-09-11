@@ -6,24 +6,24 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get light => _buildTheme(
-        brightness: Brightness.light,
-        background: AppColors.lightBackground,
-        surface: AppColors.lightSurface,
-        border: AppColors.lightBorder,
-        textColor: AppColors.lightText,
-        textSecondary: AppColors.lightTextSecondary,
-        textHint: AppColors.lightTextHint,
-      );
+    brightness: Brightness.light,
+    background: AppColors.lightBackground,
+    surface: AppColors.lightSurface,
+    border: AppColors.lightBorder,
+    textColor: AppColors.lightText,
+    textSecondary: AppColors.lightTextSecondary,
+    textHint: AppColors.lightTextHint,
+  );
 
   static ThemeData get dark => _buildTheme(
-        brightness: Brightness.dark,
-        background: AppColors.darkBackground,
-        surface: AppColors.darkSurface,
-        border: AppColors.darkBorder,
-        textColor: AppColors.darkText,
-        textSecondary: AppColors.darkTextSecondary,
-        textHint: AppColors.darkTextHint,
-      );
+    brightness: Brightness.dark,
+    background: AppColors.darkBackground,
+    surface: AppColors.darkSurface,
+    border: AppColors.darkBorder,
+    textColor: AppColors.darkText,
+    textSecondary: AppColors.darkTextSecondary,
+    textHint: AppColors.darkTextHint,
+  );
 
   static ThemeData _buildTheme({
     required Brightness brightness,
@@ -75,7 +75,7 @@ class AppTheme {
         elevation: 0,
         color: surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
           side: BorderSide(color: border, width: 1),
         ),
         margin: EdgeInsets.zero,
@@ -85,38 +85,31 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          minimumSize: const Size(double.infinity, 52),
+          minimumSize: const Size(0, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
           ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: textColor,
+          foregroundColor: AppColors.primary,
           elevation: 0,
-          minimumSize: const Size(double.infinity, 52),
-          side: BorderSide(color: border),
+          minimumSize: const Size(0, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.32)),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
           ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -138,7 +131,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
           borderSide: const BorderSide(color: AppColors.error, width: 1),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         hintStyle: TextStyle(color: textHint, fontSize: 14),
       ),
       chipTheme: ChipThemeData(
@@ -164,10 +160,7 @@ class AppTheme {
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
-        unselectedLabelTextStyle: TextStyle(
-          color: textSecondary,
-          fontSize: 12,
-        ),
+        unselectedLabelTextStyle: TextStyle(color: textSecondary, fontSize: 12),
         indicatorColor: AppColors.primaryLight,
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(

@@ -43,12 +43,13 @@ class _RestaurantRequestDetailScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l.restaurantActivated(widget.restaurantName),
-              style: const TextStyle(fontSize: 13)),
+          content: Text(
+            l.restaurantActivated(widget.restaurantName),
+            style: const TextStyle(fontSize: 13),
+          ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           width: 300,
         ),
       );
@@ -57,12 +58,10 @@ class _RestaurantRequestDetailScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(l.failed('$e'), style: const TextStyle(fontSize: 13)),
+          content: Text(l.failed('$e'), style: const TextStyle(fontSize: 13)),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           width: 300,
         ),
       );
@@ -79,24 +78,24 @@ class _RestaurantRequestDetailScreenState
     final restaurant = _restaurant;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.restaurantRequest),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: Text(l.restaurantRequest), centerTitle: false),
       body: restaurant == null
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.storefront_outlined,
-                      size: 48,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.3)),
+                  Icon(
+                    Icons.storefront_outlined,
+                    size: 48,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                  ),
                   const SizedBox(height: 16),
-                  Text(l.failedToLoadDetails,
-                      style: TextStyle(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5))),
+                  Text(
+                    l.failedToLoadDetails,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
                 ],
               ),
             )
@@ -119,11 +118,13 @@ class _RestaurantRequestDetailScreenState
                         icon: Icons.info_outline,
                         children: [
                           _buildDetailRow(context, l.name, restaurant.name),
-                          _buildDetailRow(context, l.status,
-                              restaurant.status),
+                          _buildDetailRow(context, l.status, restaurant.status),
                           if (restaurant.submittedAt != null)
-                            _buildDetailRow(context, l.submittedDate,
-                                _fmtDateTime(restaurant.submittedAt!)),
+                            _buildDetailRow(
+                              context,
+                              l.submittedDate,
+                              _fmtDateTime(l, restaurant.submittedAt!),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 32),
@@ -144,8 +145,9 @@ class _RestaurantRequestDetailScreenState
                             onPressed: _activate,
                             style: ElevatedButton.styleFrom(
                               textStyle: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             child: Text(l.activate),
                           ),
@@ -159,8 +161,7 @@ class _RestaurantRequestDetailScreenState
     );
   }
 
-  Widget _buildHeaderCard(
-      BuildContext context, PendingRestaurant restaurant) {
+  Widget _buildHeaderCard(BuildContext context, PendingRestaurant restaurant) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
 
@@ -188,8 +189,11 @@ class _RestaurantRequestDetailScreenState
               borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
             ),
             child: const Center(
-              child: Icon(Icons.storefront_rounded,
-                  size: 24, color: Color(0xFF6366F1)),
+              child: Icon(
+                Icons.storefront_rounded,
+                size: 24,
+                color: Color(0xFF6366F1),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -208,7 +212,9 @@ class _RestaurantRequestDetailScreenState
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.warning.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
@@ -251,18 +257,18 @@ class _RestaurantRequestDetailScreenState
         children: [
           Row(
             children: [
-              Icon(icon,
-                  size: 16,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.4)),
+              Icon(
+                icon,
+                size: 16,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.5),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   letterSpacing: 0.3,
                 ),
               ),
@@ -275,8 +281,7 @@ class _RestaurantRequestDetailScreenState
     );
   }
 
-  Widget _buildDetailRow(
-      BuildContext context, String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -290,8 +295,7 @@ class _RestaurantRequestDetailScreenState
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: theme.colorScheme.onSurface
-                    .withValues(alpha: 0.45),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
               ),
             ),
           ),
@@ -310,11 +314,7 @@ class _RestaurantRequestDetailScreenState
     );
   }
 
-  String _fmtDateTime(DateTime d) {
-    const m = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return '${m[d.month - 1]} ${d.day}, ${d.year}';
+  String _fmtDateTime(AppLocalizations l, DateTime d) {
+    return l.formatReleaseDate(d);
   }
 }

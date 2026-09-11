@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/models/support_ticket.dart';
 import '../../core/l10n/app_localizations.dart';
+import 'create_support_ticket_dialog.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -15,13 +16,23 @@ class SupportScreen extends StatefulWidget {
 
 class _SupportScreenState extends State<SupportScreen> {
   String _filter = 'all';
+  late final AdminProvider _admin;
 
   @override
   void initState() {
     super.initState();
     debugPrint('[SupportScreen] initState — loading tickets');
-    final admin = context.read<AdminProvider>();
-    Future.microtask(() => admin.fetchTickets());
+    _admin = context.read<AdminProvider>();
+    Future.microtask(() async {
+      await _admin.fetchTickets(page: 1);
+      if (mounted) _admin.startSupportPolling();
+    });
+  }
+
+  @override
+  void dispose() {
+    _admin.stopSupportPolling();
+    super.dispose();
   }
 
   @override
@@ -62,19 +73,39 @@ class _SupportScreenState extends State<SupportScreen> {
                         ),
                         style: TextStyle(
                           fontSize: 14,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: () => createSupportTicketFromContext(
+                    context,
+                    preset: SupportTicketComposerPreset.general(),
+                  ),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(l.createSupportTicket),
+                ),
                 IconButton(
-                  onPressed: () {
-                    debugPrint('[SupportScreen] Manual refresh triggered');
-                    admin.fetchTickets();
-                  },
-                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                  onPressed: admin.ticketsLoading
+                      ? null
+                      : () {
+                          debugPrint(
+                            '[SupportScreen] Manual refresh triggered',
+                          );
+                          admin.fetchTickets(page: 1);
+                        },
+                  icon: admin.ticketsLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh_rounded, size: 20),
                   tooltip: l.refresh,
                 ),
               ],
@@ -88,8 +119,11 @@ class _SupportScreenState extends State<SupportScreen> {
                 children: [
                   _tab(l.all, 'all', admin.tickets.length),
                   _tab(l.open, 'open', admin.openTickets.length),
-                  _tab(l.inProgress, 'inProgress',
-                      admin.inProgressTickets.length),
+                  _tab(
+                    l.inProgress,
+                    'inProgress',
+                    admin.inProgressTickets.length,
+                  ),
                   _tab(l.resolved, 'resolved', admin.resolvedTickets.length),
                   _tab(l.closed, 'closed', admin.closedTickets.length),
                 ],
@@ -99,17 +133,19 @@ class _SupportScreenState extends State<SupportScreen> {
             Divider(color: theme.dividerColor, height: 1),
 
             // Content
-            Expanded(
-              child: _buildContent(admin, tickets, theme, l),
-            ),
+            Expanded(child: _buildContent(admin, tickets, theme, l)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContent(AdminProvider admin, List<SupportTicket> tickets,
-      ThemeData theme, AppLocalizations l) {
+  Widget _buildContent(
+    AdminProvider admin,
+    List<SupportTicket> tickets,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     if (admin.ticketsLoading && admin.tickets.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -119,9 +155,11 @@ class _SupportScreenState extends State<SupportScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded,
-                size: 40,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+            Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+            ),
             const SizedBox(height: 12),
             Text(
               admin.ticketsError!,
@@ -132,7 +170,7 @@ class _SupportScreenState extends State<SupportScreen> {
             ),
             const SizedBox(height: 12),
             TextButton(
-              onPressed: () => admin.fetchTickets(),
+              onPressed: () => admin.fetchTickets(page: 1),
               child: Text(l.retry),
             ),
           ],
@@ -141,36 +179,51 @@ class _SupportScreenState extends State<SupportScreen> {
     }
 
     if (tickets.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.inbox_rounded,
-                size: 40,
-                color:
-                    theme.colorScheme.onSurface.withValues(alpha: 0.15)),
-            const SizedBox(height: 12),
-            Text(
-              l.noTicketsFound,
-              style: TextStyle(
-                fontSize: 14,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+      return Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.inbox_rounded,
+                    size: 40,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l.noTicketsFound,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          _SupportPaginationBar(admin: admin),
+        ],
       );
     }
 
-    return ListView.builder(
-      itemCount: tickets.length,
-      itemBuilder: (context, i) {
-        final t = tickets[i];
-        return _TicketRow(
-          ticket: t,
-          onTap: () => context.go('/support/${t.id}'),
-        );
-      },
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: tickets.length,
+            itemBuilder: (context, i) {
+              final t = tickets[i];
+              return _TicketRow(
+                ticket: t,
+                onTap: () => context.go('/support/${t.id}'),
+              );
+            },
+          ),
+        ),
+        _SupportPaginationBar(admin: admin),
+      ],
     );
   }
 
@@ -213,6 +266,8 @@ class _SupportScreenState extends State<SupportScreen> {
           children: [
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
@@ -224,8 +279,7 @@ class _SupportScreenState extends State<SupportScreen> {
             if (count > 0) ...[
               const SizedBox(width: 6),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
                   color: selected
                       ? AppColors.primary.withValues(alpha: 0.12)
@@ -234,13 +288,14 @@ class _SupportScreenState extends State<SupportScreen> {
                 ),
                 child: Text(
                   '$count',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: selected
                         ? AppColors.primary
-                        : theme.colorScheme.onSurface
-                            .withValues(alpha: 0.45),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.45),
                   ),
                 ),
               ),
@@ -252,16 +307,59 @@ class _SupportScreenState extends State<SupportScreen> {
   }
 }
 
+class _SupportPaginationBar extends StatelessWidget {
+  const _SupportPaginationBar({required this.admin});
+
+  final AdminProvider admin;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
+    return Container(
+      height: 58,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            l.pageNumber(admin.ticketsPage),
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: admin.ticketsLoading || admin.ticketsPrevious == null
+                ? null
+                : () => admin.fetchTickets(page: admin.ticketsPage - 1),
+            icon: const Icon(Icons.chevron_left_rounded),
+            tooltip: l.previousPage,
+          ),
+          IconButton(
+            onPressed: admin.ticketsLoading || admin.ticketsNext == null
+                ? null
+                : () => admin.fetchTickets(page: admin.ticketsPage + 1),
+            icon: const Icon(Icons.chevron_right_rounded),
+            tooltip: l.nextPage,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ─── Ticket Row ──────────────────────────────────────────────────
 
 class _TicketRow extends StatefulWidget {
   final SupportTicket ticket;
   final VoidCallback onTap;
 
-  const _TicketRow({
-    required this.ticket,
-    required this.onTap,
-  });
+  const _TicketRow({required this.ticket, required this.onTap});
 
   @override
   State<_TicketRow> createState() => _TicketRowState();
@@ -290,9 +388,7 @@ class _TicketRowState extends State<_TicketRow> {
             color: _hovered
                 ? theme.colorScheme.onSurface.withValues(alpha: 0.02)
                 : Colors.transparent,
-            border: Border(
-              bottom: BorderSide(color: theme.dividerColor),
-            ),
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,19 +433,23 @@ class _TicketRowState extends State<_TicketRow> {
                   Expanded(
                     child: Text(
                       '${t.requesterName} · ${t.category}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.4),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                     ),
                   ),
                   Text(
                     '#${t.id}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 11,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.3),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                       fontFamily: 'monospace',
                     ),
                   ),

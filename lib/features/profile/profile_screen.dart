@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import '../../core/l10n/app_localizations.dart';
+import '../../core/providers/auth_provider.dart';
+import '../../core/providers/settings_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/providers/auth_provider.dart';
-import '../../core/providers/admin_provider.dart';
-import '../../core/providers/settings_provider.dart';
-import '../../core/l10n/app_localizations.dart';
+import '../../core/version/app_release_history.dart';
+import '../../core/widgets/country_filter_dropdown.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +18,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  bool _profileExpanded = false;
+
   @override
   void initState() {
     super.initState();
@@ -27,13 +32,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final settings = context.watch<SettingsProvider>();
     final auth = context.watch<AuthProvider>();
     final l = AppLocalizations.of(context);
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -46,105 +50,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 24),
-
-            // ─── User Profile Card ────────────────────────────
+            const SizedBox(height: 20),
             _buildProfileCard(auth, theme, l),
             const SizedBox(height: 16),
-
-            // ─── Theme Section ────────────────────────────────
-            _SectionCard(
-              icon: Icons.palette_outlined,
-              title: l.theme,
-              child: Column(
-                children: [
-                  _ThemeOption(
-                    label: l.systemDefault,
-                    icon: Icons.settings_brightness_rounded,
-                    selected: settings.themeMode == ThemeMode.system,
-                    onTap: () => settings.setThemeMode(ThemeMode.system),
-                  ),
-                  _ThemeOption(
-                    label: l.lightMode,
-                    icon: Icons.light_mode_rounded,
-                    selected: settings.themeMode == ThemeMode.light,
-                    onTap: () => settings.setThemeMode(ThemeMode.light),
-                  ),
-                  _ThemeOption(
-                    label: l.darkMode,
-                    icon: Icons.dark_mode_rounded,
-                    selected: settings.themeMode == ThemeMode.dark,
-                    onTap: () => settings.setThemeMode(ThemeMode.dark),
-                  ),
-                ],
-              ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: const CountryFilterDropdown(),
             ),
-            const SizedBox(height: 16),
-
-            // ─── Language Section ─────────────────────────────
-            _SectionCard(
-              icon: Icons.translate_rounded,
-              title: l.language,
-              child: Column(
-                children: [
-                  _ThemeOption(
-                    label: l.english,
-                    icon: null,
-                    trailing: 'EN',
-                    selected: settings.locale.languageCode == 'en',
-                    onTap: () => settings.setLocale(const Locale('en')),
-                  ),
-                  _ThemeOption(
-                    label: l.arabic,
-                    icon: null,
-                    trailing: 'AR',
-                    selected: settings.locale.languageCode == 'ar',
-                    onTap: () => settings.setLocale(const Locale('ar')),
-                  ),
-                  _ThemeOption(
-                    label: l.dutch,
-                    icon: null,
-                    trailing: 'NL',
-                    selected: settings.locale.languageCode == 'nl',
-                    onTap: () => settings.setLocale(const Locale('nl')),
-                  ),
-                  _ThemeOption(
-                    label: l.french,
-                    icon: null,
-                    trailing: 'FR',
-                    selected: settings.locale.languageCode == 'fr',
-                    onTap: () => settings.setLocale(const Locale('fr')),
-                  ),
-                  _ThemeOption(
-                    label: l.german,
-                    icon: null,
-                    trailing: 'DE',
-                    selected: settings.locale.languageCode == 'de',
-                    onTap: () => settings.setLocale(const Locale('de')),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // ─── Sign Out ─────────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: OutlinedButton.icon(
-                  onPressed: () => _signOut(context),
-                  icon: const Icon(Icons.logout_rounded, size: 18),
-                  label: Text(l.signOut),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: BorderSide(
-                        color: AppColors.error.withValues(alpha: 0.3)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(height: 20),
+            _buildQuickActions(theme, l),
+            const SizedBox(height: 14),
+            _buildSignOut(context, l),
           ],
         ),
       ),
@@ -152,52 +68,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileCard(
-      AuthProvider auth, ThemeData theme, AppLocalizations l) {
+    AuthProvider auth,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     if (auth.profileLoading && auth.userProfile == null) {
-      return ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: theme.cardTheme.color,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-            border: Border.all(color: theme.dividerColor),
-          ),
-          child: const Center(child: CircularProgressIndicator()),
+      return _constrainedCard(
+        child: const Padding(
+          padding: EdgeInsets.all(28),
+          child: Center(child: CircularProgressIndicator()),
         ),
       );
     }
 
     if (auth.profileError != null && auth.userProfile == null) {
-      return ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: Container(
+      return _constrainedCard(
+        child: Padding(
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: theme.cardTheme.color,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-            border: Border.all(color: theme.dividerColor),
-          ),
           child: Column(
             children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 32,
-                  color:
-                      theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 32,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.25),
+              ),
               const SizedBox(height: 8),
               Text(
                 auth.profileError!,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
-                  color:
-                      theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                 ),
               ),
               const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => auth.fetchProfile(),
-                child: Text(l.retry),
-              ),
+              TextButton(onPressed: auth.fetchProfile, child: Text(l.retry)),
             ],
           ),
         ),
@@ -207,145 +112,224 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = auth.userProfile;
     if (profile == null) return const SizedBox.shrink();
 
-    final name = profile['name'] as String? ?? '';
-    final email = profile['email'] as String? ?? '';
-    final phone = profile['phone'] as String? ?? '';
+    final name = profile['name']?.toString() ?? '';
+    final email = profile['email']?.toString() ?? '';
+    final phone = profile['phone']?.toString() ?? '';
     final isVerified = profile['is_verified'] as bool? ?? false;
-    final roles = (profile['roles'] as List<dynamic>?)
-            ?.map((r) => r.toString())
+    final roles =
+        (profile['roles'] as List<dynamic>?)
+            ?.map((role) => role.toString())
+            .where((role) => role.isNotEmpty)
             .toList() ??
         [];
     final createdAt = profile['created_at'] != null
-        ? DateTime.tryParse(profile['created_at'])
+        ? DateTime.tryParse(profile['created_at'].toString())
         : null;
+    final initials = _initials(name);
+    final joinedDate = createdAt == null
+        ? null
+        : l.formatReleaseDate(createdAt);
+    final roleLabel = roles
+        .map(
+          (role) => role.isEmpty
+              ? role
+              : role[0].toUpperCase() + role.substring(1).toLowerCase(),
+        )
+        .join(', ');
+    final statusColor = isVerified ? AppColors.success : AppColors.warning;
 
-    final initials = name.isNotEmpty
-        ? name
-            .split(' ')
-            .where((w) => w.isNotEmpty)
-            .take(2)
-            .map((w) => w[0].toUpperCase())
-            .join()
-        : '?';
-
-    final monthNames = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    final joinedDate = createdAt != null
-        ? '${monthNames[createdAt.month]} ${createdAt.day}, ${createdAt.year}'
-        : null;
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 500),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.cardTheme.color,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-          border: Border.all(color: theme.dividerColor),
-        ),
-        child: Column(
-          children: [
-            // ── Avatar + Name + Verified badge ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-              child: Column(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
+    return _constrainedCard(
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => setState(() => _profileExpanded = !_profileExpanded),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 16, 12, 16),
+                child: Row(
+                  children: [
+                    _ProfileAvatar(initials: initials),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name.isNotEmpty ? name : '—',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          if (email.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              email,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 7),
+                          _StatusPill(
+                            label: isVerified ? l.verified : l.notVerified,
+                            color: statusColor,
+                            icon: isVerified
+                                ? Icons.verified_rounded
+                                : Icons.info_outline_rounded,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    name.isNotEmpty ? name : '—',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  if (email.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      email,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.45),
+                    Tooltip(
+                      message: _profileExpanded ? l.hideDetails : l.showDetails,
+                      child: IconButton(
+                        onPressed: () => setState(
+                          () => _profileExpanded = !_profileExpanded,
+                        ),
+                        icon: AnimatedRotation(
+                          turns: _profileExpanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 180),
+                          child: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isVerified
-                          ? AppColors.success.withValues(alpha: 0.08)
-                          : AppColors.warning.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isVerified
-                              ? Icons.verified_rounded
-                              : Icons.info_outline_rounded,
-                          size: 14,
-                          color: isVerified
-                              ? AppColors.success
-                              : AppColors.warning,
+                ),
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: _profileExpanded
+                ? Column(
+                    children: [
+                      Divider(color: theme.dividerColor, height: 1),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final itemWidth = constraints.maxWidth >= 420
+                                ? (constraints.maxWidth - 12) / 2
+                                : constraints.maxWidth;
+                            final details = <Widget>[
+                              if (phone.isNotEmpty)
+                                _ProfileDetail(
+                                  width: itemWidth,
+                                  icon: Icons.phone_outlined,
+                                  label: l.phone,
+                                  value: phone,
+                                ),
+                              if (roleLabel.isNotEmpty)
+                                _ProfileDetail(
+                                  width: itemWidth,
+                                  icon: Icons.shield_outlined,
+                                  label: l.roles,
+                                  value: roleLabel,
+                                ),
+                              if (joinedDate != null)
+                                _ProfileDetail(
+                                  width: itemWidth,
+                                  icon: Icons.calendar_today_outlined,
+                                  label: l.memberSince,
+                                  value: joinedDate,
+                                ),
+                              _ProfileDetail(
+                                width: itemWidth,
+                                icon: Icons.info_outline_rounded,
+                                label: l.version,
+                                value: AppReleaseHistory.current.label,
+                              ),
+                              _ProfileDetail(
+                                width: itemWidth,
+                                icon: Icons.event_outlined,
+                                label: l.releaseDate,
+                                value: l.formatReleaseDate(
+                                  AppReleaseHistory.current.releasedAt,
+                                ),
+                              ),
+                            ];
+                            return Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: details,
+                            );
+                          },
                         ),
-                        const SizedBox(width: 5),
-                        Text(
-                          isVerified ? l.verified : l.notVerified,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isVerified
-                                ? AppColors.success
-                                : AppColors.warning,
-                          ),
-                        ),
-                      ],
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(ThemeData theme, AppLocalizations l) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 560),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+              child: Row(
+                children: [
+                  _ActionIcon(
+                    icon: Icons.auto_awesome_outlined,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    l.profileActions,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                 ],
               ),
             ),
             Divider(color: theme.dividerColor, height: 1),
-
-            // ── Detail rows ──
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                children: [
-                  if (phone.isNotEmpty)
-                    _profileRow(
-                        theme, Icons.phone_outlined, l.phone, phone),
-                  if (roles.isNotEmpty)
-                    _profileRow(theme, Icons.shield_outlined, l.roles,
-                        roles.map((r) => r[0].toUpperCase() + r.substring(1).toLowerCase()).join(', ')),
-                  if (joinedDate != null)
-                    _profileRow(theme, Icons.calendar_today_outlined,
-                        l.memberSince, joinedDate),
-                ],
-              ),
+            _ProfileAction(
+              icon: Icons.tune_outlined,
+              title: l.pricingPolicies,
+              subtitle: l.pricingPoliciesActionSubtitle,
+              onTap: () => context.push('/profile/pricing-policies'),
+            ),
+            Divider(color: theme.dividerColor, height: 1),
+            _ProfileAction(
+              icon: Icons.tune_rounded,
+              title: l.preferences,
+              subtitle: l.preferencesActionSubtitle,
+              onTap: () => context.push('/profile/preferences'),
+            ),
+            Divider(color: theme.dividerColor, height: 1),
+            _ProfileAction(
+              icon: Icons.forum_outlined,
+              title: l.support,
+              subtitle: l.supportActionSubtitle,
+              onTap: () => context.go('/support'),
             ),
           ],
         ),
@@ -353,54 +337,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _profileRow(
-      ThemeData theme, IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Icon(icon,
-                  size: 16,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.4)),
-            ),
+  Widget _buildSignOut(BuildContext context, AppLocalizations l) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 560),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton.icon(
+          onPressed: () => _signOut(context),
+          icon: const Icon(Icons.logout_rounded, size: 18),
+          label: Text(l.signOut),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.error,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color:
-                      theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                  letterSpacing: 0.3,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _constrainedCard({required Widget child}) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 560),
+      child: Card(clipBehavior: Clip.antiAlias, child: child),
+    );
+  }
+
+  String _initials(String name) {
+    if (name.trim().isEmpty) return '?';
+    return name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .take(2)
+        .map((word) => word[0].toUpperCase())
+        .join();
   }
 
   void _signOut(BuildContext context) {
@@ -418,12 +387,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<AdminProvider>().clearAll();
               context.read<SettingsProvider>().resetToDefaults();
               context.read<AuthProvider>().signOut();
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: Text(l.signOut),
           ),
         ],
@@ -432,44 +399,126 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final Widget child;
+class _ProfileAvatar extends StatelessWidget {
+  final String initials;
 
-  const _SectionCard({
+  const _ProfileAvatar({required this.initials});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
+          color: AppColors.primary,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  final IconData icon;
+
+  const _StatusPill({
+    required this.label,
+    required this.color,
     required this.icon,
-    required this.title,
-    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileDetail extends StatelessWidget {
+  final double width;
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _ProfileDetail({
+    required this.width,
+    required this.icon,
+    required this.label,
+    required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 500),
+    return SizedBox(
+      width: width,
       child: Container(
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: theme.cardTheme.color,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-          border: Border.all(color: theme.dividerColor),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.035),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-              child: Row(
+            Icon(
+              icon,
+              size: 16,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(icon,
-                      size: 18,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.5)),
-                  const SizedBox(width: 10),
                   Text(
-                    title,
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.42,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
                     ),
@@ -477,8 +526,6 @@ class _SectionCard extends StatelessWidget {
                 ],
               ),
             ),
-            Divider(color: theme.dividerColor, height: 1),
-            child,
           ],
         ),
       ),
@@ -486,101 +533,86 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _ThemeOption extends StatefulWidget {
-  final String label;
-  final IconData? icon;
-  final String? trailing;
-  final bool selected;
+class _ActionIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+
+  const _ActionIcon({required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+      ),
+      child: Icon(icon, size: 18, color: color),
+    );
+  }
+}
+
+class _ProfileAction extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
-  const _ThemeOption({
-    required this.label,
-    this.icon,
-    this.trailing,
-    required this.selected,
+  const _ProfileAction({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
   });
 
   @override
-  State<_ThemeOption> createState() => _ThemeOptionState();
-}
-
-class _ThemeOptionState extends State<_ThemeOption> {
-  bool _hovered = false;
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          color: widget.selected
-              ? AppColors.primary.withValues(alpha: 0.06)
-              : _hovered
-                  ? theme.colorScheme.onSurface.withValues(alpha: 0.03)
-                  : Colors.transparent,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              if (widget.icon != null) ...[
-                Icon(
-                  widget.icon,
-                  size: 18,
-                  color: widget.selected
-                      ? AppColors.primary
-                      : theme.colorScheme.onSurface
-                          .withValues(alpha: 0.45),
-                ),
-                const SizedBox(width: 12),
-              ],
+              _ActionIcon(icon: icon, color: AppColors.primary),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  widget.label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: widget.selected
-                        ? FontWeight.w600
-                        : FontWeight.w400,
-                    color: widget.selected
-                        ? AppColors.primary
-                        : theme.colorScheme.onSurface,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.48,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              if (widget.trailing != null)
-                Text(
-                  widget.trailing!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: widget.selected
-                        ? AppColors.primary
-                        : theme.colorScheme.onSurface
-                            .withValues(alpha: 0.35),
-                  ),
-                ),
-              if (widget.trailing != null) const SizedBox(width: 10),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: widget.selected
-                        ? AppColors.primary
-                        : theme.colorScheme.onSurface
-                            .withValues(alpha: 0.2),
-                    width: widget.selected ? 6 : 1.5,
-                  ),
-                ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
               ),
             ],
           ),

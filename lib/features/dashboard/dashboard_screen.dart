@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/models/home_response.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/widgets/country_filter_dropdown.dart';
+import '../notifications/notification_bell.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -29,232 +32,249 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final admin = context.watch<AdminProvider>();
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
+    final compactHeader = MediaQuery.of(context).size.width < 520;
 
     return Scaffold(
       body: admin.isLoading && admin.homeData == null
           ? const Center(child: CircularProgressIndicator())
           : admin.error != null && admin.homeData == null
-              ? _ErrorView(
-                  message: admin.error!,
-                  onRetry: () => admin.fetchHome(),
-                )
-              : RefreshIndicator(
-                  onRefresh: () => admin.refreshHome(),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          ? _ErrorView(message: admin.error!, onRetry: () => admin.fetchHome())
+          : RefreshIndicator(
+              onRefresh: () => admin.refreshHome(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Row(
                       children: [
-                        // Header
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l.overview,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                      color: theme.colorScheme.onSurface,
-                                      letterSpacing: -0.5,
-                                    ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l.overview,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.colorScheme.onSurface,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l.overviewSubtitle,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    l.overviewSubtitle,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.5),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                            if (admin.isLoading)
-                              const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            if (!admin.isLoading)
-                              IconButton(
-                                onPressed: () {
-                                  debugPrint('[DashboardScreen] Manual refresh triggered');
-                                  admin.refreshHome();
-                                },
-                                icon: const Icon(Icons.refresh_rounded, size: 20),
-                                tooltip: l.refresh,
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 24),
-
-                        // Stats cards
-                        LayoutBuilder(builder: (context, c) {
-                          final cols = c.maxWidth > 1000
-                              ? 4
-                              : c.maxWidth > 600
-                                  ? 2
-                                  : 2;
-                          final gap = 14.0;
-                          final cardW =
-                              (c.maxWidth - gap * (cols - 1)) / cols;
-                          return Wrap(
-                            spacing: gap,
-                            runSpacing: gap,
-                            children: [
-                              _StatCard(
-                                width: cardW,
-                                title: l.totalOrders,
-                                value: '${admin.totalOrders}',
-                                subtitle: _orderStatusSummary(
-                                    admin.ordersCountByStatus, l),
-                                accent: AppColors.primary,
-                              ),
-                              _StatCard(
-                                width: cardW,
-                                title: l.driversOnline,
-                                value: '${admin.driversCount.online}',
-                                subtitle: l.driversStat(
-                                    admin.driversCount.total,
-                                    admin.driversCount.offline),
-                                accent: AppColors.online,
-                              ),
-                              _StatCard(
-                                width: cardW,
-                                title: l.restaurants,
-                                value: '${admin.restaurantsTotal}',
-                                subtitle: _restaurantStatusSummary(
-                                    admin.restaurants, l),
-                                accent: const Color(0xFF6366F1),
-                              ),
-                              _StatCard(
-                                width: cardW,
-                                title: l.pendingItems,
-                                value:
-                                    '${admin.pendingDriversTotal + admin.pendingRestaurantsTotal}',
-                                subtitle: l.pendingItemsSub(
-                                    admin.pendingDriversTotal,
-                                    admin.pendingRestaurantsTotal),
-                                accent: AppColors.warning,
-                              ),
-                            ],
-                          );
-                        }),
-                        const SizedBox(height: 20),
-
-                        // Orders by status + Fleet status
-                        LayoutBuilder(builder: (context, c) {
-                          if (c.maxWidth > 720) {
-                            return IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: _OrdersByStatusPanel(
-                                      ordersCountByStatus:
-                                          admin.ordersCountByStatus,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    flex: 2,
-                                    child: _FleetPanel(
-                                      driversCount: admin.driversCount,
-                                      restaurantsTotal:
-                                          admin.restaurantsTotal,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                          return Column(
-                            children: [
-                              _OrdersByStatusPanel(
-                                ordersCountByStatus:
-                                    admin.ordersCountByStatus,
-                              ),
-                              const SizedBox(height: 14),
-                              _FleetPanel(
-                                driversCount: admin.driversCount,
-                                restaurantsTotal: admin.restaurantsTotal,
-                              ),
-                            ],
-                          );
-                        }),
-                        const SizedBox(height: 20),
-
-                        // Bottom row: Drivers list + Pending
-                        LayoutBuilder(builder: (context, c) {
-                          if (c.maxWidth > 720) {
-                            return IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: _DriversListPanel(
-                                        drivers: admin.drivers),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: _AttentionPanel(
-                                      pendingDrivers:
-                                          admin.pendingDriversTotal,
-                                      pendingRestaurants:
-                                          admin.pendingRestaurantsTotal,
-                                      openTickets:
-                                          admin.openTickets.length,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                          return Column(
-                            children: [
-                              _DriversListPanel(drivers: admin.drivers),
-                              const SizedBox(height: 14),
-                              _AttentionPanel(
-                                pendingDrivers:
-                                    admin.pendingDriversTotal,
-                                pendingRestaurants:
-                                    admin.pendingRestaurantsTotal,
-                                openTickets: admin.openTickets.length,
-                              ),
-                            ],
-                          );
-                        }),
+                        if (admin.isLoading)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        if (!admin.isLoading) ...[
+                          if (compactHeader)
+                            IconButton(
+                              onPressed: () => context.go('/support'),
+                              icon: const Icon(Icons.forum_outlined, size: 20),
+                              tooltip: l.support,
+                            )
+                          else
+                            OutlinedButton.icon(
+                              onPressed: () => context.go('/support'),
+                              icon: const Icon(Icons.forum_outlined, size: 18),
+                              label: Text(l.support),
+                            ),
+                          const SizedBox(width: 4),
+                          NotificationBellButton(compact: compactHeader),
+                          const SizedBox(width: 4),
+                        ],
+                        if (!admin.isLoading)
+                          IconButton(
+                            onPressed: () {
+                              debugPrint(
+                                '[DashboardScreen] Manual refresh triggered',
+                              );
+                              admin.refreshHome();
+                            },
+                            icon: const Icon(Icons.refresh_rounded, size: 20),
+                            tooltip: l.refresh,
+                          ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: compactHeader ? double.infinity : 300,
+                      child: const CountryFilterDropdown(),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Stats cards
+                    LayoutBuilder(
+                      builder: (context, c) {
+                        final cols = c.maxWidth > 1000
+                            ? 4
+                            : c.maxWidth >= 250
+                            ? 2
+                            : 1;
+                        final gap = 14.0;
+                        final cardW = (c.maxWidth - gap * (cols - 1)) / cols;
+                        return Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [
+                            _StatCard(
+                              width: cardW,
+                              title: l.totalOrders,
+                              value: '${admin.totalOrders}',
+                              subtitle: l.ordersTotalSummary(admin.totalOrders),
+                              accent: AppColors.primary,
+                              icon: Icons.receipt_long_outlined,
+                              onTap: () => context.go('/orders'),
+                            ),
+                            _StatCard(
+                              width: cardW,
+                              title: l.driversOnline,
+                              value: '${admin.driversCount.online}',
+                              subtitle: l.driversStat(
+                                admin.driversCount.total,
+                                admin.driversCount.offline,
+                              ),
+                              accent: AppColors.online,
+                              icon: Icons.local_shipping_outlined,
+                              onTap: () => context.go(
+                                '/management?tab=drivers&driver_filter=online',
+                              ),
+                            ),
+                            _StatCard(
+                              width: cardW,
+                              title: l.restaurants,
+                              value: '${admin.restaurantsTotal}',
+                              subtitle: l.restaurantsTotalSummary(
+                                admin.restaurantsTotal,
+                              ),
+                              accent: const Color(0xFF6366F1),
+                              icon: Icons.restaurant_outlined,
+                              onTap: () =>
+                                  context.go('/management?tab=restaurants'),
+                            ),
+                            _StatCard(
+                              width: cardW,
+                              title: l.pendingItems,
+                              value:
+                                  '${admin.pendingDriversTotal + admin.pendingRestaurantsTotal}',
+                              subtitle: l.pendingItemsSub(
+                                admin.pendingDriversTotal,
+                                admin.pendingRestaurantsTotal,
+                              ),
+                              accent: AppColors.warning,
+                              icon: Icons.pending_actions_outlined,
+                              onTap: () => context.go('/approvals'),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Orders by status + Fleet status
+                    LayoutBuilder(
+                      builder: (context, c) {
+                        if (c.maxWidth > 720) {
+                          return IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: _OrdersByStatusPanel(
+                                    ordersCountByStatus:
+                                        admin.ordersCountByStatus,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  flex: 2,
+                                  child: _FleetPanel(
+                                    driversCount: admin.driversCount,
+                                    restaurantsTotal: admin.restaurantsTotal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return Column(
+                          children: [
+                            _OrdersByStatusPanel(
+                              ordersCountByStatus: admin.ordersCountByStatus,
+                            ),
+                            const SizedBox(height: 14),
+                            _FleetPanel(
+                              driversCount: admin.driversCount,
+                              restaurantsTotal: admin.restaurantsTotal,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Bottom row: Drivers list + Pending
+                    LayoutBuilder(
+                      builder: (context, c) {
+                        if (c.maxWidth > 720) {
+                          return IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: _DriversListPanel(
+                                    drivers: admin.drivers,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: _AttentionPanel(
+                                    pendingDrivers: admin.pendingDriversTotal,
+                                    pendingRestaurants:
+                                        admin.pendingRestaurantsTotal,
+                                    openTickets: admin.openTickets.length,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return Column(
+                          children: [
+                            _DriversListPanel(drivers: admin.drivers),
+                            const SizedBox(height: 14),
+                            _AttentionPanel(
+                              pendingDrivers: admin.pendingDriversTotal,
+                              pendingRestaurants: admin.pendingRestaurantsTotal,
+                              openTickets: admin.openTickets.length,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
+              ),
+            ),
     );
-  }
-
-  String _orderStatusSummary(Map<String, int> counts, AppLocalizations l) {
-    if (counts.isEmpty) return l.noOrdersData;
-    final entries = counts.entries.take(3).map((e) {
-      final label = e.key.replaceAll('_', ' ').toLowerCase();
-      return '${e.value} $label';
-    });
-    return entries.join(' · ');
-  }
-
-  String _restaurantStatusSummary(
-      List<HomeRestaurant> restaurants, AppLocalizations l) {
-    final active = restaurants.where((r) => r.isActive).length;
-    final total = restaurants.length;
-    if (total == 0) return l.noRestaurantsLoaded;
-    return l.activeOfShown(active, total);
   }
 }
 
@@ -275,9 +295,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_rounded,
-                size: 48,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 48,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+            ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -308,6 +330,8 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final Color accent;
+  final IconData icon;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.width,
@@ -315,70 +339,189 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.subtitle,
     required this.accent,
+    required this.icon,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
+    final compact = width < 250;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+      side: BorderSide(color: theme.dividerColor),
+    );
+    final iconBox = Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+      ),
+      child: Icon(icon, size: 17, color: accent),
+    );
+    final valueText = Text(
+      value,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: compact ? 24 : 26,
+        fontWeight: FontWeight.w800,
+        color: theme.colorScheme.onSurface,
+        letterSpacing: -0.8,
+        height: 1,
+      ),
+    );
+    final arrow = onTap == null
+        ? null
+        : Icon(
+            Icons.arrow_outward_rounded,
+            size: 15,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.28),
+          );
+    final card = SizedBox(
       width: width,
-      height: 140,
-      child: Container(
-        padding: const EdgeInsets.all(20),
+      height: compact ? 104 : 112,
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          color: theme.cardTheme.color,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-          border: Border.all(color: theme.dividerColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color:
-                        theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.onSurface,
-                letterSpacing: -1,
-                height: 1,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              subtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              ),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+              blurRadius: 18,
+              offset: const Offset(0, 7),
             ),
           ],
         ),
+        child: Material(
+          color: theme.cardTheme.color,
+          shape: shape,
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(height: 3, color: accent),
+              ),
+              InkWell(
+                onTap: onTap,
+                child: Padding(
+                  padding: compact
+                      ? const EdgeInsets.fromLTRB(12, 13, 10, 11)
+                      : const EdgeInsets.fromLTRB(14, 14, 12, 13),
+                  child: compact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                iconBox,
+                                const Spacer(),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        valueText,
+                                        if (arrow != null) ...[
+                                          const SizedBox(width: 5),
+                                          arrow,
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.64,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              subtitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                height: 1.2,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.46,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            iconBox,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.64),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 7),
+                                  Text(
+                                    subtitle,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      height: 1.2,
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.46),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            valueText,
+                            if (arrow != null) ...[
+                              const SizedBox(width: 6),
+                              arrow,
+                            ],
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+
+    return MouseRegion(
+      cursor: onTap == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
+      child: card,
     );
   }
 }
@@ -393,17 +536,20 @@ class _OrdersByStatusPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
-    final total =
-        ordersCountByStatus.values.fold<int>(0, (s, v) => s + v);
+    final total = ordersCountByStatus.values.fold<int>(0, (s, v) => s + v);
     final entries = ordersCountByStatus.entries.toList();
 
     final statusColors = <String, Color>{
       'PENDING': AppColors.warning,
+      'SEARCHING_FOR_DRIVER': AppColors.warning,
+      'DRIVER_NOTIFICATION_SENT': AppColors.warning,
+      'ACCEPTED': AppColors.info,
       'PREPARING': const Color(0xFF6366F1),
       'READY': const Color(0xFF06B6D4),
       'PICKED_UP': const Color(0xFF8B5CF6),
       'ON_THE_WAY': AppColors.info,
       'DELIVERED': AppColors.success,
+      'RESTAURANT_DELIVERED': AppColors.success,
       'COMPLETED': AppColors.success,
       'CANCELLED': AppColors.error,
       'REJECTED': AppColors.error,
@@ -411,11 +557,15 @@ class _OrdersByStatusPanel extends StatelessWidget {
 
     final statusIcons = <String, IconData>{
       'PENDING': Icons.schedule_rounded,
+      'SEARCHING_FOR_DRIVER': Icons.search_rounded,
+      'DRIVER_NOTIFICATION_SENT': Icons.notifications_none_rounded,
+      'ACCEPTED': Icons.check_circle_outline_rounded,
       'PREPARING': Icons.restaurant_rounded,
       'READY': Icons.check_circle_outline_rounded,
       'PICKED_UP': Icons.inventory_2_rounded,
       'ON_THE_WAY': Icons.local_shipping_rounded,
       'DELIVERED': Icons.done_all_rounded,
+      'RESTAURANT_DELIVERED': Icons.storefront_rounded,
       'COMPLETED': Icons.done_all_rounded,
       'CANCELLED': Icons.cancel_outlined,
       'REJECTED': Icons.block_rounded,
@@ -429,17 +579,23 @@ class _OrdersByStatusPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                l.ordersByStatus,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  l.ordersByStatus,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
               Text(
                 '${_fmt(total)} ${l.total}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -461,13 +617,12 @@ class _OrdersByStatusPanel extends StatelessWidget {
                   children: entries.asMap().entries.map((e) {
                     final color =
                         statusColors[e.value.key.toUpperCase()] ??
-                            AppColors.offline;
+                        AppColors.offline;
                     return Expanded(
                       flex: e.value.value.clamp(1, total),
                       child: Container(
                         color: color,
-                        margin:
-                            EdgeInsets.only(left: e.key > 0 ? 2 : 0),
+                        margin: EdgeInsets.only(left: e.key > 0 ? 2 : 0),
                       ),
                     );
                   }).toList(),
@@ -485,8 +640,7 @@ class _OrdersByStatusPanel extends StatelessWidget {
                   l.noOrderData,
                   style: TextStyle(
                     fontSize: 13,
-                    color: theme.colorScheme.onSurface
-                        .withValues(alpha: 0.4),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
               ),
@@ -495,11 +649,9 @@ class _OrdersByStatusPanel extends StatelessWidget {
             ...entries.map((e) {
               final key = e.key.toUpperCase();
               final color = statusColors[key] ?? AppColors.offline;
-              final icon =
-                  statusIcons[key] ?? Icons.circle_outlined;
-              final pct =
-                  total > 0 ? (e.value / total * 100).round() : 0;
-              final label = e.key.replaceAll('_', ' ');
+              final icon = statusIcons[key] ?? Icons.circle_outlined;
+              final pct = total > 0 ? (e.value / total * 100).round() : 0;
+              final label = l.orderStatusLabel(e.key);
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 14),
@@ -520,8 +672,9 @@ class _OrdersByStatusPanel extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            label[0].toUpperCase() +
-                                label.substring(1).toLowerCase(),
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -531,10 +684,13 @@ class _OrdersByStatusPanel extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             '${_fmt(e.value)} ${l.orders}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 12,
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.4),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.4,
+                              ),
                             ),
                           ),
                         ],
@@ -542,11 +698,14 @@ class _OrdersByStatusPanel extends StatelessWidget {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.1),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusFull,
+                        ),
                       ),
                       child: Text(
                         '$pct%',
@@ -572,16 +731,19 @@ class _OrdersByStatusPanel extends StatelessWidget {
 class _FleetPanel extends StatelessWidget {
   final DriversCount driversCount;
   final int restaurantsTotal;
-  const _FleetPanel(
-      {required this.driversCount, required this.restaurantsTotal});
+  const _FleetPanel({
+    required this.driversCount,
+    required this.restaurantsTotal,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
     final total = driversCount.total;
-    final onlinePct =
-        total > 0 ? (driversCount.online / total * 100).round() : 0;
+    final onlinePct = total > 0
+        ? (driversCount.online / total * 100).round()
+        : 0;
 
     return _Panel(
       child: Column(
@@ -601,6 +763,8 @@ class _FleetPanel extends StatelessWidget {
             children: [
               Text(
                 '$onlinePct%',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -609,12 +773,15 @@ class _FleetPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                l.driversOnlineLabel,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.5),
+              Expanded(
+                child: Text(
+                  l.driversOnlineLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
             ],
@@ -627,8 +794,9 @@ class _FleetPanel extends StatelessWidget {
               height: 6,
               child: LinearProgressIndicator(
                 value: total > 0 ? driversCount.online / total : 0,
-                backgroundColor:
-                    theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                backgroundColor: theme.colorScheme.onSurface.withValues(
+                  alpha: 0.08,
+                ),
                 color: AppColors.primary,
               ),
             ),
@@ -636,10 +804,8 @@ class _FleetPanel extends StatelessWidget {
           const SizedBox(height: 20),
 
           _FleetRow(l.totalDrivers, '$total', null),
-          _FleetRow(
-              l.online, '${driversCount.online}', AppColors.online),
-          _FleetRow(
-              l.offline, '${driversCount.offline}', AppColors.offline),
+          _FleetRow(l.online, '${driversCount.online}', AppColors.online),
+          _FleetRow(l.offline, '${driversCount.offline}', AppColors.offline),
           const SizedBox(height: 8),
           Divider(color: theme.dividerColor),
           const SizedBox(height: 8),
@@ -667,22 +833,26 @@ class _FleetRow extends StatelessWidget {
             Container(
               width: 7,
               height: 7,
-              decoration:
-                  BoxDecoration(color: dot, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
             ),
             const SizedBox(width: 10),
           ],
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color:
-                  theme.colorScheme.onSurface.withValues(alpha: 0.55),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 12),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -712,21 +882,26 @@ class _DriversListPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                l.activeDrivers,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  l.activeDrivers,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
               Text(
                 '${drivers.length} ${l.shown}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 12,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.4),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
               ),
             ],
@@ -740,8 +915,7 @@ class _DriversListPanel extends StatelessWidget {
                   l.noDriversAvailable,
                   style: TextStyle(
                     fontSize: 13,
-                    color: theme.colorScheme.onSurface
-                        .withValues(alpha: 0.4),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
               ),
@@ -762,8 +936,7 @@ class _DriverRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
-    final statusColor =
-        driver.isOnline ? AppColors.online : AppColors.offline;
+    final statusColor = driver.isOnline ? AppColors.online : AppColors.offline;
     final statusLabel = driver.isOnline ? l.online : l.offline;
 
     return Padding(
@@ -813,18 +986,18 @@ class _DriverRow extends StatelessWidget {
                 ),
                 Text(
                   driver.phone,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
-                    color: theme.colorScheme.onSurface
-                        .withValues(alpha: 0.4),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
@@ -843,6 +1016,8 @@ class _DriverRow extends StatelessWidget {
                 const SizedBox(width: 5),
                 Text(
                   statusLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -933,9 +1108,7 @@ class _AttentionItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: count > 0
-            ? color.withValues(alpha: 0.06)
-            : Colors.transparent,
+        color: count > 0 ? color.withValues(alpha: 0.06) : Colors.transparent,
         borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
         border: count > 0
             ? Border.all(color: color.withValues(alpha: 0.15))
@@ -948,15 +1121,18 @@ class _AttentionItem extends StatelessWidget {
           Expanded(
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13,
-                color: theme.colorScheme.onSurface
-                    .withValues(alpha: 0.65),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
               ),
             ),
           ),
           Text(
             '$count',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -984,8 +1160,15 @@ class _Panel extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
         border: Border.all(color: theme.dividerColor),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: child,
     );

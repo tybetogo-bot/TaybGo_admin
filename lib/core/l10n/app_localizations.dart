@@ -4024,6 +4024,38 @@ class AppLocalizations {
     fr: 'Paramètres de l’application',
     de: 'App-Einstellungen',
   );
+  String get serviceAvailability => _t(
+    'Service Availability',
+    'توفر الخدمات',
+    nl: 'Beschikbaarheid van diensten',
+    fr: 'Disponibilité des services',
+    de: 'Verfügbarkeit der Dienste',
+  );
+  String get serviceAvailabilityDescription => _t(
+    'Choose which services are shown in the customer app.',
+    'اختر الخدمات التي تظهر في تطبيق العملاء.',
+    nl: 'Kies welke diensten zichtbaar zijn in de klantenapp.',
+    fr: 'Choisissez les services affichés dans l’application client.',
+    de: 'Wählen Sie, welche Dienste in der Kunden-App angezeigt werden.',
+  );
+  String get foodService =>
+      _t('Food', 'الطعام', nl: 'Maaltijden', fr: 'Repas', de: 'Essen');
+  String get taxiService =>
+      _t('Taxi', 'تاكسي', nl: 'Taxi', fr: 'Taxi', de: 'Taxi');
+  String get shippingService => _t(
+    'Shipping',
+    'الشحن',
+    nl: 'Verzending',
+    fr: 'Livraison de colis',
+    de: 'Versand',
+  );
+  String get serviceAvailabilityUpdated => _t(
+    'Service availability updated',
+    'تم تحديث توفر الخدمات',
+    nl: 'Beschikbaarheid van diensten bijgewerkt',
+    fr: 'Disponibilité des services mise à jour',
+    de: 'Verfügbarkeit der Dienste aktualisiert',
+  );
   String settingUpdated(String key) => _t(
     '$key updated',
     'تم تحديث $key',

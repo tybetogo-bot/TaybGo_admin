@@ -9,6 +9,7 @@ import '../models/home_response.dart';
 import '../models/app_setting.dart';
 import '../models/pricing_policy.dart';
 import '../models/public_app_config.dart';
+import '../models/service_availability.dart';
 import '../models/support_ticket.dart';
 
 class ApiService {
@@ -104,6 +105,46 @@ class ApiService {
       );
     }
     return AppSetting.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<ServiceAvailability> getServiceAvailability() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/api/admin/service-availability/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 401) _throwUnauthorized();
+    if (response.statusCode != 200) {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to load service availability',
+      );
+    }
+    return ServiceAvailability.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<ServiceAvailability> updateServiceAvailability(
+    Map<String, bool> changes,
+  ) async {
+    if (changes.isEmpty) {
+      throw ArgumentError.value(changes, 'changes', 'Must not be empty');
+    }
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/api/admin/service-availability/'),
+      headers: _headers,
+      body: jsonEncode(changes),
+    );
+    if (response.statusCode == 401) _throwUnauthorized();
+    if (response.statusCode != 200) {
+      throw _apiException(
+        response,
+        fallbackMessage: 'Failed to update service availability',
+      );
+    }
+    return ServiceAvailability.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
   }

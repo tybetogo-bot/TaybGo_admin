@@ -1,3 +1,8 @@
+import 'package:provider/provider.dart';
+import '../providers/promos_provider.dart';
+import '../providers/country_filter_provider.dart';
+import '../services/api_service.dart';
+import '../../features/promos/promos_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../models/app_notification.dart';
@@ -54,6 +59,7 @@ class AppRouter {
       return null;
     },
     routes: [
+      GoRoute(path: '/promos', redirect: (context, state) => '/profile/promos'),
       GoRoute(
         path: '/sign-in',
         builder: (context, state) => const SignInScreen(),
@@ -244,6 +250,17 @@ class AppRouter {
                 path: '/profile',
                 builder: (context, state) => const ProfileScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'promos',
+                    builder: (context, state) => ChangeNotifierProvider(
+                      create: (_) => PromosProvider(
+                        api: context.read<ApiService>(),
+                        country: context.read<CountryFilterProvider>(),
+                      ),
+                      child: const PromosScreen(showBackButton: true),
+                    ),
+                  ),
+
                   GoRoute(
                     path: 'pricing-policies',
                     builder: (context, state) =>

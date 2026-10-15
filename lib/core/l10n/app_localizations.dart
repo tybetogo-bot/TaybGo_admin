@@ -25,6 +25,524 @@ class AppLocalizations {
     Locale('de'),
   ];
 
+  String get promos => _t(
+    "Promos",
+    "العروض الترويجية",
+    nl: "Promoties",
+    fr: "Promotions",
+    de: "Werbeaktionen",
+  );
+  String get promosSubtitle => _t(
+    "Review restaurant banners before customers see them.",
+    "راجع إعلانات المطاعم قبل ظهورها للعملاء.",
+    nl: "Beoordeel restaurantbanners voordat klanten ze zien.",
+    fr: "Vérifiez les bannières avant leur publication.",
+    de: "Restaurantbanner vor der Veröffentlichung prüfen.",
+  );
+  String get promoReview => _t(
+    "Review promo",
+    "مراجعة العرض",
+    nl: "Promotie beoordelen",
+    fr: "Examiner la promotion",
+    de: "Werbung prüfen",
+  );
+  String get promoPreview => _t(
+    "Customer preview",
+    "معاينة العميل",
+    nl: "Klantvoorbeeld",
+    fr: "Aperçu client",
+    de: "Kundenvorschau",
+  );
+  String get promoPriority => _t(
+    "Display priority",
+    "أولوية العرض",
+    nl: "Weergaveprioriteit",
+    fr: "Priorité d’affichage",
+    de: "Anzeigepriorität",
+  );
+  String get promoPriorityHelp => _t(
+    "Higher numbers appear first within a city. Nearby results prefer distance.",
+    "الأرقام الأعلى تظهر أولاً داخل المدينة. النتائج القريبة تُرتب حسب المسافة.",
+    nl: "Hogere nummers eerst binnen een stad. Afstand gaat voor bij nabijgelegen resultaten.",
+    fr: "Les nombres élevés passent en premier en ville. À proximité, la distance prime.",
+    de: "Höhere Zahlen zuerst innerhalb einer Stadt. In der Nähe zählt die Entfernung zuerst.",
+  );
+  String get promoActivationHelp => _t(
+    "Approval does not publish the banner. The seller must activate it.",
+    "الموافقة لا تنشر الإعلان. يجب على البائع تفعيله.",
+    nl: "Goedkeuring publiceert niet. De verkoper moet activeren.",
+    fr: "Le vendeur doit activer la bannière après approbation.",
+    de: "Nach der Freigabe muss der Verkäufer das Banner aktivieren.",
+  );
+  String get promoInactive => _t(
+    "Awaiting seller activation / inactive",
+    "بانتظار تفعيل البائع / غير نشط",
+    nl: "Wacht op activering / inactief",
+    fr: "En attente d’activation / inactive",
+    de: "Wartet auf Aktivierung / inaktiv",
+  );
+  String get promoActive => _t(
+    "Active · subject to customer location",
+    "نشط · حسب موقع العميل",
+    nl: "Actief · afhankelijk van klantlocatie",
+    fr: "Active · selon la position du client",
+    de: "Aktiv · abhängig vom Kundenstandort",
+  );
+  String get promoReject => _t(
+    "Reject promo",
+    "رفض العرض",
+    nl: "Promotie afwijzen",
+    fr: "Refuser la promotion",
+    de: "Werbung ablehnen",
+  );
+  String get promoReason => _t(
+    "Reason for rejection",
+    "سبب الرفض",
+    nl: "Reden voor afwijzing",
+    fr: "Motif du refus",
+    de: "Ablehnungsgrund",
+  );
+  String get promoReasonHelp => _t(
+    "Explain what the seller should change (up to 2,000 characters).",
+    "وضح ما يجب على البائع تعديله (حتى 2000 حرف).",
+    nl: "Leg uit wat de verkoper moet aanpassen (max. 2.000 tekens).",
+    fr: "Indiquez les modifications nécessaires (2 000 caractères max.).",
+    de: "Gewünschte Änderungen erläutern (max. 2.000 Zeichen).",
+  );
+  String get promoDisable => _t(
+    "Disable banner",
+    "إيقاف الإعلان",
+    nl: "Banner uitschakelen",
+    fr: "Désactiver la bannière",
+    de: "Banner deaktivieren",
+  );
+  String get promoDisableHelp => _t(
+    "This hides the banner. Its approval remains, so the seller can reactivate it. To require changes, reject it with a reason.",
+    "سيُخفى الإعلان مع بقاء الموافقة، ويمكن للبائع إعادة تفعيله. لطلب تعديلات، ارفضه مع توضيح السبب.",
+    nl: "Dit verbergt de banner. De verkoper kan opnieuw activeren. Wijs af met een reden om wijzigingen te eisen.",
+    fr: "La bannière sera masquée, mais le vendeur pourra la réactiver. Refusez-la pour exiger des modifications.",
+    de: "Das Banner wird ausgeblendet. Der Verkäufer kann es wieder aktivieren. Für Änderungen mit Begründung ablehnen.",
+  );
+  String get promoNoResults => _t(
+    "No promos match these filters",
+    "لا توجد عروض مطابقة للفلاتر",
+    nl: "Geen passende promoties",
+    fr: "Aucune promotion correspondante",
+    de: "Keine passenden Werbeaktionen",
+  );
+  String get promoNoResultsHelp => _t(
+    "New seller submissions will appear here. Try another status or clear the filters.",
+    "ستظهر طلبات البائعين الجديدة هنا. جرّب حالة أخرى أو امسح الفلاتر.",
+    nl: "Nieuwe inzendingen verschijnen hier. Wijzig de status of wis filters.",
+    fr: "Les nouvelles demandes apparaîtront ici. Modifiez ou effacez les filtres.",
+    de: "Neue Einreichungen erscheinen hier. Status ändern oder Filter löschen.",
+  );
+  String get promoUpdated => _t(
+    "Promo updated",
+    "تم تحديث العرض",
+    nl: "Promotie bijgewerkt",
+    fr: "Promotion mise à jour",
+    de: "Werbung aktualisiert",
+  );
+  String get promosLoadError => _t(
+    "Could not load promos. Please retry.",
+    "تعذر تحميل العروض. أعد المحاولة.",
+    nl: "Promoties laden mislukt. Probeer opnieuw.",
+    fr: "Chargement impossible. Réessayez.",
+    de: "Laden fehlgeschlagen. Erneut versuchen.",
+  );
+  String get promoImageError => _t(
+    "Image unavailable",
+    "الصورة غير متاحة",
+    nl: "Afbeelding niet beschikbaar",
+    fr: "Image indisponible",
+    de: "Bild nicht verfügbar",
+  );
+  String get promoRestaurantId => _t(
+    "Restaurant ID (optional)",
+    "رقم المطعم (اختياري)",
+    nl: "Restaurant-ID (optioneel)",
+    fr: "ID restaurant (facultatif)",
+    de: "Restaurant-ID (optional)",
+  );
+  String get promoApplyFilters => _t(
+    "Apply filters",
+    "تطبيق الفلاتر",
+    nl: "Filters toepassen",
+    fr: "Appliquer les filtres",
+    de: "Filter anwenden",
+  );
+  String get promoClearFilters => _t(
+    "Clear filters",
+    "مسح الفلاتر",
+    nl: "Filters wissen",
+    fr: "Effacer les filtres",
+    de: "Filter löschen",
+  );
+  String get promoSubmitted => _t(
+    "Submitted",
+    "تاريخ التقديم",
+    nl: "Ingediend",
+    fr: "Soumise",
+    de: "Eingereicht",
+  );
+  String get promoReviewed => _t(
+    "Reviewed",
+    "تاريخ المراجعة",
+    nl: "Beoordeeld",
+    fr: "Examinée",
+    de: "Geprüft",
+  );
+  String get promoInvalidNumber => _t(
+    "Enter a valid whole number",
+    "أدخل رقماً صحيحاً",
+    nl: "Voer een geheel getal in",
+    fr: "Saisissez un entier valide",
+    de: "Gültige ganze Zahl eingeben",
+  );
+  String get promoActionError => _t(
+    "Could not update the promo. Please retry.",
+    "تعذر تحديث العرض. أعد المحاولة.",
+    nl: "Bijwerken mislukt. Probeer opnieuw.",
+    fr: "Mise à jour impossible. Réessayez.",
+    de: "Aktualisierung fehlgeschlagen. Erneut versuchen.",
+  );
+
+  String get promoWorkspace => _t(
+    "Restaurant promotions",
+    "عروض المطاعم",
+    nl: "Restaurantpromoties",
+    fr: "Promotions des restaurants",
+    de: "Restaurantwerbung",
+  );
+  String get promoWorkspaceHelp => _t(
+    "A better spotlight for every restaurant. Review, organise and manage food banners.",
+    "مساحة مميزة لكل مطعم. راجع إعلانات الطعام ونظّم ظهورها.",
+    nl: "Geef restaurants meer aandacht. Beoordeel en beheer banners.",
+    fr: "Mettez les restaurants en avant. Examinez et gérez les bannières.",
+    de: "Restaurants ins Rampenlicht rücken. Banner prüfen und verwalten.",
+  );
+  String get promoDiscovery => _t(
+    "FOOD DISCOVERY",
+    "اكتشاف المطاعم",
+    nl: "ETEN ONTDEKKEN",
+    fr: "DÉCOUVERTE CULINAIRE",
+    de: "ESSEN ENTDECKEN",
+  );
+  String get promoNeedsReview => _t(
+    "Needs review",
+    "بانتظار المراجعة",
+    nl: "Te beoordelen",
+    fr: "À examiner",
+    de: "Zu prüfen",
+  );
+  String get promoNeedsReviewHelp => _t(
+    "New and resubmitted banners",
+    "إعلانات جديدة أو معاد تقديمها",
+    nl: "Nieuwe en opnieuw ingediende banners",
+    fr: "Bannières nouvelles ou renvoyées",
+    de: "Neue und erneut eingereichte Banner",
+  );
+  String get promoLive => _t(
+    "Active banners",
+    "إعلانات نشطة",
+    nl: "Actieve banners",
+    fr: "Bannières actives",
+    de: "Aktive Banner",
+  );
+  String get promoLiveHelp => _t(
+    "Eligible for customer discovery",
+    "مؤهلة للظهور حسب موقع العميل",
+    nl: "Beschikbaar voor ontdekking",
+    fr: "Visibles selon la zone du client",
+    de: "Je nach Kundenstandort sichtbar",
+  );
+  String get promoReady => _t(
+    "Approved, inactive",
+    "معتمد وغير نشط",
+    nl: "Goedgekeurd, inactief",
+    fr: "Approuvées, inactives",
+    de: "Freigegeben, inaktiv",
+  );
+  String get promoReadyHelp => _t(
+    "Seller activation required",
+    "تحتاج إلى تفعيل البائع",
+    nl: "Activering door verkoper vereist",
+    fr: "Activation du vendeur requise",
+    de: "Aktivierung durch Verkäufer nötig",
+  );
+  String get promoRejectedHelp => _t(
+    "Changes requested from the seller",
+    "بانتظار تعديلات البائع",
+    nl: "Wijzigingen gevraagd",
+    fr: "Modifications demandées",
+    de: "Änderungen angefordert",
+  );
+  String get promoFilters =>
+      _t("Filters", "الفلاتر", nl: "Filters", fr: "Filtres", de: "Filter");
+  String get promoFilterHelp => _t(
+    "Choose a country, city or restaurant. Queue counts follow this scope.",
+    "اختر دولة أو مدينة أو مطعماً. الأعداد تتبع هذه الفلاتر.",
+    nl: "Kies een land, stad of restaurant. Aantallen volgen deze selectie.",
+    fr: "Choisissez un pays, une ville ou un restaurant. Les compteurs suivent ces filtres.",
+    de: "Land, Stadt oder Restaurant wählen. Die Zähler folgen diesen Filtern.",
+  );
+  String get promoFindRestaurant => _t(
+    "Find a restaurant",
+    "ابحث عن مطعم",
+    nl: "Restaurant zoeken",
+    fr: "Rechercher un restaurant",
+    de: "Restaurant suchen",
+  );
+  String get promoSearchRestaurant => _t(
+    "Search by restaurant name",
+    "ابحث باسم المطعم",
+    nl: "Zoek op restaurantnaam",
+    fr: "Rechercher par nom",
+    de: "Nach Restaurantname suchen",
+  );
+  String get promoSearchAction =>
+      _t("Search", "بحث", nl: "Zoeken", fr: "Rechercher", de: "Suchen");
+  String get promoNoRestaurants => _t(
+    "No matching restaurants",
+    "لا توجد مطاعم مطابقة",
+    nl: "Geen passende restaurants",
+    fr: "Aucun restaurant correspondant",
+    de: "Keine passenden Restaurants",
+  );
+  String get promoAllRestaurants => _t(
+    "All restaurants",
+    "جميع المطاعم",
+    nl: "Alle restaurants",
+    fr: "Tous les restaurants",
+    de: "Alle Restaurants",
+  );
+  String get promoQueue => _t(
+    "Banner library",
+    "مكتبة الإعلانات",
+    nl: "Bannerbibliotheek",
+    fr: "Bibliothèque de bannières",
+    de: "Bannerübersicht",
+  );
+  String get promoViewDetails => _t(
+    "View details",
+    "عرض التفاصيل",
+    nl: "Details bekijken",
+    fr: "Voir les détails",
+    de: "Details anzeigen",
+  );
+  String get promoReviewNext => _t(
+    "Review next",
+    "مراجعة التالي",
+    nl: "Volgende beoordelen",
+    fr: "Examiner la suivante",
+    de: "Nächstes prüfen",
+  );
+  String get promoContinue => _t(
+    "Continue to the next pending banner",
+    "متابعة إلى الإعلان التالي بانتظار المراجعة",
+    nl: "Doorgaan naar de volgende banner",
+    fr: "Passer à la prochaine bannière en attente",
+    de: "Mit dem nächsten wartenden Banner fortfahren",
+  );
+  String get promoVisibility => _t(
+    "Customer visibility",
+    "الظهور للعملاء",
+    nl: "Zichtbaarheid voor klanten",
+    fr: "Visibilité client",
+    de: "Kundensichtbarkeit",
+  );
+  String get promoHidden => _t(
+    "Hidden from customers",
+    "مخفي عن العملاء",
+    nl: "Verborgen voor klanten",
+    fr: "Masquée aux clients",
+    de: "Für Kunden ausgeblendet",
+  );
+  String get promoPendingHelp => _t(
+    "Review the image and message, then approve it or tell the seller what needs changing.",
+    "راجع الصورة والنص، ثم وافق أو وضّح للبائع التعديلات المطلوبة.",
+    nl: "Controleer beeld en tekst. Keur goed of vraag om wijzigingen.",
+    fr: "Vérifiez l’image et le texte, puis approuvez ou demandez des modifications.",
+    de: "Bild und Text prüfen. Freigeben oder Änderungen anfordern.",
+  );
+  String get promoActiveHelp => _t(
+    "Eligible to appear when the restaurant is active and within the customer’s city or a 10 km radius.",
+    "هذا الإعلان معتمد ونشط. يظهر ضمن مدينة المطعم أو نطاق 10 كم.",
+    nl: "Deze banner is actief. Klanten vinden hem in de stad of binnen 10 km.",
+    fr: "Cette bannière est active dans la ville ou dans un rayon de 10 km.",
+    de: "Dieses Banner ist in der Stadt oder im Umkreis von 10 km aktiv.",
+  );
+  String get promoInactiveHelp => _t(
+    "This banner is approved but hidden. Activation is currently handled by the seller; admin activation is not available yet.",
+    "الإعلان معتمد لكنه مخفي. التفعيل حالياً من طرف البائع، والتفعيل من الإدارة غير متاح بعد.",
+    nl: "Deze banner is goedgekeurd maar verborgen. De verkoper kan activeren; activeren door de beheerder wordt nog niet ondersteund.",
+    fr: "Cette bannière est approuvée mais masquée. Le vendeur peut l’activer ; l’activation administrateur n’est pas encore disponible.",
+    de: "Dieses Banner ist freigegeben, aber ausgeblendet. Der Verkäufer kann es aktivieren; Admin-Aktivierung wird noch nicht unterstützt.",
+  );
+  String get promoRejectedHint => _t(
+    "The seller can edit and resubmit this banner. You can also approve it again after review.",
+    "يمكن للبائع تعديل الإعلان وإعادة تقديمه. ويمكنك الموافقة عليه بعد مراجعته.",
+    nl: "De verkoper kan aanpassen en opnieuw indienen. U kunt na controle ook goedkeuren.",
+    fr: "Le vendeur peut modifier et renvoyer la bannière. Vous pouvez aussi l’approuver après examen.",
+    de: "Der Verkäufer kann bearbeiten und erneut einreichen. Eine erneute Freigabe ist nach Prüfung möglich.",
+  );
+  String get promoDetails => _t(
+    "Submission details",
+    "تفاصيل الطلب",
+    nl: "Inzendingsdetails",
+    fr: "Détails de la demande",
+    de: "Einreichungsdetails",
+  );
+  String get promoBannerContent => _t(
+    "Banner content",
+    "محتوى الإعلان",
+    nl: "Bannerinhoud",
+    fr: "Contenu de la bannière",
+    de: "Bannerinhalt",
+  );
+  String get promoPriorityNormal =>
+      _t("Normal", "عادي", nl: "Normaal", fr: "Normale", de: "Normal");
+  String get promoPriorityFeatured => _t(
+    "Featured",
+    "مميز",
+    nl: "Uitgelicht",
+    fr: "Mise en avant",
+    de: "Hervorgehoben",
+  );
+  String get promoPriorityTop => _t(
+    "High priority",
+    "أولوية عالية",
+    nl: "Hoge prioriteit",
+    fr: "Priorité haute",
+    de: "Hohe Priorität",
+  );
+  String get promoApproveTitle => _t(
+    "Approve this banner",
+    "الموافقة على الإعلان",
+    nl: "Deze banner goedkeuren",
+    fr: "Approuver cette bannière",
+    de: "Dieses Banner freigeben",
+  );
+  String get promoRejectTitle => _t(
+    "Request changes",
+    "طلب تعديلات",
+    nl: "Wijzigingen vragen",
+    fr: "Demander des modifications",
+    de: "Änderungen anfordern",
+  );
+  String get promoDisableTitle => _t(
+    "Hide this banner",
+    "إخفاء الإعلان",
+    nl: "Deze banner verbergen",
+    fr: "Masquer cette bannière",
+    de: "Dieses Banner ausblenden",
+  );
+  String get promoImageOpen => _t(
+    "Inspect full image",
+    "فحص الصورة الكاملة",
+    nl: "Volledige afbeelding bekijken",
+    fr: "Examiner l’image complète",
+    de: "Vollständiges Bild prüfen",
+  );
+  String get promoImageFit => _t(
+    "Preview crop",
+    "قصّ المعاينة",
+    nl: "Voorbeelduitsnede",
+    fr: "Recadrage aperçu",
+    de: "Vorschauzuschnitt",
+  );
+  String get promoCountError => _t(
+    "Counts unavailable",
+    "الأعداد غير متاحة",
+    nl: "Aantallen niet beschikbaar",
+    fr: "Compteurs indisponibles",
+    de: "Zähler nicht verfügbar",
+  );
+  String get promoClearScope => _t(
+    "Reset scope",
+    "إعادة تعيين النطاق",
+    nl: "Selectie herstellen",
+    fr: "Réinitialiser les filtres",
+    de: "Filter zurücksetzen",
+  );
+  String get promoNoQueueHelp => _t(
+    "There are no banners in this queue for the selected area. Try All or adjust your filters.",
+    "لا توجد إعلانات في هذه القائمة ضمن النطاق المختار. جرّب الكل أو عدّل الفلاتر.",
+    nl: "Geen banners in deze selectie. Kies Alles of pas de filters aan.",
+    fr: "Aucune bannière ici. Essayez Tout ou modifiez vos filtres.",
+    de: "Keine Banner in dieser Auswahl. Alle wählen oder Filter anpassen.",
+  );
+  String get promoAllBanners => _t(
+    "All banners",
+    "كل الإعلانات",
+    nl: "Alle banners",
+    fr: "Toutes les bannières",
+    de: "Alle Banner",
+  );
+  String get promoUnknownDate => _t(
+    "Not recorded",
+    "غير مسجل",
+    nl: "Niet vastgelegd",
+    fr: "Non renseignée",
+    de: "Nicht erfasst",
+  );
+  String get promoRestaurantActive => _t(
+    "Active banners at this restaurant",
+    "إعلانات نشطة لهذا المطعم",
+    nl: "Actieve banners bij dit restaurant",
+    fr: "Bannières actives de ce restaurant",
+    de: "Aktive Banner dieses Restaurants",
+  );
+  String get promoDecision => _t(
+    "Review decision",
+    "قرار المراجعة",
+    nl: "Beoordeling",
+    fr: "Décision",
+    de: "Prüfentscheidung",
+  );
+  String get promoRefreshHint => _t(
+    "Refresh banners and queue counts",
+    "تحديث الإعلانات وأعداد القوائم",
+    nl: "Banners en aantallen vernieuwen",
+    fr: "Actualiser les bannières et compteurs",
+    de: "Banner und Zähler aktualisieren",
+  );
+  String get release1012Change1 => _t(
+    "Added restaurant promotions under Profile with clear review and visibility queues.",
+    "إضافة عروض المطاعم في الملف الشخصي مع قوائم واضحة للمراجعة والظهور.",
+    nl: "Restaurantpromoties toegevoegd aan Profiel met duidelijke beoordelings- en zichtbaarheidswachtrijen.",
+    fr: "Promotions des restaurants dans Profil, avec files de révision et de visibilité.",
+    de: "Restaurantwerbung im Profil mit klaren Prüf- und Sichtbarkeitslisten.",
+  );
+  String get release1012Change2 => _t(
+    "Added country, city and restaurant-name filters with scoped counts and pagination.",
+    "إضافة فلاتر الدولة والمدينة واسم المطعم مع أعداد دقيقة وتقسيم الصفحات.",
+    nl: "Land-, stad- en restaurantnaamfilters met passende aantallen en paginering.",
+    fr: "Filtres par pays, ville et nom de restaurant, compteurs et pagination.",
+    de: "Filter nach Land, Stadt und Restaurantname mit Zählern und Seitennavigation.",
+  );
+  String get release1012Change3 => _t(
+    "Review banner images, approve with priority, request changes, hide banners and continue to the next review.",
+    "مراجعة صور الإعلانات والموافقة مع الأولوية وطلب التعديلات وإخفاء الإعلانات ومتابعة مراجعة التالي.",
+    nl: "Bannerbeelden beoordelen, prioriteit instellen, wijzigingen vragen, banners verbergen en doorgaan naar de volgende.",
+    fr: "Examinez les images, approuvez avec priorité, demandez des modifications et masquez les bannières.",
+    de: "Bannerbilder prüfen, mit Priorität freigeben, Änderungen anfordern und Banner ausblenden.",
+  );
+  String get release1012Change4 => _t(
+    "Added customer service visibility controls for Food, Taxi and Shipping under Profile.",
+    "إضافة أدوات التحكم بظهور الطعام والتاكسي والشحن للعملاء ضمن الملف الشخصي.",
+    nl: "Zichtbaarheid van eten, taxi en verzending beheren via Profiel.",
+    fr: "Contrôles de visibilité des services repas, taxi et livraison dans Profil.",
+    de: "Kundensichtbarkeit für Essen, Taxi und Versand im Profil verwalten.",
+  );
+  String get release1012Change5 => _t(
+    "Improved desktop and mobile review layouts, dark mode, Arabic RTL and error recovery.",
+    "تحسين تجربة المراجعة على الكمبيوتر والهاتف والوضع الداكن والعربية من اليمين لليسار والتعامل مع الأخطاء.",
+    nl: "Verbeterde desktop- en mobiele beoordeling, donkere modus, Arabische RTL en foutherstel.",
+    fr: "Amélioration des vues ordinateur et mobile, du mode sombre, de l’arabe RTL et de la gestion des erreurs.",
+    de: "Verbesserte Desktop- und Mobilansichten, Dunkelmodus, arabisches RTL und Fehlerbehandlung.",
+  );
   bool get isArabic => locale.languageCode == 'ar';
 
   static const errorPhoneAlreadyRegisteredKey =

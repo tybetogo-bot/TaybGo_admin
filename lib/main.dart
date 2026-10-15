@@ -260,6 +260,7 @@ class _TaybGoAdminAppState extends State<TaybGoAdminApp>
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<ApiService>.value(value: widget.apiService),
         ChangeNotifierProvider.value(value: widget.authProvider),
         ChangeNotifierProvider.value(value: widget.adminProvider),
         ChangeNotifierProvider.value(value: widget.countryFilterProvider),

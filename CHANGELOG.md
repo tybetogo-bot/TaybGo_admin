@@ -2,6 +2,27 @@
 
 All notable TaybGo Admin changes are documented here.
 
+## 1.0.12+13 — 2026-10-15
+
+### Promotions
+
+- Added the restaurant promotions workspace under Profile → Quick actions, keeping the main navigation focused on daily operations.
+- Added scoped queue counts for pending, active, approved-but-inactive, and rejected banners, with server-backed pagination and country/city/restaurant filters.
+- Replaced restaurant ID entry with restaurant-name search and made filter edits apply together or discard on close.
+- Added image previews, full-image inspection, review details, approval with priority presets, rejection reasons, and confirmed banner disabling.
+- Added fixed review actions, optional review-next flow, responsive desktop and mobile layouts, dark mode, and localization across all five supported languages.
+- Clarified approval versus activation and the seller's ability to reactivate an admin-disabled banner. Admin activation still requires backend support.
+
+### Customer service availability
+
+- Added Profile controls for Food, Taxi, and Shipping visibility in the customer app, using the authenticated service-availability API.
+- Service visibility affects customer discovery only; it does not disable backend order handling.
+
+### Release quality
+
+- Added regression coverage for promo API contracts, stale-response protection, queue scoping, moderation validation, deferred filters, desktop layout, and Arabic RTL dark mode.
+- Updated the package version, in-app release history, localized release notes, and release date to 1.0.12+13 (October 15, 2026).
+
 ## 1.0.11+12 — 2026-09-12
 
 ### Partner management

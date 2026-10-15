@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../auth/auth_error_keys.dart';
 import '../config/env_config.dart';
 import '../models/admin_order.dart';
+import '../models/promo_banner.dart';
 import '../models/app_notification.dart';
 import '../models/home_response.dart';
 import '../models/app_setting.dart';
@@ -34,6 +35,80 @@ class ApiService {
     'Accept': 'application/json',
     if (_authToken != null) 'Authorization': 'Bearer $_authToken',
   };
+
+  Future<PaginatedResponse<PromoBanner>> getPromos({
+    int page = 1,
+    String? status,
+    int? countryId,
+    String? city,
+    int? restaurantId,
+    bool? isActive,
+  }) async {
+    final params = <String, String>{
+      'page': '$page',
+      'status': ?status,
+      if (countryId != null) 'country_id': '$countryId',
+      if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
+      if (restaurantId != null) 'restaurant_id': '$restaurantId',
+      if (isActive != null) 'is_active': '$isActive',
+    };
+    final response = await _client.get(
+      Uri.parse('$baseUrl/api/admin/promos/').replace(queryParameters: params),
+      headers: _headers,
+    );
+    if (response.statusCode == 401) _throwUnauthorized();
+    if (response.statusCode != 200) {
+      throw _apiException(response, fallbackMessage: 'Failed to load promos');
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is List) {
+      final items = decoded
+          .map((e) => PromoBanner.fromJson(e as Map<String, dynamic>))
+          .toList();
+      return PaginatedResponse(count: items.length, results: items);
+    }
+    return PaginatedResponse.fromJson(
+      decoded as Map<String, dynamic>,
+      PromoBanner.fromJson,
+    );
+  }
+
+  Future<PromoBanner> getPromo(int id) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/api/admin/promos/$id/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 401) _throwUnauthorized();
+    if (response.statusCode != 200) {
+      throw _apiException(response, fallbackMessage: 'Failed to load promo');
+    }
+    return PromoBanner.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<PromoBanner> moderatePromo(
+    int id, {
+    required String action,
+    int? priority,
+    String? reason,
+  }) async {
+    if (!{'approve', 'reject', 'disable'}.contains(action)) {
+      throw ArgumentError.value(action);
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/admin/promos/$id/$action/'),
+      headers: _headers,
+      body: jsonEncode({'priority': ?priority, 'reason': ?reason}),
+    );
+    if (response.statusCode == 401) _throwUnauthorized();
+    if (response.statusCode != 200) {
+      throw _apiException(response, fallbackMessage: 'Failed to update promo');
+    }
+    return PromoBanner.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
 
   Future<PublicAppConfig> getPublicConfig({
     required String currentVersion,

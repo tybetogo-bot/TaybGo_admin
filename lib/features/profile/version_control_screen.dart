@@ -84,6 +84,13 @@ class VersionControlScreen extends StatelessWidget {
 
   List<String> _notesFor(AppRelease release, AppLocalizations l) {
     return switch (release.label) {
+      '1.0.12+13' => [
+        l.release1012Change1,
+        l.release1012Change2,
+        l.release1012Change3,
+        l.release1012Change4,
+        l.release1012Change5,
+      ],
       '1.0.11+12' => [
         l.release1011Change1,
         l.release1011Change2,

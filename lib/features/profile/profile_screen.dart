@@ -312,6 +312,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             Divider(color: theme.dividerColor, height: 1),
             _ProfileAction(
+              icon: Icons.campaign_outlined,
+              title: l.promos,
+              subtitle: l.promosSubtitle,
+              onTap: () => context.push('/profile/promos'),
+            ),
+            Divider(color: theme.dividerColor, height: 1),
+            _ProfileAction(
               icon: Icons.tune_outlined,
               title: l.pricingPolicies,
               subtitle: l.pricingPoliciesActionSubtitle,

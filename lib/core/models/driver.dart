@@ -1,4 +1,5 @@
 enum DriverStatus { online, offline, busy }
+
 enum ApprovalStatus { pending, approved, rejected }
 
 class Driver {

@@ -1,5 +1,3 @@
-﻿library phone_otp_auth_ui;
-
 export 'src/l10n/auth_ui_strings.dart';
 export 'src/models/country.dart';
 export 'src/models/phone_number_value.dart';

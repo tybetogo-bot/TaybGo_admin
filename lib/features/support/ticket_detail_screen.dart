@@ -18,16 +18,30 @@ class TicketDetailScreen extends StatefulWidget {
 class _TicketDetailScreenState extends State<TicketDetailScreen> {
   final _replyCtrl = TextEditingController();
   bool _sending = false;
+  bool _detailsExpanded = false;
   String? _restaurantName;
+  late final AdminProvider _admin;
 
   @override
   void initState() {
     super.initState();
-    final admin = context.read<AdminProvider>();
-    Future.microtask(() async {
-      await admin.fetchTicketDetail(widget.ticketId);
+    _admin = context.read<AdminProvider>();
+    _admin.stopSupportPolling();
+    if (_admin.selectedTicket?.id != widget.ticketId) {
+      _admin.clearSelectedTicket();
+    }
+    Future.microtask(_refreshTicket);
+  }
+
+  Future<void> _refreshTicket() async {
+    _admin.stopSupportPolling();
+    await _admin.fetchTicketDetail(widget.ticketId);
+    if (!mounted) return;
+
+    if (_admin.selectedTicket?.id == widget.ticketId) {
+      _admin.startSupportPolling(ticketId: widget.ticketId);
       _loadRestaurantName();
-    });
+    }
   }
 
   Future<void> _loadRestaurantName() async {
@@ -54,6 +68,9 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 
   @override
   void dispose() {
+    // The parent SupportScreen stays mounted for nested ticket routes. Resume
+    // its list polling when this detail route is popped.
+    _admin.startSupportPolling();
     _replyCtrl.dispose();
     super.dispose();
   }
@@ -75,26 +92,59 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
           },
         ),
         title: t != null
-            ? Text('#${t.id}',
+            ? Text(
+                '#${t.id}',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   fontFamily: 'monospace',
-                ))
-            : Text(l.ticketDetails,
+                ),
+              )
+            : Text(
+                l.ticketDetails,
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w600)),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
         titleSpacing: 0,
         elevation: 0,
         scrolledUnderElevation: 1,
+        actions: [
+          IconButton(
+            onPressed: admin.ticketDetailLoading
+                ? null
+                : () {
+                    debugPrint(
+                      '[TicketDetailScreen] Manual refresh triggered '
+                      'for ticket #${widget.ticketId}',
+                    );
+                    _refreshTicket();
+                  },
+            icon: admin.ticketDetailLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh_rounded, size: 20),
+            tooltip: l.refresh,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: _buildBody(context, admin, t, theme, l),
     );
   }
 
-  Widget _buildBody(BuildContext context, AdminProvider admin,
-      SupportTicket? t, ThemeData theme, AppLocalizations l) {
+  Widget _buildBody(
+    BuildContext context,
+    AdminProvider admin,
+    SupportTicket? t,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     if (admin.ticketDetailLoading && t == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -104,20 +154,21 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded,
-                size: 40,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
-            const SizedBox(height: 12),
-            Text(admin.ticketsError ?? l.connectionError,
-                style: TextStyle(
-                    fontSize: 14,
-                    color: theme.colorScheme.onSurface
-                        .withValues(alpha: 0.5))),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => admin.fetchTicketDetail(widget.ticketId),
-              child: Text(l.retry),
+            Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
             ),
+            const SizedBox(height: 12),
+            Text(
+              admin.ticketsError ?? l.connectionError,
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(onPressed: _refreshTicket, child: Text(l.retry)),
           ],
         ),
       );
@@ -157,6 +208,8 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         children: [
           Text(
             t.subject,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 19,
               fontWeight: FontWeight.w700,
@@ -179,16 +232,16 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     );
   }
 
-  // ─── Details: clean key-value section ──────────────────────────
+  // ─── Details: collapsible key-value section ────────────────────
 
-  Widget _buildDetails(
-      SupportTicket t, ThemeData theme, AppLocalizations l) {
+  Widget _buildDetails(SupportTicket t, ThemeData theme, AppLocalizations l) {
     final restaurantDisplay =
-        _restaurantName ?? t.restaurantName ?? (t.restaurant != null ? '#${t.restaurant}' : null);
+        _restaurantName ??
+        t.restaurantName ??
+        (t.restaurant != null ? '#${t.restaurant}' : null);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
@@ -196,73 +249,181 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
       ),
       child: Column(
         children: [
-          _detailRow(Icons.person_outline, l.requester, t.requesterName,
-              theme: theme),
-          if (restaurantDisplay != null) ...[
-            _divider(theme),
-            _detailRow(Icons.restaurant_outlined, l.relatedRestaurant,
-                restaurantDisplay,
-                theme: theme),
-          ],
-          if (t.driver != null) ...[
-            _divider(theme),
-            _detailRow(
-                Icons.local_shipping_outlined,
-                l.relatedDriver,
-                t.driverName ?? '#${t.driver}',
-                theme: theme),
-          ],
-          if (t.order != null) ...[
-            _divider(theme),
-            _detailRow(Icons.receipt_long_outlined, l.relatedOrder,
-                '#${t.order}',
-                theme: theme),
-          ],
-          if (t.assignedTo != null) ...[
-            _divider(theme),
-            _detailRow(
-                Icons.support_agent_rounded,
-                l.assignedTo,
-                t.assignedToName ?? '#${t.assignedTo}',
-                theme: theme, valueColor: AppColors.primary),
-          ],
-          _divider(theme),
-          _detailRow(Icons.access_time_outlined, l.created,
-              _formatDate(t.createdAt),
-              theme: theme),
-          if (t.closedAt != null) ...[
-            _divider(theme),
-            _detailRow(Icons.check_circle_outline, l.closedAt,
-                _formatDate(t.closedAt!),
-                theme: theme),
-          ],
+          InkWell(
+            onTap: () => setState(() => _detailsExpanded = !_detailsExpanded),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline_rounded,
+                    size: 15,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      l.requester,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.45,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    flex: 2,
+                    child: Text(
+                      t.requesterName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.8,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedRotation(
+                    turns: _detailsExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  _divider(theme),
+                  if (restaurantDisplay != null) ...[
+                    _detailRow(
+                      Icons.restaurant_outlined,
+                      l.relatedRestaurant,
+                      restaurantDisplay,
+                      theme: theme,
+                    ),
+                    _divider(theme),
+                  ],
+                  if (t.driver != null) ...[
+                    _detailRow(
+                      Icons.local_shipping_outlined,
+                      l.relatedDriver,
+                      t.driverName ?? '#${t.driver}',
+                      theme: theme,
+                    ),
+                    _divider(theme),
+                  ],
+                  if (t.order != null) ...[
+                    _detailRow(
+                      Icons.receipt_long_outlined,
+                      l.relatedOrder,
+                      '#${t.order}',
+                      theme: theme,
+                    ),
+                    _divider(theme),
+                  ],
+                  if (t.assignedTo != null) ...[
+                    _detailRow(
+                      Icons.support_agent_rounded,
+                      l.assignedTo,
+                      t.assignedToName ?? '#${t.assignedTo}',
+                      theme: theme,
+                      valueColor: AppColors.primary,
+                    ),
+                    _divider(theme),
+                  ],
+                  _detailRow(
+                    Icons.access_time_outlined,
+                    l.created,
+                    _formatDate(t.createdAt),
+                    theme: theme,
+                  ),
+                  if (t.closedAt != null) ...[
+                    _divider(theme),
+                    _detailRow(
+                      Icons.check_circle_outline,
+                      l.closedAt,
+                      _formatDate(t.closedAt!),
+                      theme: theme,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            crossFadeState: _detailsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
         ],
       ),
     );
   }
 
-  Widget _detailRow(IconData icon, String label, String value,
-      {required ThemeData theme, Color? valueColor}) {
+  Widget _detailRow(
+    IconData icon,
+    String label,
+    String value, {
+    required ThemeData theme,
+    Color? valueColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon,
-              size: 16,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+          Icon(
+            icon,
+            size: 16,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+          ),
           const SizedBox(width: 12),
-          Text(label,
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                  fontSize: 13,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.45))),
-          const Spacer(),
-          Text(value,
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            flex: 2,
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
               style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: valueColor ??
-                      theme.colorScheme.onSurface.withValues(alpha: 0.8))),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color:
+                    valueColor ??
+                    theme.colorScheme.onSurface.withValues(alpha: 0.8),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -274,7 +435,10 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   // ─── Conversation ──────────────────────────────────────────────
 
   Widget _buildConversation(
-      SupportTicket t, ThemeData theme, AppLocalizations l) {
+    SupportTicket t,
+    ThemeData theme,
+    AppLocalizations l,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -291,14 +455,15 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         ),
         if (t.messages.isEmpty)
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Center(
-              child: Text(l.noMessages(t.id),
-                  style: TextStyle(
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.3))),
+              child: Text(
+                l.noMessages(t.id),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
+              ),
             ),
           )
         else
@@ -309,8 +474,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 
   // ─── Reply area ────────────────────────────────────────────────
 
-  Widget _buildReplyArea(
-      SupportTicket t, ThemeData theme, AppLocalizations l) {
+  Widget _buildReplyArea(SupportTicket t, ThemeData theme, AppLocalizations l) {
     return Container(
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
@@ -331,7 +495,9 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
               decoration: InputDecoration(
                 hintText: l.writeReply,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                  horizontal: 14,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -347,15 +513,16 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2))
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Icon(Icons.send_rounded, size: 16),
                     label: Text(l.reply),
                     style: ElevatedButton.styleFrom(
                       textStyle: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w500),
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                   ),
                 ),
@@ -368,8 +535,8 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                   ),
                 _ActionBtn(
                   label: l.close,
-                  icon: null,
-                  color: null,
+                  icon: Icons.close_rounded,
+                  color: AppColors.error,
                   onPressed: () => _updateStatus(t.id, 'CLOSED'),
                 ),
               ],
@@ -389,9 +556,14 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -402,10 +574,13 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         border: Border.all(color: theme.dividerColor),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 12,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+      ),
     );
   }
 
@@ -432,9 +607,9 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
       _replyCtrl.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.failedToSend('$e'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.failedToSend('$e'))));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -448,12 +623,30 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
       await admin.updateTicketStatus(ticketId, status);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.failedToUpdate('$e'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.failedToUpdate('$e'))));
       }
     }
   }
+}
+
+// ─── Role colors ─────────────────────────────────────────────────
+
+const _adminColor = AppColors.primary;
+const _sellerColor = Color(0xFFFF8F00); // amber
+const _customerColor = AppColors.info;
+
+Color _roleColor(TicketMessage m) {
+  if (m.isAdmin) return _adminColor;
+  if (m.isSeller) return _sellerColor;
+  return _customerColor;
+}
+
+IconData _roleIcon(TicketMessage m) {
+  if (m.isAdmin) return Icons.support_agent_rounded;
+  if (m.isSeller) return Icons.storefront_rounded;
+  return Icons.person_rounded;
 }
 
 // ─── Message Bubble ───────────────────────────────────────────────
@@ -466,27 +659,25 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isAdmin = message.isAdmin;
+    final color = _roleColor(message);
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-          isAdmin ? 48 : 20, 6, isAdmin ? 20 : 48, 6),
+      padding: EdgeInsets.fromLTRB(isAdmin ? 48 : 20, 6, isAdmin ? 20 : 48, 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment:
-            isAdmin ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isAdmin
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (!isAdmin) ...[
             Container(
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.07),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.person_rounded,
-                  size: 15,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.35)),
+              child: Icon(_roleIcon(message), size: 15, color: color),
             ),
             const SizedBox(width: 8),
           ],
@@ -494,15 +685,9 @@ class _MessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isAdmin
-                    ? AppColors.primary.withValues(alpha: 0.07)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.03),
-                borderRadius:
-                    BorderRadius.circular(AppSpacing.radiusMedium),
-                border: isAdmin
-                    ? Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.12))
-                    : Border.all(color: theme.dividerColor),
+                color: color.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+                border: Border.all(color: color.withValues(alpha: 0.12)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,50 +696,62 @@ class _MessageBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Flexible(
-                        child: Text(message.authorName,
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: isAdmin
-                                    ? AppColors.primary
-                                    : theme.colorScheme.onSurface),
-                            overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          message.authorName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: color,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: isAdmin
-                              ? AppColors.primary.withValues(alpha: 0.12)
-                              : theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Text(message.authorRole,
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            message.authorRole,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                color: isAdmin
-                                    ? AppColors.primary
-                                    : theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.45))),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: color,
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      Text(_fmtTime(message.createdAt),
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.3))),
+                      Text(
+                        _fmtTime(message.createdAt),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 5),
-                  Text(message.body,
-                      style: TextStyle(
-                          fontSize: 13.5,
-                          height: 1.5,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.8))),
+                  Text(
+                    message.body,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.5,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                    ),
+                  ),
                   if (message.attachments.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Wrap(
@@ -563,25 +760,41 @@ class _MessageBubble extends StatelessWidget {
                       children: message.attachments.map((a) {
                         return Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.05),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.05,
+                            ),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.attach_file_rounded,
-                                  size: 12,
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.4)),
+                              Icon(
+                                Icons.attach_file_rounded,
+                                size: 12,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.4,
+                                ),
+                              ),
                               const SizedBox(width: 4),
-                              Text(a.mimeType,
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 160,
+                                ),
+                                child: Text(
+                                  a.mimeType,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                      fontSize: 11,
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.5))),
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -598,14 +811,14 @@ class _MessageBubble extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  AppColors.primary.withValues(alpha: 0.18),
-                  AppColors.primary.withValues(alpha: 0.06),
-                ]),
+                color: _adminColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.support_agent_rounded,
-                  size: 15, color: AppColors.primary),
+              child: const Icon(
+                Icons.support_agent_rounded,
+                size: 15,
+                color: _adminColor,
+              ),
             ),
           ],
         ],
@@ -651,18 +864,21 @@ class _ActionBtnState extends State<_ActionBtn> {
         onPressed: _busy ? null : _run,
         icon: _busy
             ? const SizedBox(
-                width: 14, height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2))
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             : Icon(widget.icon, size: 14),
         label: Text(widget.label),
         style: OutlinedButton.styleFrom(
           foregroundColor: widget.color,
           side: BorderSide(color: widget.color!),
-          textStyle:
-              const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          minimumSize: Size.zero,
+          minimumSize: const Size(0, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+          ),
+          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         ),
       );
     }
@@ -670,16 +886,19 @@ class _ActionBtnState extends State<_ActionBtn> {
     return OutlinedButton(
       onPressed: _busy ? null : _run,
       style: OutlinedButton.styleFrom(
-        textStyle:
-            const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        minimumSize: Size.zero,
+        minimumSize: const Size(0, 40),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+        ),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       ),
       child: _busy
           ? const SizedBox(
-              width: 14, height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2))
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
           : Text(widget.label),
     );
   }

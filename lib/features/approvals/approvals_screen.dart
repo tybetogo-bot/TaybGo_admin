@@ -23,11 +23,8 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     debugPrint('[ApprovalsScreen] initState');
-    final admin = context.read<AdminProvider>();
-    if (admin.homeData == null) {
-      debugPrint('[ApprovalsScreen] No home data cached — fetching');
-      Future.microtask(() => admin.fetchHome());
-    }
+    debugPrint('[ApprovalsScreen] Loading direct approval collections');
+    Future.microtask(_loadApprovals);
     _tabController.addListener(() {
       final tab = _tabController.index == 0 ? 'Drivers' : 'Restaurants';
       debugPrint('[ApprovalsScreen] Tab switched to: $tab');
@@ -38,6 +35,15 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadApprovals() async {
+    final admin = context.read<AdminProvider>();
+    if (admin.homeData == null) {
+      debugPrint('[ApprovalsScreen] No home data cached — fetching dashboard');
+      await admin.fetchHome();
+    }
+    await admin.fetchApprovals();
   }
 
   @override
@@ -75,8 +81,9 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
                         l.applicationsWaitingReview(totalPending),
                         style: TextStyle(
                           fontSize: 14,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ],
@@ -85,7 +92,7 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
                 IconButton(
                   onPressed: () {
                     debugPrint('[ApprovalsScreen] Manual refresh triggered');
-                    admin.refreshHome();
+                    _loadApprovals();
                   },
                   icon: const Icon(Icons.refresh_rounded, size: 20),
                   tooltip: l.refresh,
@@ -117,12 +124,17 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerHeight: 0,
                 labelColor: theme.colorScheme.onSurface,
-                unselectedLabelColor:
-                    theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                unselectedLabelColor: theme.colorScheme.onSurface.withValues(
+                  alpha: 0.5,
+                ),
                 labelStyle: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w600),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
                 unselectedLabelStyle: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w400),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
                 tabs: [
                   Tab(
                     child: Row(
@@ -130,7 +142,14 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
                       children: [
                         const Icon(Icons.local_shipping_outlined, size: 16),
                         const SizedBox(width: 8),
-                        Text(l.drivers),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 120),
+                          child: Text(
+                            l.drivers,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         if (admin.pendingDrivers.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           _Badge(admin.pendingDriversTotal),
@@ -144,7 +163,14 @@ class _ApprovalsScreenState extends State<ApprovalsScreen>
                       children: [
                         const Icon(Icons.storefront_outlined, size: 16),
                         const SizedBox(width: 8),
-                        Text(l.restaurants),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 120),
+                          child: Text(
+                            l.restaurants,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         if (admin.pendingRestaurants.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           _Badge(admin.pendingRestaurantsTotal),
@@ -188,6 +214,8 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         '$count',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -208,26 +236,30 @@ class _DriversTab extends StatelessWidget {
   Widget build(BuildContext context) {
     if (drivers.isEmpty) return _emptyState(context);
 
-    return LayoutBuilder(builder: (context, c) {
-      final cols = c.maxWidth > 800 ? 2 : 1;
-      if (cols == 1) {
-        return ListView.separated(
+    return LayoutBuilder(
+      builder: (context, c) {
+        final cols = c.maxWidth > 800 ? 2 : 1;
+        if (cols == 1) {
+          return ListView.separated(
+            itemCount: drivers.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (_, i) =>
+                _DriverCard(key: ValueKey(drivers[i].id), driver: drivers[i]),
+          );
+        }
+        return GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 180,
+          ),
           itemCount: drivers.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
-          itemBuilder: (_, i) => _DriverCard(key: ValueKey(drivers[i].id), driver: drivers[i]),
+          itemBuilder: (_, i) =>
+              _DriverCard(key: ValueKey(drivers[i].id), driver: drivers[i]),
         );
-      }
-      return GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          mainAxisExtent: 180,
-        ),
-        itemCount: drivers.length,
-        itemBuilder: (_, i) => _DriverCard(key: ValueKey(drivers[i].id), driver: drivers[i]),
-      );
-    });
+      },
+    );
   }
 }
 
@@ -242,16 +274,18 @@ class _DriverCard extends StatefulWidget {
 class _DriverCardState extends State<_DriverCard> {
   bool _busy = false;
 
-  Future<void> _verify(String status) async {
+  Future<void> _updateStatus(String status) async {
     if (_busy) return;
-    debugPrint('[ApprovalsScreen] Verifying driver: '
-        'id=${widget.driver.id}, name="${widget.driver.name}", '
-        'phone="${widget.driver.phone}", action=$status');
+    debugPrint(
+      '[ApprovalsScreen] Verifying driver: '
+      'id=${widget.driver.id}, name="${widget.driver.name}", '
+      'phone="${widget.driver.phone}", action=$status',
+    );
     setState(() => _busy = true);
     final admin = context.read<AdminProvider>();
     final l = AppLocalizations.of(context);
     try {
-      await admin.verifyDriver(widget.driver.id, status: status);
+      await admin.updateDriverStatus(widget.driver.id, status: status);
       if (!mounted) return;
       final msg = status == 'APPROVED'
           ? l.driverApproved(widget.driver.name)
@@ -324,6 +358,8 @@ class _DriverCardState extends State<_DriverCard> {
                     children: [
                       Text(
                         driver.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -333,20 +369,25 @@ class _DriverCardState extends State<_DriverCard> {
                       const SizedBox(height: 2),
                       Text(
                         driver.submittedAt != null
-                            ? _fmtDate(driver.submittedAt!)
+                            ? _fmtDate(l, driver.submittedAt!)
                             : l.pending,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.4),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.4,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded,
-                    size: 20,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -381,15 +422,21 @@ class _DriverCardState extends State<_DriverCard> {
                     child: SizedBox(
                       height: 38,
                       child: OutlinedButton(
-                        onPressed: () => _verify('REJECTED'),
+                        onPressed: () => _updateStatus('REJECTED'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor:
-                              theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          foregroundColor: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
                           side: BorderSide(color: theme.dividerColor),
                           textStyle: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w500),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        child: Text(l.decline),
+                        child: Text(
+                          l.decline,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ),
@@ -398,12 +445,18 @@ class _DriverCardState extends State<_DriverCard> {
                     child: SizedBox(
                       height: 38,
                       child: ElevatedButton(
-                        onPressed: () => _verify('APPROVED'),
+                        onPressed: () => _updateStatus('APPROVED'),
                         style: ElevatedButton.styleFrom(
                           textStyle: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w500),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        child: Text(l.approve),
+                        child: Text(
+                          l.approve,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ),
@@ -426,28 +479,34 @@ class _RestaurantsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     if (restaurants.isEmpty) return _emptyState(context);
 
-    return LayoutBuilder(builder: (context, c) {
-      final cols = c.maxWidth > 800 ? 2 : 1;
-      if (cols == 1) {
-        return ListView.separated(
+    return LayoutBuilder(
+      builder: (context, c) {
+        final cols = c.maxWidth > 800 ? 2 : 1;
+        if (cols == 1) {
+          return ListView.separated(
+            itemCount: restaurants.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (_, i) => _RestaurantCard(
+              key: ValueKey(restaurants[i].id),
+              restaurant: restaurants[i],
+            ),
+          );
+        }
+        return GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 170,
+          ),
           itemCount: restaurants.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
-          itemBuilder: (_, i) =>
-              _RestaurantCard(key: ValueKey(restaurants[i].id), restaurant: restaurants[i]),
+          itemBuilder: (_, i) => _RestaurantCard(
+            key: ValueKey(restaurants[i].id),
+            restaurant: restaurants[i],
+          ),
         );
-      }
-      return GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          mainAxisExtent: 170,
-        ),
-        itemCount: restaurants.length,
-        itemBuilder: (_, i) =>
-            _RestaurantCard(key: ValueKey(restaurants[i].id), restaurant: restaurants[i]),
-      );
-    });
+      },
+    );
   }
 }
 
@@ -464,16 +523,21 @@ class _RestaurantCardState extends State<_RestaurantCard> {
 
   Future<void> _activate() async {
     if (_busy) return;
-    debugPrint('[ApprovalsScreen] Activating restaurant: '
-        'id=${widget.restaurant.id}, name="${widget.restaurant.name}"');
+    debugPrint(
+      '[ApprovalsScreen] Activating restaurant: '
+      'id=${widget.restaurant.id}, name="${widget.restaurant.name}"',
+    );
     setState(() => _busy = true);
     final admin = context.read<AdminProvider>();
     final l = AppLocalizations.of(context);
     try {
       await admin.activateRestaurant(widget.restaurant.id);
       if (!mounted) return;
-      _snack(context, l.restaurantActivated(widget.restaurant.name),
-          AppColors.success);
+      _snack(
+        context,
+        l.restaurantActivated(widget.restaurant.name),
+        AppColors.success,
+      );
     } catch (e) {
       if (!mounted) return;
       _snack(context, l.failed('$e'), AppColors.error);
@@ -519,8 +583,11 @@ class _RestaurantCardState extends State<_RestaurantCard> {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
                   ),
                   child: const Center(
-                    child: Icon(Icons.storefront_rounded,
-                        size: 20, color: Color(0xFF6366F1)),
+                    child: Icon(
+                      Icons.storefront_rounded,
+                      size: 20,
+                      color: Color(0xFF6366F1),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -530,6 +597,8 @@ class _RestaurantCardState extends State<_RestaurantCard> {
                     children: [
                       Text(
                         restaurant.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -539,20 +608,25 @@ class _RestaurantCardState extends State<_RestaurantCard> {
                       const SizedBox(height: 2),
                       Text(
                         restaurant.submittedAt != null
-                            ? _fmtDate(restaurant.submittedAt!)
+                            ? _fmtDate(l, restaurant.submittedAt!)
                             : l.pending,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.4),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.4,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded,
-                    size: 20,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -577,9 +651,15 @@ class _RestaurantCardState extends State<_RestaurantCard> {
                   onPressed: _activate,
                   style: ElevatedButton.styleFrom(
                     textStyle: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w500),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  child: Text(l.activate),
+                  child: Text(
+                    l.activate,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
           ],
@@ -602,17 +682,21 @@ class _InfoTag extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.35)),
+        Icon(
+          icon,
+          size: 13,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+        ),
         const SizedBox(width: 5),
         Flexible(
           child: Text(
             text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
             ),
-            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -627,9 +711,11 @@ Widget _emptyState(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.check_circle_outline_rounded,
-            size: 48,
-            color: AppColors.primary.withValues(alpha: 0.3)),
+        Icon(
+          Icons.check_circle_outline_rounded,
+          size: 48,
+          color: AppColors.primary.withValues(alpha: 0.3),
+        ),
         const SizedBox(height: 16),
         Text(
           l.allCaughtUp,
@@ -664,10 +750,6 @@ void _snack(BuildContext context, String msg, Color color) {
   );
 }
 
-String _fmtDate(DateTime d) {
-  const m = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
-  return '${m[d.month - 1]} ${d.day}, ${d.year}';
+String _fmtDate(AppLocalizations l, DateTime d) {
+  return l.formatReleaseDate(d);
 }

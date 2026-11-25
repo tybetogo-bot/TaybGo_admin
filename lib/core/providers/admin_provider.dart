@@ -1596,6 +1596,25 @@ class AdminProvider extends ChangeNotifier {
     );
   }
 
+  /// Update store type and minimum order amount for an admin restaurant.
+  Future<HomeRestaurant> updateRestaurantStoreSettings(
+    int restaurantId, {
+    required String storeType,
+    required String minOrderAmount,
+  }) async {
+    final updated = await _apiService.updateRestaurantStoreSettings(
+      restaurantId,
+      storeType: storeType,
+      minOrderAmount: minOrderAmount,
+    );
+    if (_restaurantProfile?.id == restaurantId) {
+      _restaurantProfile = updated;
+      notifyListeners();
+    }
+    await refreshManagementRestaurants();
+    return updated;
+  }
+
   Future<void> activateRestaurant(int restaurantId) async {
     debugPrint('[AdminProvider] activateRestaurant() id=$restaurantId');
     await _apiService.activateRestaurant(restaurantId);

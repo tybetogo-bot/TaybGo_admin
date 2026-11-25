@@ -34,6 +34,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
   String _search = '';
   String? _selectedStatus;
   String? _selectedCity;
+  String? _selectedStoreType;
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
 
@@ -109,9 +110,13 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
         _filter != 'all' ||
         activeSearch.trim().isNotEmpty ||
         _selectedStatus != null ||
-        _selectedCity != null;
+        _selectedCity != null ||
+        _selectedStoreType != null;
     final localFiltersActive =
-        _filter != 'all' || _selectedStatus != null || _selectedCity != null;
+        _filter != 'all' ||
+        _selectedStatus != null ||
+        _selectedCity != null ||
+        _selectedStoreType != null;
 
     return Scaffold(
       body: Padding(
@@ -309,6 +314,30 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                           onChanged: (value) {
                             setState(() {
                               _selectedCity = value == '_all' ? null : value;
+                            });
+                          },
+                        ),
+                        _dropdown(
+                          value: _selectedStoreType ?? '_all',
+                          icon: Icons.category_outlined,
+                          items: [
+                            DropdownMenuItem(
+                              value: '_all',
+                              child: Text(l.allStoreTypes),
+                            ),
+                            DropdownMenuItem(
+                              value: 'RESTAURANT',
+                              child: Text(l.storeTypeRestaurant),
+                            ),
+                            DropdownMenuItem(
+                              value: 'GENERAL_MARKET',
+                              child: Text(l.storeTypeGeneralMarket),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedStoreType =
+                                  value == '_all' ? null : value;
                             });
                           },
                         ),
@@ -538,6 +567,12 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
       result = result.where((r) => r.city == _selectedCity).toList();
     }
 
+    if (_selectedStoreType != null) {
+      result = result
+          .where((r) => r.storeType.toUpperCase() == _selectedStoreType)
+          .toList();
+    }
+
     final search = widget.searchQuery ?? _search;
     if (search.trim().isNotEmpty) {
       final query = search.trim().toLowerCase();
@@ -568,6 +603,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
       _search = '';
       _selectedStatus = null;
       _selectedCity = null;
+      _selectedStoreType = null;
     });
     _loadRestaurants();
   }
@@ -784,6 +820,18 @@ class _RestaurantTableRowState extends State<_RestaurantTableRow> {
                             restaurant.effectiveStatus,
                           ),
                         ),
+                        if (restaurant.isGeneralMarket)
+                          StatusBadge(
+                            label: l.storeTypeGeneralMarket,
+                            color: AppColors.info,
+                          ),
+                        if (restaurant.hasMinOrder)
+                          StatusBadge(
+                            label: l.minOrderLabel(
+                              restaurant.formattedMinOrderAmount,
+                            ),
+                            color: AppColors.primary,
+                          ),
                       ],
                     ),
                   ),
@@ -941,6 +989,16 @@ class _RestaurantCard extends StatelessWidget {
                   ),
                   color: restaurantStatusColor(restaurant.effectiveStatus),
                 ),
+                if (restaurant.isGeneralMarket)
+                  StatusBadge(
+                    label: l.storeTypeGeneralMarket,
+                    color: AppColors.info,
+                  ),
+                if (restaurant.hasMinOrder)
+                  StatusBadge(
+                    label: l.minOrderLabel(restaurant.formattedMinOrderAmount),
+                    color: AppColors.primary,
+                  ),
               ],
             ),
             const SizedBox(height: 12),

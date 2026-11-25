@@ -52,10 +52,12 @@ class _CreateRestaurantScreenState extends State<CreateRestaurantScreen> {
   final _country = TextEditingController();
   final _restaurantName = TextEditingController();
   final _restaurantPhone = TextEditingController();
+  final _minOrderAmount = TextEditingController(text: '0.00');
   final _logoUrl = TextEditingController();
   final _licenseUrl = TextEditingController();
 
   DateTime? _birthdate;
+  String _storeType = 'RESTAURANT';
   bool _deliveryEnabled = true;
   bool _submitting = false;
   String? _formError;
@@ -114,6 +116,7 @@ class _CreateRestaurantScreenState extends State<CreateRestaurantScreen> {
     _country,
     _restaurantName,
     _restaurantPhone,
+    _minOrderAmount,
     _logoUrl,
     _licenseUrl,
   ];
@@ -208,6 +211,41 @@ class _CreateRestaurantScreenState extends State<CreateRestaurantScreen> {
                         icon: const Icon(Icons.content_copy_rounded, size: 18),
                       ),
                       errorText: _error('restaurant.phone'),
+                    ),
+                    DropdownButtonFormField<String>(
+                      key: const Key('restaurant-store-type'),
+                      isExpanded: true,
+                      initialValue: _storeType,
+                      decoration: managedInputDecoration(
+                        context,
+                        label: l.storeType,
+                        prefixIcon: Icons.category_outlined,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'RESTAURANT',
+                          child: Text(l.storeTypeRestaurant),
+                        ),
+                        DropdownMenuItem(
+                          value: 'GENERAL_MARKET',
+                          child: Text(l.storeTypeGeneralMarket),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _storeType = value);
+                        }
+                      },
+                    ),
+                    ManagedTextField(
+                      key: const Key('restaurant-min-order-amount'),
+                      controller: _minOrderAmount,
+                      label: '${l.minOrderAmount} (EUR)',
+                      icon: Icons.euro_outlined,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      errorText: _error('restaurant.min_order_amount'),
                     ),
                     ManagedCloudinaryFileField(
                       key: const Key('restaurant-upload-logo'),
@@ -567,12 +605,23 @@ class _CreateRestaurantScreenState extends State<CreateRestaurantScreen> {
     )) {
       errors['restaurant.work_hours'] = l.openCloseTimesMustDiffer;
     }
+    final minOrderText = _minOrderAmount.text.trim().replaceAll(',', '.');
+    final minOrder = double.tryParse(minOrderText);
+    if (minOrderText.isNotEmpty && (minOrder == null || minOrder < 0)) {
+      errors['restaurant.min_order_amount'] = l.invalidAmount;
+    }
     return errors;
   }
 
   Map<String, dynamic> _payload() {
     final logo = _logoUrl.text.trim();
     final license = _licenseUrl.text.trim();
+    final parsedMinOrder = double.tryParse(
+      _minOrderAmount.text.trim().replaceAll(',', '.'),
+    );
+    final minOrderFormatted = (parsedMinOrder != null && parsedMinOrder >= 0)
+        ? parsedMinOrder.toStringAsFixed(2)
+        : '0.00';
     return {
       'user': buildManagedUserPayload(
         name: _ownerName.text,
@@ -607,6 +656,8 @@ class _CreateRestaurantScreenState extends State<CreateRestaurantScreen> {
         if (logo.isNotEmpty) 'logo': logo,
         'work_hours': buildUtcWorkHours(_hours),
         'delivery_enabled': _deliveryEnabled,
+        'store_type': _storeType,
+        'min_order_amount': minOrderFormatted,
         'status': 'ACTIVE',
       },
     };

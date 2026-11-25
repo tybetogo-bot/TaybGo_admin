@@ -307,8 +307,19 @@ void main() {
       ),
       client: MockClient((request) async {
         if (request.url.path == '/api/admin/restaurants/') {
-          posted = jsonDecode(request.body) as Map<String, dynamic>;
-          return http.Response(jsonEncode({'id': 21}), 201);
+          if (request.method == 'POST') {
+            posted = jsonDecode(request.body) as Map<String, dynamic>;
+            return http.Response(jsonEncode({'id': 21}), 201);
+          }
+          return http.Response(
+            jsonEncode({
+              'count': 0,
+              'next': null,
+              'previous': null,
+              'results': [],
+            }),
+            200,
+          );
         }
         return http.Response(jsonEncode(_emptyHome()), 200);
       }),

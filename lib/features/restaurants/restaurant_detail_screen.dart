@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/l10n/app_localizations.dart';
@@ -7,6 +8,7 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../exports/monthly_exports_screen.dart';
 import '../management/reset_password_dialog.dart';
 import '../support/create_support_ticket_dialog.dart';
 import 'restaurants_screen.dart';
@@ -159,6 +161,31 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     );
   }
 
+  Future<void> _editStoreSettings(HomeRestaurant restaurant) async {
+    final l = AppLocalizations.of(context);
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (_) => _EditStoreSettingsDialog(restaurant: restaurant),
+    );
+    if (updated == true && mounted) {
+      _showStatusSnack(l.storeSettingsUpdated, AppColors.success);
+    }
+  }
+
+  void _openMonthlyExports(HomeRestaurant restaurant) {
+    final router = GoRouter.maybeOf(context);
+    if (router != null) {
+      router.push('/exports?restaurant_id=${restaurant.id}');
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            MonthlyExportsScreen(initialRestaurantId: restaurant.id),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final admin = context.watch<AdminProvider>();
@@ -259,6 +286,41 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                     l.active,
                     restaurant.effectiveStatus == 'ACTIVE' ? l.yes : l.no,
                   ),
+                  _buildDetailRow(
+                    context,
+                    l.storeType,
+                    restaurant.isGeneralMarket
+                        ? l.storeTypeGeneralMarket
+                        : l.storeTypeRestaurant,
+                  ),
+                  _buildDetailRow(
+                    context,
+                    l.minOrderAmount,
+                    restaurant.formattedMinOrderAmount,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      OutlinedButton.icon(
+                        key: const Key('restaurant-edit-store-settings'),
+                        onPressed: () => _editStoreSettings(restaurant),
+                        icon: const Icon(Icons.tune_rounded, size: 18),
+                        label: Text(l.editStoreSettings),
+                      ),
+                      OutlinedButton.icon(
+                        key: const Key('restaurant-monthly-exports'),
+                        onPressed: () => _openMonthlyExports(restaurant),
+                        icon: const Icon(
+                          Icons.picture_as_pdf_outlined,
+                          size: 18,
+                        ),
+                        label: Text(l.monthlyPdfExports),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   _buildDetailRow(
                     context,
                     l.currentHoursStatus,
@@ -388,6 +450,21 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                       ),
                       color: restaurantStatusColor(restaurant.effectiveStatus),
                     ),
+                    StatusBadge(
+                      label: restaurant.isGeneralMarket
+                          ? l.storeTypeGeneralMarket
+                          : l.storeTypeRestaurant,
+                      color: restaurant.isGeneralMarket
+                          ? AppColors.info
+                          : AppColors.primary,
+                    ),
+                    if (restaurant.hasMinOrder)
+                      StatusBadge(
+                        label: l.minOrderLabel(
+                          restaurant.formattedMinOrderAmount,
+                        ),
+                        color: AppColors.primary,
+                      ),
                   ],
                 ),
               ],
@@ -741,6 +818,142 @@ class _HoursDayRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _EditStoreSettingsDialog extends StatefulWidget {
+  final HomeRestaurant restaurant;
+
+  const _EditStoreSettingsDialog({required this.restaurant});
+
+  @override
+  State<_EditStoreSettingsDialog> createState() =>
+      _EditStoreSettingsDialogState();
+}
+
+class _EditStoreSettingsDialogState extends State<_EditStoreSettingsDialog> {
+  late String _selectedType;
+  late final TextEditingController _minOrderController;
+  String? _error;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialType = widget.restaurant.storeType.toUpperCase();
+    _selectedType =
+        (initialType == 'RESTAURANT' || initialType == 'GENERAL_MARKET')
+        ? initialType
+        : 'RESTAURANT';
+    _minOrderController = TextEditingController(
+      text: widget.restaurant.minOrderValue.toStringAsFixed(2),
+    );
+  }
+
+  @override
+  void dispose() {
+    _minOrderController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final l = AppLocalizations.of(context);
+    final parsed = double.tryParse(
+      _minOrderController.text.trim().replaceAll(',', '.'),
+    );
+    if (parsed == null || parsed < 0) {
+      setState(() => _error = l.invalidAmount);
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await context.read<AdminProvider>().updateRestaurantStoreSettings(
+        widget.restaurant.id,
+        storeType: _selectedType,
+        minOrderAmount: parsed.toStringAsFixed(2),
+      );
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l.editStoreSettings),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              key: const Key('edit-store-type-dropdown'),
+              isExpanded: true,
+              initialValue: _selectedType,
+              decoration: InputDecoration(
+                labelText: l.storeType,
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: 'RESTAURANT',
+                  child: Text(l.storeTypeRestaurant),
+                ),
+                DropdownMenuItem(
+                  value: 'GENERAL_MARKET',
+                  child: Text(l.storeTypeGeneralMarket),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedType = value);
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const Key('edit-min-order-input'),
+              controller: _minOrderController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: InputDecoration(
+                labelText: '${l.minOrderAmount} (EUR)',
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                _error!,
+                style: const TextStyle(color: AppColors.error, fontSize: 12),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.pop(context, false),
+          child: Text(l.cancel),
+        ),
+        FilledButton(
+          key: const Key('edit-store-settings-save'),
+          onPressed: _saving ? null : _save,
+          child: Text(l.save),
+        ),
+      ],
     );
   }
 }

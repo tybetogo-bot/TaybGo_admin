@@ -218,8 +218,10 @@ class _GooglePlacesAddressFieldState extends State<GooglePlacesAddressField> {
                 ],
               ),
               clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: [
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  children: [
                   for (var i = 0; i < _suggestions.length; i++) ...[
                     ListTile(
                       onTap: () => _select(_suggestions[i]),
@@ -271,6 +273,7 @@ class _GooglePlacesAddressFieldState extends State<GooglePlacesAddressField> {
                     ),
                   ),
                 ],
+              ),
               ),
             ),
           ] else if (_showNoResults) ...[

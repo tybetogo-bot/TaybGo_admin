@@ -1516,16 +1516,17 @@ class _PricingPolicyFormPageState extends State<PricingPolicyFormPage> {
           ),
         ]),
         const SizedBox(height: 4),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+        Material(
+          color: Theme.of(context).colorScheme.surface,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-            border: Border.all(
+            side: BorderSide(
               color: Theme.of(
                 context,
               ).colorScheme.outline.withValues(alpha: 0.25),
             ),
           ),
+          clipBehavior: Clip.antiAlias,
           child: SwitchListTile.adaptive(
             contentPadding: const EdgeInsets.symmetric(horizontal: 14),
             title: Text(l.active),

@@ -456,18 +456,19 @@ class ManagedToggleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: value
-            ? AppColors.primary.withValues(alpha: 0.055)
-            : scheme.surface,
+    return Material(
+      color: value
+          ? AppColors.primary.withValues(alpha: 0.055)
+          : scheme.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(
+        side: BorderSide(
           color: value
               ? AppColors.primary.withValues(alpha: 0.3)
               : scheme.outline.withValues(alpha: 0.22),
         ),
       ),
+      clipBehavior: Clip.antiAlias,
       child: SwitchListTile.adaptive(
         value: value,
         onChanged: onChanged,

@@ -4764,6 +4764,377 @@ class AppLocalizations {
     fr: 'Ãƒâ€°chec : $e',
     de: 'Fehlgeschlagen: $e',
   );
+  String get storeType => _t(
+    'Store type',
+    'نوع المتجر',
+    nl: 'Winkeltype',
+    fr: 'Type de boutique',
+    de: 'Geschäftstyp',
+  );
+  String get storeTypeRestaurant => _t(
+    'Restaurant',
+    'مطعم',
+    nl: 'Restaurant',
+    fr: 'Restaurant',
+    de: 'Restaurant',
+  );
+  String get storeTypeGeneralMarket => _t(
+    'General Market',
+    'سوبرماركت / بقالة',
+    nl: 'Supermarkt',
+    fr: 'Épicerie / Marché',
+    de: 'Supermarkt',
+  );
+  String get allStoreTypes => _t(
+    'All store types',
+    'كل أنواع المتاجر',
+    nl: 'Alle winkeltypes',
+    fr: 'Tous les types',
+    de: 'Alle Geschäftstypen',
+  );
+  String get minOrderAmount => _t(
+    'Minimum order amount',
+    'الحد الأدنى للطلب',
+    nl: 'Minimumbestelbedrag',
+    fr: 'Montant minimum de commande',
+    de: 'Mindestbestellwert',
+  );
+  String minOrderLabel(String formatted) => _t(
+    'Min order $formatted',
+    'الحد الأدنى $formatted',
+    nl: 'Min. bestelling $formatted',
+    fr: 'Min. commande $formatted',
+    de: 'Min. Bestellung $formatted',
+  );
+  String get editStoreSettings => _t(
+    'Edit Store Settings',
+    'تعديل إعدادات المتجر',
+    nl: 'Winkelinstellingen bewerken',
+    fr: 'Modifier les paramètres du magasin',
+    de: 'Shop-Einstellungen bearbeiten',
+  );
+  String get storeSettingsUpdated => _t(
+    'Store settings updated',
+    'تم تحديث إعدادات المتجر',
+    nl: 'Winkelinstellingen bijgewerkt',
+    fr: 'Paramètres du magasin mis à jour',
+    de: 'Shop-Einstellungen aktualisiert',
+  );
+  String get invalidAmount => _t(
+    'Enter a valid non-negative amount.',
+    'أدخل مبلغاً صالحاً غير سالب.',
+    nl: 'Voer een geldig bedrag in.',
+    fr: 'Entrez un montant valide.',
+    de: 'Geben Sie einen gültigen Betrag ein.',
+  );
+  String get inStorePickup => _t(
+    'IN-STORE PICKUP',
+    'استلام من المتجر',
+    nl: 'AFHALEN IN WINKEL',
+    fr: 'RETRAIT SUR PLACE',
+    de: 'ABHOLUNG IM LADEN',
+  );
+  String get giftCardApplied => _t(
+    'Gift card applied',
+    'رصيد بطاقة الهدايا المستخدم',
+    nl: 'Cadeaukaart toegepast',
+    fr: 'Carte-cadeau appliquée',
+    de: 'Geschenkkarte angewendet',
+  );
+  String get cardDue => _t(
+    'Card amount due',
+    'المتبقي بالبطاقة',
+    nl: 'Te betalen per kaart',
+    fr: 'Reste par carte',
+    de: 'Kartenzahlung offen',
+  );
+  String get cashDue => _t(
+    'Cash amount due',
+    'المتبقي نقداً',
+    nl: 'Contant te betalen',
+    fr: 'Reste en espèces',
+    de: 'Barzahlung offen',
+  );
+  String get attachments => _t(
+    'Order attachments',
+    'مرفقات الطلب',
+    nl: 'Bestelbijlagen',
+    fr: 'Pièces jointes',
+    de: 'Bestellanhänge',
+  );
+  String get openPdf => _t(
+    'Open PDF',
+    'فتح PDF',
+    nl: 'PDF openen',
+    fr: 'Ouvrir PDF',
+    de: 'PDF öffnen',
+  );
+  String get monthlyPdfExports => _t(
+    'Monthly PDF Exports',
+    'التقارير الشهرية PDF',
+    nl: 'Maandelijkse PDF-exports',
+    fr: 'Exports PDF mensuels',
+    de: 'Monatliche PDF-Exporte',
+  );
+  String get monthlyPdfExportsSubtitle => _t(
+    'Generate and inspect monthly store Umsatzbericht PDF statements.',
+    'إنشاء ومراجعة كشوف الحساب الشهرية بصيغة PDF.',
+    nl: 'Genereer en bekijk maandelijkse winkelafschriften in PDF.',
+    fr: 'Générez et consultez les relevés PDF mensuels des magasins.',
+    de: 'Monatliche Umsatzbericht-PDFs erstellen und prüfen.',
+  );
+  String get generateMonthlyExports => _t(
+    'Generate Monthly Exports',
+    'إنشاء تقارير شهرية',
+    nl: 'Maandexports genereren',
+    fr: 'Générer les exports mensuels',
+    de: 'Monatsexporte erstellen',
+  );
+  String get generate => _t(
+    'Generate',
+    'إنشاء',
+    nl: 'Genereren',
+    fr: 'Générer',
+    de: 'Erstellen',
+  );
+  String get forceRegenerate => _t(
+    'Force regenerate existing exports',
+    'إعادة إنشاء التقارير الموجودة',
+    nl: 'Bestaande exports opnieuw genereren',
+    fr: 'Régénérer les exports existants',
+    de: 'Vorhandene Exporte neu erstellen',
+  );
+  String get year => _t(
+    'Year',
+    'السنة',
+    nl: 'Jaar',
+    fr: 'Année',
+    de: 'Jahr',
+  );
+  String get month => _t(
+    'Month',
+    'الشهر',
+    nl: 'Maand',
+    fr: 'Mois',
+    de: 'Monat',
+  );
+  String get storeId => _t(
+    'Store ID',
+    'معرّف المتجر',
+    nl: 'Winkel-ID',
+    fr: 'ID boutique',
+    de: 'Shop-ID',
+  );
+  String get allStoresIfBlank => _t(
+    'Leave blank for all active stores',
+    'اتركه فارغاً لجميع المتاجر النشطة',
+    nl: 'Laat leeg voor alle actieve winkels',
+    fr: 'Laisser vide pour toutes les boutiques actives',
+    de: 'Leer lassen für alle aktiven Shops',
+  );
+  String get monthlyExportsGeneratedSummary => _t(
+    'Monthly exports batch completed',
+    'اكتمل إنشاء دفعة التقارير الشهرية',
+    nl: 'Maandelijkse exportbatch voltooid',
+    fr: 'Lot d’exports mensuels terminé',
+    de: 'Monatlicher Exportlauf abgeschlossen',
+  );
+  String get failedToOpenPdf => _t(
+    'Could not open file URL',
+    'تعذر فتح رابط الملف',
+    nl: 'Kon bestands-URL niet openen',
+    fr: 'Impossible d’ouvrir le fichier',
+    de: 'Datei-URL konnte nicht geöffnet werden',
+  );
+  String get noMonthlyExportsFound => _t(
+    'No monthly PDF exports found',
+    'لا توجد تقارير شهرية PDF',
+    nl: 'Geen maandelijkse PDF-exports gevonden',
+    fr: 'Aucun export PDF mensuel trouvé',
+    de: 'Keine monatlichen PDF-Exporte gefunden',
+  );
+  String exportRowCount(int count) => _t(
+    '$count orders',
+    '$count طلبات',
+    nl: '$count bestellingen',
+    fr: '$count commandes',
+    de: '$count Bestellungen',
+  );
+  String get giftCards => _t(
+    'Gift Cards',
+    'بطاقات الهدايا',
+    nl: 'Cadeaukaarten',
+    fr: 'Cartes-cadeaux',
+    de: 'Geschenkkarten',
+  );
+  String get giftCardsSubtitle => _t(
+    'Search, issue, adjust balances, or void customer gift cards.',
+    'البحث وإصدار وتعديل أرصدة أو إلغاء بطاقات الهدايا.',
+    nl: 'Zoek, geef uit, pas saldo aan of annuleer cadeaukaarten.',
+    fr: 'Rechercher, émettre, ajuster ou annuler des cartes-cadeaux.',
+    de: 'Geschenkkarten suchen, ausgeben, anpassen oder stornieren.',
+  );
+  String get giftCard => _t(
+    'Gift Card',
+    'بطاقة هدية',
+    nl: 'Cadeaukaart',
+    fr: 'Carte-cadeau',
+    de: 'Geschenkkarte',
+  );
+  String get issueGiftCard => _t(
+    'Issue Gift Card',
+    'إصدار بطاقة هدية',
+    nl: 'Cadeaukaart uitgeven',
+    fr: 'Émettre une carte-cadeau',
+    de: 'Geschenkkarte ausstellen',
+  );
+  String get giftCardIssued => _t(
+    'Gift card issued',
+    'تم إصدار بطاقة الهدية',
+    nl: 'Cadeaukaart uitgegeven',
+    fr: 'Carte-cadeau émise',
+    de: 'Geschenkkarte ausgestellt',
+  );
+  String get issue => _t(
+    'Issue',
+    'إصدار',
+    nl: 'Uitgeven',
+    fr: 'Émettre',
+    de: 'Ausstellen',
+  );
+  String get copyCode => _t(
+    'Copy code',
+    'نسخ الرمز',
+    nl: 'Code kopiëren',
+    fr: 'Copier le code',
+    de: 'Code kopieren',
+  );
+  String get giftCardCodeCopied => _t(
+    'Gift card code copied',
+    'تم نسخ رمز بطاقة الهدية',
+    nl: 'Cadeaukaartcode gekopieerd',
+    fr: 'Code de carte-cadeau copié',
+    de: 'Geschenkkartencode kopiert',
+  );
+  String get ownerUserId => _t(
+    'Owner User ID',
+    'معرّف المستخدم المالك',
+    nl: 'Gebruikers-ID eigenaar',
+    fr: 'ID utilisateur propriétaire',
+    de: 'Benutzer-ID Eigentümer',
+  );
+  String get invalidUserId => _t(
+    'Enter a valid numeric user ID.',
+    'أدخل معرّف مستخدم رقمياً صالحاً.',
+    nl: 'Voer een geldig numeriek gebruikers-ID in.',
+    fr: 'Entrez un ID utilisateur numérique valide.',
+    de: 'Geben Sie eine gültige numerische Benutzer-ID ein.',
+  );
+  String get amount => _t(
+    'Amount',
+    'المبلغ',
+    nl: 'Bedrag',
+    fr: 'Montant',
+    de: 'Betrag',
+  );
+  String get balance => _t(
+    'Balance',
+    'الرصيد',
+    nl: 'Saldo',
+    fr: 'Solde',
+    de: 'Guthaben',
+  );
+  String get done => _t(
+    'Done',
+    'تم',
+    nl: 'Klaar',
+    fr: 'Terminé',
+    de: 'Fertig',
+  );
+  String get purchasedBy => _t(
+    'Purchased by',
+    'المشتري',
+    nl: 'Gekocht door',
+    fr: 'Acheté par',
+    de: 'Gekauft von',
+  );
+  String get ownedBy => _t(
+    'Owner',
+    'المالك',
+    nl: 'Eigenaar',
+    fr: 'Propriétaire',
+    de: 'Eigentümer',
+  );
+  String get ledgerHistory => _t(
+    'Ledger history',
+    'سجل العمليات',
+    nl: 'Transactiegeschiedenis',
+    fr: 'Historique du grand livre',
+    de: 'Kontoverlauf',
+  );
+  String get noHistory => _t(
+    'No ledger entries yet',
+    'لا توجد حركات مسجلة بعد',
+    nl: 'Nog geen transacties',
+    fr: 'Aucune entrée',
+    de: 'Noch keine Buchungen',
+  );
+  String get voidGiftCard => _t(
+    'Void Card',
+    'إلغاء البطاقة',
+    nl: 'Kaart ongeldig maken',
+    fr: 'Annuler la carte',
+    de: 'Karte stornieren',
+  );
+  String voidGiftCardConfirm(String masked) => _t(
+    'Void gift card $masked? Remaining balance will no longer be spendable.',
+    'هل تريد إلغاء بطاقة الهدايا $masked؟ لن يعود بالإمكان استخدام الرصيد المتبقي.',
+    nl: 'Cadeaukaart $masked ongeldig maken? Het resterende saldo vervalt.',
+    fr: 'Annuler la carte-cadeau $masked ? Le solde restant ne sera plus utilisable.',
+    de: 'Geschenkkarte $masked stornieren? Das Restguthaben verfällt.',
+  );
+  String get giftCardVoided => _t(
+    'Gift card voided',
+    'تم إلغاء بطاقة الهدية',
+    nl: 'Cadeaukaart ongeldig gemaakt',
+    fr: 'Carte-cadeau annulée',
+    de: 'Geschenkkarte storniert',
+  );
+  String get adjustBalance => _t(
+    'Adjust Balance',
+    'تعديل الرصيد',
+    nl: 'Saldo aanpassen',
+    fr: 'Ajuster le solde',
+    de: 'Guthaben anpassen',
+  );
+  String get deltaAmountHint => _t(
+    'Delta amount (e.g. 5.00 or -5.00)',
+    'قيمة التعديل (مثال 5.00 أو ‎-5.00)',
+    nl: 'Verschilbedrag (bijv. 5.00 of -5.00)',
+    fr: 'Montant delta (ex. 5.00 ou -5.00)',
+    de: 'Änderungsbetrag (z. B. 5.00 oder -5.00)',
+  );
+  String get reason => _t(
+    'Reason',
+    'السبب',
+    nl: 'Reden',
+    fr: 'Motif',
+    de: 'Grund',
+  );
+  String get searchGiftCardsHint => _t(
+    'Search ID, code, buyer, email, phone...',
+    'ابحث بالمعرّف أو الرمز أو البريد أو الهاتف...',
+    nl: 'Zoek op ID, code, e-mail, telefoon...',
+    fr: 'Rechercher ID, code, e-mail, téléphone...',
+    de: 'Suche nach ID, Code, E-Mail, Telefon...',
+  );
+  String get noGiftCardsFound => _t(
+    'No gift cards found',
+    'لم يتم العثور على بطاقات هدايا',
+    nl: 'Geen cadeaukaarten gevonden',
+    fr: 'Aucune carte-cadeau trouvée',
+    de: 'Keine Geschenkkarten gefunden',
+  );
 }
 
 class _AppLocalizationsDelegate

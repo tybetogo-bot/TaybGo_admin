@@ -340,6 +340,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             Divider(color: theme.dividerColor, height: 1),
             _ProfileAction(
+              icon: Icons.picture_as_pdf_outlined,
+              title: l.monthlyPdfExports,
+              subtitle: l.monthlyPdfExportsSubtitle,
+              onTap: () => context.push('/profile/exports'),
+            ),
+            Divider(color: theme.dividerColor, height: 1),
+            _ProfileAction(
+              icon: Icons.card_giftcard_outlined,
+              title: l.giftCards,
+              subtitle: l.giftCardsSubtitle,
+              onTap: () => context.push('/profile/gift-cards'),
+            ),
+            Divider(color: theme.dividerColor, height: 1),
+            _ProfileAction(
               icon: Icons.forum_outlined,
               title: l.support,
               subtitle: l.supportActionSubtitle,

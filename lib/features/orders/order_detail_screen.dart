@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/models/admin_order.dart';
@@ -142,6 +143,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     _OrderContentPanel(order: order),
                     const SizedBox(height: 14),
                     _InstructionsPanel(order: order),
+                    if (order.hasAttachments) ...[
+                      const SizedBox(height: 14),
+                      _AttachmentsPanel(order: order),
+                    ],
                   ],
                 );
                 final right = Column(
@@ -275,6 +280,8 @@ class _DetailHeader extends StatelessWidget {
             alignment: WrapAlignment.end,
             children: [
               _Pill(label: _typeLabel(order.orderType, l), color: typeColor),
+              if (order.isPickup)
+                _Pill(label: l.inStorePickup, color: AppColors.info),
               _Pill(label: _statusLabel(order.status, l), color: statusColor),
               _Pill(
                 label: order.isPaid ? l.paid : l.unpaid,
@@ -544,6 +551,22 @@ class _PricingPanel extends StatelessWidget {
             value: _paymentLabel(order.paymentType, l),
           ),
           _InfoRow(label: l.status, value: order.isPaid ? l.paid : l.unpaid),
+          if (order.hasGiftCardApplied)
+            _InfoRow(
+              label: l.giftCardApplied,
+              value: _formatAmount(order.giftCardAmountApplied),
+            ),
+          if (order.hasCardDue)
+            _InfoRow(
+              label: l.cardDue,
+              value: _formatAmount(order.cardAmountDue),
+            ),
+          if (order.hasCashDue)
+            _InfoRow(
+              label: l.cashDue,
+              value: _formatAmount(order.cashAmountDue),
+              emphasized: true,
+            ),
         ],
       ),
     );
@@ -567,12 +590,93 @@ class _DispatchPanel extends StatelessWidget {
             label: l.orderMode,
             value: order.isManual ? l.manual : l.automatic,
           ),
-          _InfoRow(
-            label: l.dispatchStarted,
-            value: _formatDateTime(order.dispatchStartedAt),
-          ),
-          _InfoRow(label: l.updatedAt, value: _formatDateTime(order.updatedAt)),
-        ],
+      _InfoRow(
+        label: l.dispatchStarted,
+        value: _formatDateTime(order.dispatchStartedAt),
+      ),
+      _InfoRow(label: l.updatedAt, value: _formatDateTime(order.updatedAt)),
+    ],
+  ),
+);
+}
+}
+
+class _AttachmentsPanel extends StatelessWidget {
+  final AdminOrder order;
+
+  const _AttachmentsPanel({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return _Panel(
+      title: l.attachments,
+      icon: Icons.attach_file_rounded,
+      child: Column(
+        children: order.attachments
+            .map(
+              (att) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      att.isImage
+                          ? Icons.image_outlined
+                          : Icons.picture_as_pdf_outlined,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            att.fileName.isEmpty ? att.id : att.fileName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            att.contentType,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.55,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (att.downloadUrl != null)
+                      IconButton(
+                        tooltip: l.openPdf,
+                        onPressed: () async {
+                          final uri = Uri.tryParse(att.downloadUrl!);
+                          if (uri != null) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                      ),
+                  ],
+                ),
+              ),
+            )
+            .toList(growable: false),
       ),
     );
   }

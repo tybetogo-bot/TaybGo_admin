@@ -29,6 +29,8 @@ import '../../features/notifications/notifications_screen.dart';
 import '../../core/models/pricing_policy.dart';
 import '../../features/pricing/pricing_screen.dart';
 import '../../features/pricing/pricing_policy_detail_screen.dart';
+import '../../features/exports/monthly_exports_screen.dart';
+import '../../features/gift_cards/admin_gift_cards_screen.dart';
 
 class AppRouter {
   final AuthProvider authProvider;
@@ -123,6 +125,19 @@ class AppRouter {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: '/exports',
+        builder: (context, state) {
+          final restaurantId = int.tryParse(
+            state.uri.queryParameters['restaurant_id'] ?? '',
+          );
+          return MonthlyExportsScreen(initialRestaurantId: restaurantId);
+        },
+      ),
+      GoRoute(
+        path: '/gift-cards',
+        builder: (context, state) => const AdminGiftCardsScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -307,6 +322,21 @@ class AppRouter {
                             const VersionControlScreen(),
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'exports',
+                    builder: (context, state) {
+                      final restaurantId = int.tryParse(
+                        state.uri.queryParameters['restaurant_id'] ?? '',
+                      );
+                      return MonthlyExportsScreen(
+                        initialRestaurantId: restaurantId,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'gift-cards',
+                    builder: (context, state) => const AdminGiftCardsScreen(),
                   ),
                 ],
               ),

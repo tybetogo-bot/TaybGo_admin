@@ -8,6 +8,8 @@ class Restaurant {
   final String email;
   final String address;
   final String cuisineType;
+  final String storeType;
+  final String minOrderAmount;
   final String? logoUrl;
   final RestaurantApprovalStatus approvalStatus;
   final DateTime submittedAt;
@@ -21,9 +23,13 @@ class Restaurant {
     required this.email,
     required this.address,
     required this.cuisineType,
+    this.storeType = 'RESTAURANT',
+    this.minOrderAmount = '0.00',
     this.logoUrl,
     required this.approvalStatus,
     required this.submittedAt,
     this.description,
   });
+
+  bool get isGeneralMarket => storeType.toUpperCase() == 'GENERAL_MARKET';
 }

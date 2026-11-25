@@ -1,7 +1,9 @@
 import 'dart:math';
 
 class ManagedEntityValidation {
-  static final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final RegExp _emailPattern = RegExp(
+    r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$',
+  );
   static final RegExp _phonePattern = RegExp(r'^\+?[0-9 ()-]{7,20}$');
 
   static Map<String, String> validateCommon({
@@ -111,7 +113,8 @@ Map<String, dynamic> buildManagedUserPayload({
   return {
     'name': name.trim(),
     'phone': phone.trim(),
-    if (email?.trim().isNotEmpty == true) 'email': email!.trim(),
+    if (email?.trim().isNotEmpty == true)
+      'email': email!.trim().toLowerCase(),
     if (birthdate != null)
       'birthdate':
           '${birthdate.year.toString().padLeft(4, '0')}-'

@@ -1,6 +1,7 @@
 class AdminOrder {
   final int id;
   final String orderType;
+  final String fulfillmentType;
   final String paymentType;
   final OrderPerson? customer;
   final String? deliveryInstructions;
@@ -12,6 +13,9 @@ class AdminOrder {
   final String? deliveryFee;
   final String? tip;
   final String? totalAmount;
+  final String? giftCardAmountApplied;
+  final String? cardAmountDue;
+  final String? cashAmountDue;
   final OrderAddress? pickupAddress;
   final OrderAddress? dropoffAddress;
   final String? requestedVehicleType;
@@ -25,10 +29,12 @@ class AdminOrder {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final List<OrderItemSummary> items;
+  final List<AdminOrderAttachment> attachments;
 
   const AdminOrder({
     required this.id,
     required this.orderType,
+    this.fulfillmentType = 'DELIVERY',
     required this.paymentType,
     this.customer,
     this.deliveryInstructions,
@@ -40,6 +46,9 @@ class AdminOrder {
     this.deliveryFee,
     this.tip,
     this.totalAmount,
+    this.giftCardAmountApplied,
+    this.cardAmountDue,
+    this.cashAmountDue,
     this.pickupAddress,
     this.dropoffAddress,
     this.requestedVehicleType,
@@ -53,12 +62,15 @@ class AdminOrder {
     this.createdAt,
     this.updatedAt,
     this.items = const [],
+    this.attachments = const [],
   });
 
   factory AdminOrder.fromJson(Map<String, dynamic> json) {
+    final rawFulfillment = _stringValue(json['fulfillment_type']).toUpperCase();
     return AdminOrder(
       id: _intValue(json['id']),
       orderType: _stringValue(json['order_type']).toUpperCase(),
+      fulfillmentType: rawFulfillment.isEmpty ? 'DELIVERY' : rawFulfillment,
       paymentType: _stringValue(json['payment_type']).toUpperCase(),
       customer: OrderPerson.fromDynamic(json['customer']),
       deliveryInstructions: _nullIfEmpty(json['delivery_instructions']),
@@ -70,6 +82,9 @@ class AdminOrder {
       deliveryFee: _moneyString(json['delivery_fee']),
       tip: _moneyString(json['tip']),
       totalAmount: _moneyString(json['total_amount']),
+      giftCardAmountApplied: _moneyString(json['gift_card_amount_applied']),
+      cardAmountDue: _moneyString(json['card_amount_due']),
+      cashAmountDue: _moneyString(json['cash_amount_due']),
       pickupAddress: OrderAddress.fromDynamic(json['pickup_address']),
       dropoffAddress: OrderAddress.fromDynamic(json['dropoff_address']),
       requestedVehicleType: _nullIfEmpty(json['requested_vehicle_type']),
@@ -93,14 +108,61 @@ class AdminOrder {
               )
               .toList() ??
           const [],
+      attachments:
+          (json['attachments'] as List<dynamic>?)
+              ?.whereType<Map>()
+              .map(
+                (item) => AdminOrderAttachment.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList(growable: false) ??
+          const [],
     );
   }
 
   bool get isFood => orderType == 'FOOD';
   bool get isShipping => orderType == 'SHIPPING';
   bool get isTaxi => orderType == 'TAXI';
+  bool get isPickup => fulfillmentType == 'PICKUP';
+  bool get hasGiftCardApplied =>
+      (_decimalValue(giftCardAmountApplied) ?? 0) > 0.009;
+  bool get hasCardDue => (_decimalValue(cardAmountDue) ?? 0) > 0.009;
+  bool get hasCashDue => (_decimalValue(cashAmountDue) ?? 0) > 0.009;
+  bool get hasAttachments => attachments.isNotEmpty;
 
   double get totalValue => _decimalValue(totalAmount) ?? 0;
+}
+
+class AdminOrderAttachment {
+  final String id;
+  final String fileName;
+  final String contentType;
+  final int byteSize;
+  final String? downloadUrl;
+  final DateTime? downloadUrlExpiresAt;
+
+  const AdminOrderAttachment({
+    required this.id,
+    required this.fileName,
+    required this.contentType,
+    this.byteSize = 0,
+    this.downloadUrl,
+    this.downloadUrlExpiresAt,
+  });
+
+  factory AdminOrderAttachment.fromJson(Map<String, dynamic> json) {
+    return AdminOrderAttachment(
+      id: _stringValue(json['id']),
+      fileName: _stringValue(json['file_name']),
+      contentType: _stringValue(json['content_type']),
+      byteSize: _intValue(json['byte_size']),
+      downloadUrl: _nullIfEmpty(json['download_url']),
+      downloadUrlExpiresAt: _dateValue(json['download_url_expires_at']),
+    );
+  }
+
+  bool get isImage => contentType.toLowerCase().startsWith('image/');
 }
 
 class OrderPerson {

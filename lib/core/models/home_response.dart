@@ -348,6 +348,8 @@ class HomeRestaurant {
   final String phone;
   final RestaurantWorkHours workHours;
   final String status;
+  final String storeType;
+  final String minOrderAmount;
   final DateTime? createdAt;
   final bool isActive;
 
@@ -362,6 +364,8 @@ class HomeRestaurant {
     required this.phone,
     required this.workHours,
     required this.status,
+    this.storeType = 'RESTAURANT',
+    this.minOrderAmount = '0.00',
     this.createdAt,
     required this.isActive,
   });
@@ -373,6 +377,8 @@ class HomeRestaurant {
         ? Map<String, dynamic>.from(rawUser)
         : const <String, dynamic>{};
     final status = _stringValue(json['status']).toUpperCase();
+    final rawStoreType = _stringValue(json['store_type']).toUpperCase();
+    final rawMinOrder = _decimalString(json['min_order_amount']) ?? '0.00';
     return HomeRestaurant(
       id: _intValue(json['id']),
       ownerUser: _intValue(json['owner_user'] ?? user['id']),
@@ -386,10 +392,20 @@ class HomeRestaurant {
       phone: _stringValue(json['phone']),
       workHours: RestaurantWorkHours.fromJson(json['work_hours']),
       status: status,
+      storeType: rawStoreType.isEmpty ? 'RESTAURANT' : rawStoreType,
+      minOrderAmount: rawMinOrder,
       createdAt: _dateValue(json['created_at']),
       isActive: _boolValue(json['is_active']) ?? status == 'ACTIVE',
     );
   }
+
+  bool get isGeneralMarket => storeType.toUpperCase() == 'GENERAL_MARKET';
+
+  double get minOrderValue => double.tryParse(minOrderAmount) ?? 0.0;
+
+  bool get hasMinOrder => minOrderValue > 0.009;
+
+  String get formattedMinOrderAmount => '€${minOrderValue.toStringAsFixed(2)}';
 
   /// The backend status is authoritative for admin restaurant actions.
   ///
@@ -747,25 +763,43 @@ class PendingRestaurant {
   final int id;
   final String name;
   final String status;
+  final String storeType;
+  final String minOrderAmount;
   final DateTime? submittedAt;
 
   const PendingRestaurant({
     required this.id,
     required this.name,
     required this.status,
+    this.storeType = 'RESTAURANT',
+    this.minOrderAmount = '0.00',
     this.submittedAt,
   });
 
   factory PendingRestaurant.fromJson(Map<String, dynamic> json) {
+    final rawType = _stringValue(json['store_type']).toUpperCase();
     return PendingRestaurant(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
       status: json['status'] ?? 'PENDING',
+      storeType: rawType.isEmpty ? 'RESTAURANT' : rawType,
+      minOrderAmount: _decimalString(json['min_order_amount']) ?? '0.00',
       submittedAt: json['submitted_at'] != null
           ? DateTime.tryParse(json['submitted_at'])
           : null,
     );
   }
+
+  bool get isGeneralMarket => storeType.toUpperCase() == 'GENERAL_MARKET';
+
+  double get minOrderValue => double.tryParse(minOrderAmount) ?? 0.0;
+}
+
+String? _decimalString(dynamic value) {
+  final text = _nullIfEmpty(value);
+  if (text == null) return null;
+  final parsed = double.tryParse(text);
+  return parsed?.toStringAsFixed(2);
 }
 
 class DriverDocument {

@@ -877,7 +877,11 @@ class _OrderRowLead extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 3),
-              _SubtleText(_paymentLabel(order.paymentType, l)),
+              _SubtleText(
+                order.isPickup
+                    ? '${_paymentLabel(order.paymentType, l)} · ${l.inStorePickup}'
+                    : _paymentLabel(order.paymentType, l),
+              ),
             ],
           ),
         ),

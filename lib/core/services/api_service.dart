@@ -3,11 +3,13 @@ import 'dart:ui';
 import 'package:http/http.dart' as http;
 import '../auth/auth_error_keys.dart';
 import '../config/env_config.dart';
+import '../models/admin_gift_card.dart';
 import '../models/admin_order.dart';
 import '../models/promo_banner.dart';
 import '../models/app_notification.dart';
 import '../models/home_response.dart';
 import '../models/app_setting.dart';
+import '../models/monthly_store_export.dart';
 import '../models/pricing_policy.dart';
 import '../models/public_app_config.dart';
 import '../models/service_availability.dart';
@@ -721,6 +723,251 @@ class ApiService {
     throw _apiException(
       response,
       fallbackMessage: 'Failed to load admin restaurant',
+    );
+  }
+
+  /// Update store_type and min_order_amount on an admin restaurant.
+  Future<HomeRestaurant> updateRestaurantStoreSettings(
+    int restaurantId, {
+    required String storeType,
+    required String minOrderAmount,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/api/admin/restaurants/$restaurantId/'),
+      headers: _headers,
+      body: jsonEncode({
+        'restaurant': {
+          'store_type': storeType.trim().toUpperCase(),
+          'min_order_amount': minOrderAmount.trim(),
+        },
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return HomeRestaurant.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to update store settings',
+    );
+  }
+
+  // ─── Monthly PDF Exports ──────────────────────────────────────
+
+  Future<List<MonthlyStoreExport>> getMonthlyStoreExports({
+    int? restaurantId,
+    int? year,
+    int? month,
+    String? storeType,
+  }) async {
+    final params = <String, String>{};
+    if (restaurantId != null) params['restaurant_id'] = '$restaurantId';
+    if (year != null) params['year'] = '$year';
+    if (month != null) params['month'] = '$month';
+    if (storeType != null && storeType.trim().isNotEmpty) {
+      params['store_type'] = storeType.trim().toUpperCase();
+    }
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/exports/monthly/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      final items = decoded is List
+          ? decoded
+          : decoded is Map
+          ? decoded['results'] as List? ?? const []
+          : const [];
+      return items
+          .whereType<Map>()
+          .map(
+            (e) => MonthlyStoreExport.fromJson(Map<String, dynamic>.from(e)),
+          )
+          .toList(growable: false);
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to load monthly exports',
+    );
+  }
+
+  Future<AdminMonthlyGenerateResult> generateMonthlyStoreExports({
+    int? year,
+    int? month,
+    int? restaurantId,
+    bool force = false,
+  }) async {
+    final payload = <String, dynamic>{if (force) 'force': true};
+    if (year != null && month != null) {
+      payload['year'] = year;
+      payload['month'] = month;
+    }
+    if (restaurantId != null) {
+      payload['restaurant_id'] = restaurantId;
+    }
+
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/admin/exports/monthly/generate/'),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200) {
+      return AdminMonthlyGenerateResult.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to generate monthly exports',
+    );
+  }
+
+  // ─── Gift Cards Admin ─────────────────────────────────────────
+
+  Future<List<AdminGiftCard>> getAdminGiftCards({
+    String? search,
+    String? status,
+  }) async {
+    final params = <String, String>{};
+    if (search != null && search.trim().isNotEmpty) {
+      params['search'] = search.trim();
+    }
+    if (status != null && status.trim().isNotEmpty) {
+      params['status'] = status.trim().toUpperCase();
+    }
+
+    final uri = Uri.parse(
+      '$baseUrl/api/admin/gift-cards/',
+    ).replace(queryParameters: params.isNotEmpty ? params : null);
+    final response = await _client.get(uri, headers: _headers);
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      final items = decoded is List
+          ? decoded
+          : decoded is Map
+          ? decoded['results'] as List? ?? const []
+          : const [];
+      return items
+          .whereType<Map>()
+          .map((e) => AdminGiftCard.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false);
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to load gift cards',
+    );
+  }
+
+  Future<AdminGiftCard> getAdminGiftCardDetail(int giftCardId) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/api/gift-cards/$giftCardId/'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      return AdminGiftCard.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to load gift card detail',
+    );
+  }
+
+  Future<AdminGiftCardIssueResult> issueAdminGiftCard({
+    required String amount,
+    String currency = 'EUR',
+    int? ownedBy,
+    DateTime? expiresAt,
+  }) async {
+    final payload = <String, dynamic>{
+      'amount': amount.trim(),
+      'currency': currency.trim().toUpperCase(),
+      'owned_by': ?ownedBy,
+      'expires_at': ?expiresAt?.toUtc().toIso8601String(),
+    };
+
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/admin/gift-cards/issue/'),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return AdminGiftCardIssueResult.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to issue gift card',
+    );
+  }
+
+  Future<AdminGiftCardOperationResult> adjustAdminGiftCard(
+    int giftCardId, {
+    required String deltaAmount,
+    required String reason,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/admin/gift-cards/$giftCardId/adjust/'),
+      headers: _headers,
+      body: jsonEncode({
+        'delta_amount': deltaAmount.trim(),
+        'reason': reason.trim(),
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return AdminGiftCardOperationResult.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to adjust gift card',
+    );
+  }
+
+  Future<AdminGiftCardOperationResult> voidAdminGiftCard(
+    int giftCardId, {
+    String? reason,
+  }) async {
+    final normalizedReason = reason?.trim();
+    final payload = <String, dynamic>{
+      'reason': ?(normalizedReason == null || normalizedReason.isEmpty
+          ? null
+          : normalizedReason),
+    };
+    final response = await _client.post(
+      Uri.parse('$baseUrl/api/admin/gift-cards/$giftCardId/void/'),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200) {
+      return AdminGiftCardOperationResult.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+    if (response.statusCode == 401) _throwUnauthorized();
+    throw _apiException(
+      response,
+      fallbackMessage: 'Failed to void gift card',
     );
   }
 

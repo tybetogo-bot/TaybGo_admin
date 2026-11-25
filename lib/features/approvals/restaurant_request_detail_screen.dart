@@ -118,6 +118,18 @@ class _RestaurantRequestDetailScreenState
                         icon: Icons.info_outline,
                         children: [
                           _buildDetailRow(context, l.name, restaurant.name),
+                          _buildDetailRow(
+                            context,
+                            l.storeType,
+                            restaurant.isGeneralMarket
+                                ? l.storeTypeGeneralMarket
+                                : l.storeTypeRestaurant,
+                          ),
+                          _buildDetailRow(
+                            context,
+                            l.minOrderAmount,
+                            '€${restaurant.minOrderValue.toStringAsFixed(2)}',
+                          ),
                           _buildDetailRow(context, l.status, restaurant.status),
                           if (restaurant.submittedAt != null)
                             _buildDetailRow(
